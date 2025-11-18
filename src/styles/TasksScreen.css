@@ -1,0 +1,349 @@
+.tasks-content-section {
+    padding: 20px;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top:-20px ;
+}
+
+.tasks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0;
+}
+
+.coin-balance-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.coin-icon {
+    width: 45px;
+    height: 45px;
+}
+
+.coin-balance {
+    font-family: 'KZ Supercell-Magic', sans-serif;
+    font-weight: 800;
+    font-style: normal;
+    font-size: 20px;
+    letter-spacing: 0%;
+    background: linear-gradient(90deg, #35A3F2, #37BDF3);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 1px white;
+    paint-order: stroke fill;
+    margin: 0;
+    line-height: 27px;
+}
+
+.claim-all-button {
+    width: 163px;
+    height: 42px;
+    background: linear-gradient(180deg, #82D5FE, #BEEDFE);
+    border: 1.5px solid white;
+    border-radius: 10px;
+    font-family: 'KZ Supercell-Magic', sans-serif;
+    font-weight: 800;
+    font-style: normal;
+    font-size: 14px;
+    line-height: 100%;
+    letter-spacing: 0%;
+    text-transform: uppercase;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-stroke: 1px #3AABED;
+    paint-order: stroke fill;
+    box-sizing: border-box;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.claim-all-button:hover {
+    opacity: 0.95;
+}
+
+.claim-all-button:active {
+    transform: scale(0.98);
+}
+
+.claim-all-button--disabled,
+.claim-all-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.claim-all-button--disabled:hover,
+.claim-all-button:disabled:hover {
+    opacity: 0.5;
+}
+
+.claim-all-button--disabled:active,
+.claim-all-button:disabled:active {
+    transform: none;
+}
+
+.tasks-main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    padding-bottom: 80px; /* Отступ снизу для футера */
+    box-sizing: border-box;
+}
+
+.task-item {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.task-item--completed {
+    opacity: 0.6; 
+}
+
+.task-content {
+    width: 100%;
+    height: 55px;
+    background: linear-gradient(180deg, #D8EDFF, #FFFFFF);
+    border: 1.5px solid #D8EDFF;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 15px;
+    box-sizing: border-box;
+}
+
+/* Убран opacity для выполненных заданий */
+.task-content--completed {
+    /* opacity: 0.6; */
+}
+
+.task-text {
+    width: 70%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+}
+
+.task-title {
+    font-family: 'KZ Supercell-Magic', sans-serif;
+    font-weight: 800;
+    font-style: normal;
+    font-size: 14px;
+    line-height: 20px;
+    letter-spacing: 0%;
+    background: linear-gradient(90deg, #35A3F2, #37BDF3);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0;
+}
+
+@media (max-width: 380px) {
+    .task-title {
+        font-weight: 800;
+        font-style: normal;
+        font-size: 12px;
+        line-height: 18px;
+    }
+}
+
+.task-progress {
+    font-family: 'KZ Supercell-Magic', sans-serif;
+    font-weight: 800;
+    font-style: normal;
+    font-size: 14px;
+    line-height: 20px;
+    letter-spacing: 0%;
+    background: linear-gradient(90deg, #35A3F2, #37BDF3);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 24px;
+}
+
+/* Убран opacity для выполненных заданий */
+.task-progress--completed {
+    /* opacity: 0.6; */
+}
+
+.task-claim-button {
+    width: 100%;
+    height: 47px;
+    background: linear-gradient(180deg, #82D5FE, #BEEDFE);
+    border: 1.5px solid white;
+    border-radius: 10px;
+    font-family: 'KZ Supercell-Magic', sans-serif;
+    font-weight: 800;
+    font-style: normal;
+    font-size: 14px;
+    line-height: 100%;
+    letter-spacing: 0%;
+    text-transform: uppercase;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    justify-content: flex-end; /* Награда справа */
+    align-items: center;
+    padding: 0 15px;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    position: relative; /* Для абсолютного позиционирования текста */
+}
+
+.task-claim-button-text {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    -webkit-text-stroke: 1px #3AABED;
+    paint-order: stroke fill;
+}
+
+.task-claim-reward {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.task-claim-amount {
+    font-family: 'KZ Supercell-Magic', sans-serif;
+    font-weight: 800;
+    font-style: normal;
+    font-size: 15px;
+    line-height: 100%;
+    letter-spacing: 0%;
+    text-transform: uppercase;
+    color: white;
+    -webkit-text-stroke: 1px #3AABED;
+    paint-order: stroke fill;
+    margin: 0;
+}
+
+.task-claim-coin {
+    width: 30px;
+    height: 30px;
+    margin: 0;
+}
+
+.task-claim-button:hover:not(:disabled) {
+    opacity: 0.95;
+}
+
+.task-claim-button:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+/* Стили для неактивной кнопки CLAIM */
+.task-claim-button--disabled,
+.task-claim-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.task-claim-button--disabled:hover,
+.task-claim-button:disabled:hover {
+    opacity: 0.5;
+}
+
+.task-claim-button--disabled:active,
+.task-claim-button:disabled:active {
+    transform: none;
+}
+
+
+.task-completed-reward-container {
+    width: 100%;
+    height: 47px;
+    display: flex;
+    justify-content: flex-end; 
+    align-items: center;
+    padding: 0 15px;
+    box-sizing: border-box;
+}
+
+/* Убран opacity для выполненных заданий */
+.task-claim-reward--disabled {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+
+
+/* Убран opacity для выполненных заданий */
+.task-claim-amount--disabled {
+    font-family: 'KZ Supercell-Magic', sans-serif;
+    font-weight: 800;
+    font-style: normal;
+    font-size: 15px;
+    line-height: 100%;
+    letter-spacing: 0%;
+    text-transform: uppercase;
+    color: white;
+    -webkit-text-stroke: 1px #3AABED;
+    paint-order: stroke fill;
+    margin: 0;
+}
+
+/* Убран opacity для выполненных заданий */
+.task-claim-coin--disabled {
+    width: 30px;
+    height: 30px;
+    margin: 0;
+    opacity: 0.9; 
+}
+
+.completed-tasks-header-container {
+    width: 100%;
+}
+
+.completed-tasks-header {
+    font-family: 'KZ Supercell-Magic', sans-serif;
+    font-weight: 800;
+    font-style: normal;
+    font-size: 18px;
+    line-height: 100%;
+    letter-spacing: 0%;
+    background: linear-gradient(90deg, #35A3F2, #37BDF3);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 1px #FFFFFF;
+    -webkit-text-stroke-second: 1.5px #CDE2FB;
+    paint-order: stroke fill;
+    margin: 0;
+    text-align: left;
+    line-height: 20px;
+}
+
+.active-tasks-list,
+.completed-tasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}

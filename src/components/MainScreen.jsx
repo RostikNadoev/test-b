@@ -150,9 +150,9 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) { // Д
 
   const getButtonText = (id) => {
     switch(id) {
-      case 0: return '1 TON';
-      case 1: return '2 TON';
-      case 2: return '5 TON';
+      case 0: return '2.5 TON';
+      case 1: return '5 TON';
+      case 2: return '4 TON';
       default: return '';
     }
   };

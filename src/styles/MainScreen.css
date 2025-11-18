@@ -505,3 +505,13 @@
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-8px); }
 }
+/* Класс для лайоута без фона */
+.main-screen-no-bg {
+  width: 100%;
+  height: var(--app-height, 100vh);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-image: none; /* Убираем стандартный фон */
+  overflow: hidden;
+}

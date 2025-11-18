@@ -1,314 +1,509 @@
 /* styles/CardScreen.css */
 .card-screen {
-    width: 100%;
-    height: var(--app-height, 100vh);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background-image: url('../assets/MainPage/main.png');
-    background-size: 100% 100%;
-    background-repeat: no-repeat;
-    background-position: center;
-    overflow: hidden;
-  }
-  
-  .card-content {
-    flex: 1;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px 0;
-    box-sizing: border-box;
-    overflow-y: auto;
-  }
-  
-  .card-footer {
-    width: 100%;
-    height: auto;
-    padding-bottom: 12px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transform: translateZ(0);
-    position: relative;
-    z-index: 10;
-  }
-  
-  .footer-close-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .footer-close-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    position: relative;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    user-select: none;
-    padding: 15px 10px;
-    margin: -15px -10px;
-  }
-  
-  .footer-close-wrapper {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .footer-close-block {
-    width: 115px;
-    height: 52px;
-    display: block;
-  }
-  
-  .footer-close-icon {
-    position: absolute;
-    top: -10%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 57px;
-    z-index: 3;
-    pointer-events: none;
-  }
-  
-  .footer-close-overlay {
-    position: absolute;
-    top: 3px;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    pointer-events: none;
-    z-index: 2;
-  }
-  
-  .footer-close-label {
-    font-family: 'KZ Supercell-Magic', sans-serif;
-    font-weight: 800;
-    font-style: normal;
-    font-size: 18px;
-    line-height: 100%;
-    letter-spacing: 0%;
-    background: linear-gradient(90deg, rgba(53, 163, 242, 1), rgba(55, 189, 243, 1));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    -webkit-text-stroke: 0.4px white;
-    paint-order: stroke fill;
-  }
-  
-  
-  /* Стили для карточки на отдельной странице */
-  .card-detail-container {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
-    box-sizing: border-box;
-  }
-  
-  .card-detail {
-    width: 280px;
-    height: 390px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    margin-top: 20px;
-  }
-  
-  .card-detail-image {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    border-radius: 16px;
-  }
-  
-  .card-detail-main-image {
-    position: absolute;
-    top: 40%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    height: auto;
-    max-width: 250px;
-    z-index: 2;
-    pointer-events: none;
-  }
-  
-  .card-detail-ton-image {
-    position: absolute;
-    top: 35px;
-    left: 0px;
-    width: 88px;
-    height: 88px;
-    z-index: 1;
-    pointer-events: none;
-  }
-  
-  .card-detail-button {
-    position: absolute;
-    bottom: 45px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 185px;
-    height: 45px;
-    border: 2px solid rgba(255, 255, 255, 1);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 4;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-  
-  .card-detail-0 .card-detail-button {
-    background: linear-gradient(0deg, rgba(130, 213, 254, 1), rgba(190, 237, 254, 1));
-  }
-  
-  .card-detail-1 .card-detail-button {
-    background: linear-gradient(0deg, rgb(80, 171, 245), rgb(22, 101, 185));
-  }
-  
-  .card-detail-2 .card-detail-button {
-    background: linear-gradient(180deg, rgba(237, 123, 255, 1), rgba(106, 50, 188, 1));
-  }
-  
-  .card-detail-button-text {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }
-  
-  .card-detail-button-number {
-    font-family: 'KZ Supercell-Magic', sans-serif;
-    font-weight: 800;
-    font-style: normal;
-    font-size: 20px;
-    line-height: 100%;
-    letter-spacing: 0%;
-    color: white;
-  }
-  
-  .card-detail-button-ton {
-    font-family: 'KZ Supercell-Magic', sans-serif;
-    font-weight: 800;
-    font-style: normal;
-    font-size: 14px;
-    line-height: 100%;
-    letter-spacing: 0%;
-    color: white;
-  }
+  width: 100%;
+  height: var(--app-height, 100vh);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-image: url('../assets/MainPage/main.png');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  overflow: hidden;
+}
 
-  /* styles/CardScreen.css - добавляем эти стили */
+.card-content {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
 
-.footer-close-indicator {
+.card-footer {
+  width: 100%;
+  height: auto;
+  padding-bottom: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform: translateZ(0);
+  position: relative;
+  z-index: 10;
+}
+
+.footer-close-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 40px;
+}
+
+.footer-close-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  padding: 15px 10px;
+  margin: -15px -10px;
+}
+
+.footer-close-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.footer-close-block {
+  width: 115px;
+  height: 52px;
+  display: block;
+}
+
+.footer-close-icon {
   position: absolute;
-  top: -18px;
+  top: -10%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 57px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.footer-close-overlay {
+  position: absolute;
+  top: 3px;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.footer-close-label {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 18px;
+  line-height: 100%;
+  letter-spacing: 0%;
+  background: linear-gradient(90deg, rgba(53, 163, 242, 1), rgba(55, 189, 243, 1));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 0.4px white;
+  paint-order: stroke fill;
+}
+
+
+/* Стили для карточки на отдельной странице */
+.card-detail-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.card-detail {
+  width: 280px;
+  height: 390px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-top: 20px;
+}
+
+.card-detail-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 16px;
+}
+
+.card-detail-main-image {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  height: auto;
+  max-width: 250px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.card-detail-ton-image {
+  position: absolute;
+  top: 35px;
+  left: 0px;
+  width: 88px;
+  height: 88px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.card-detail-button {
+  position: absolute;
+  bottom: 45px;
   left: 50%;
   transform: translateX(-50%);
-  width: 111px;
-  height: 50px;
-  background: linear-gradient(0deg, rgba(172, 219, 255, 1), rgba(255, 255, 255, 0));
-  border-radius: 0;
-  z-index: 0;
-  pointer-events: none;
+  width: 185px;
+  height: 45px;
+  border: 2px solid rgba(255, 255, 255, 1);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 4;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.card-detail-0 .card-detail-button {
+  background: linear-gradient(0deg, rgba(130, 213, 254, 1), rgba(190, 237, 254, 1));
+}
+
+.card-detail-1 .card-detail-button {
+  background: linear-gradient(0deg, rgb(80, 171, 245), rgb(22, 101, 185));
+}
+
+.card-detail-2 .card-detail-button {
+  background: linear-gradient(180deg, rgba(237, 123, 255, 1), rgba(106, 50, 188, 1));
+}
+
+.card-detail-button-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.card-detail-button-number {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 100%;
+  letter-spacing: 0%;
+  color: white;
+}
+
+.card-detail-button-ton {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 14px;
+  line-height: 100%;
+  letter-spacing: 0%;
+  color: white;
+}
+
+/* styles/CardScreen.css - добавляем эти стили */
+
+.footer-close-indicator {
+position: absolute;
+top: -18px;
+left: 50%;
+transform: translateX(-50%);
+width: 111px;
+height: 50px;
+background: linear-gradient(0deg, rgba(172, 219, 255, 1), rgba(255, 255, 255, 0));
+border-radius: 0;
+z-index: 0;
+pointer-events: none;
 }
 
 
 .card-detail-0,
 .card-detail-1,
 .card-detail-2 {
-  width: 280px; 
-  height: 320px; 
-  margin-top: -60px; 
-  transform: scale(0.9); 
+width: 280px; 
+height: 320px; 
+margin-top: -60px; 
+transform: scale(0.9); 
 }
 
 .card-detail-0 .card-detail-image,
 .card-detail-1 .card-detail-image,
 .card-detail-2 .card-detail-image {
-  width: 100%;
-  height: 100%;
+width: 100%;
+height: 100%;
 }
 
 .card-detail-0 .card-detail-main-image,
 .card-detail-1 .card-detail-main-image,
 .card-detail-2 .card-detail-main-image {
-  top: 40%; 
-  width: 230px;
+top: 40%; 
+width: 230px;
 }
 
 .card-detail-0 .card-detail-ton-image,
 .card-detail-1 .card-detail-ton-image,
 .card-detail-2 .card-detail-ton-image {
-  top: 25px;
-  left: 5px;
+top: 25px;
+left: 5px;
 }
 
 /* Стили для кнопок на всех карточках */
 .card-detail-0 .card-detail-button,
 .card-detail-1 .card-detail-button,
 .card-detail-2 .card-detail-button {
-  height: 50px;
-  bottom: 30px; 
-  transform: none; 
+height: 50px;
+bottom: 30px; 
+transform: none; 
 }
 
 /* Правая кнопка для всех карточек */
 .card-detail-0 .card-1-button-right,
 .card-detail-1 .card-1-button-right,
 .card-detail-2 .card-1-button-right {
-  left: auto;
-  width: 162px;
-  right: 30px; 
+left: auto;
+width: 162px;
+right: 30px; 
 }
 
 /* Левая кнопка для всех карточек */
 .card-detail-0 .card-1-button-left,
 .card-detail-1 .card-1-button-left,
 .card-detail-2 .card-1-button-left {
-  left: 30px; 
-  width: 50px;
-  height: 50px;
-  right: auto;
-  background: linear-gradient(30deg, rgb(255, 223, 199) 30%, rgb(255, 197, 122)) !important;
+left: 30px; 
+width: 50px;
+height: 50px;
+right: auto;
+border: 2px solid rgba(255, 255, 255, 1);
+border-radius: 10px;
 }
 
 .card-detail-star-icon {
-  width: 90%;
+width: 32px;
 }
 
 /* Анимация плавания для TON иконок на всех карточках */
 .card-detail-ton-image {
-  animation: float 2s ease-in-out infinite; 
+animation: float 2s ease-in-out infinite; 
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
+0%, 100% { transform: translateY(0px); }
+50% { transform: translateY(-8px); }
 }
 
 .card-detail-1 .card-detail-main-image,
 .card-detail-2 .card-detail-main-image {
-  top: 33%;
-  width: 240px;
+top: 33%;
+width: 240px;
 }
 
 .card-detail-1 .card-detail-ton-image,
 .card-detail-2 .card-detail-ton-image{
-  width: 100px;
-  height: 100px;
+width: 100px;
+height: 100px;
 }
+
+/* Специфичные стили для градиентов левой кнопки */
+.card1-left {
+background: linear-gradient(30deg, rgb(255, 223, 199) 30%, rgb(255, 197, 122)); /* Желтый */
+}
+
+.card2-left {
+background: linear-gradient(0deg, rgb(80, 171, 245), rgb(22, 101, 185)); /* Синий */
+}
+
+.card3-left {
+background: linear-gradient(180deg, rgba(237, 123, 255, 1), rgba(106, 50, 188, 1)); /* Фиолетовый */
+}
+
+/* Специфичные стили для градиентов правой кнопки */
+.card1-right {
+  background: linear-gradient(0deg, rgba(130, 213, 254, 1), rgba(190, 237, 254, 1)); /* Голубой по умолчанию */
+}
+
+.card2-right {
+background: linear-gradient(0deg, rgb(80, 171, 245), rgb(22, 101, 185)); /* Синий по умолчанию */
+}
+
+.card3-right {
+background: linear-gradient(180deg, rgba(237, 123, 255, 1), rgba(106, 50, 188, 1)); /* Фиолетовый по умолчанию */
+}
+
+/* Специфичные стили для переключенного состояния */
+.card1-left-switched {
+background: linear-gradient(0deg, rgba(130, 213, 254, 1), rgba(190, 237, 254, 1)); /* Голубой */
+}
+
+.card1-right-switched {
+background: linear-gradient(30deg, rgb(255, 223, 199) 30%, rgb(255, 197, 122)); /* Желтый */
+}
+
+.card2-left-switched {
+background: linear-gradient(30deg, rgb(255, 223, 199) 30%, rgb(255, 197, 122)); /* Желтый */
+}
+
+.card2-right-switched {
+background: linear-gradient(0deg, rgb(80, 171, 245), rgb(22, 101, 185)); /* Синий */
+}
+
+.card3-left-switched {
+background: linear-gradient(30deg, rgb(255, 223, 199) 30%, rgb(255, 197, 122)); /* Желтый */
+}
+
+.card3-right-switched {
+background: linear-gradient(180deg, rgba(237, 123, 255, 1), rgba(106, 50, 188, 1)); /* Фиолетовый */
+}
+
+/* Стиль для белой иконки */
+.card-detail-star-icon-white {
+width: 35px;
+filter: brightness(0) invert(1); /* Делает иконку белой */
+}
+
+/* Стили для звездочек в правой кнопке в переключенном состоянии */
+.card1-right .card-detail-star-icon,
+.card2-right .card-detail-star-icon,
+.card3-right .card-detail-star-icon {
+width: 32px;
+}
+
+.card1-right .card-detail-button-number,
+.card2-right .card-detail-button-number,
+.card3-right .card-detail-button-number {
+font-size: 15px;
+}
+
+.card1-right .card-detail-button-ton,
+.card2-right .card-detail-button-ton,
+.card3-right .card-detail-button-ton {
+font-size: 13px;
+}
+
+.items-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 равных столбца */
+  gap: 10px; /* Отступы между рамками */
+  width: calc(100% - 8px); /* Ширина минус 8px (по 4px с каждой стороны) */
+  max-width: none; /* Убираем ограничение по ширине */
+  padding: 0px 4px; /* 4px отступа по бокам */
+  box-sizing: border-box;
+  margin-top: 0px;
+  position: relative;
+  padding-bottom: 20px; /* Добавляем отступ снизу для зоны с кнопкой */
+}
+
+/* Стили для каждой рамки */
+.item-frame {
+  width: 100%; /* Занимает всю ширину ячейки */
+  aspect-ratio: 100 / 120; /* Соотношение сторон 100:120 (то же что и 5:6) */
+  min-height: 130px; /* Минимальная высота */
+  max-height: 150px; /* Максимальная высота */
+  background-image: url('../assets/MainPage/chest3/back.png');
+  background-size: cover;
+  background-position: center;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* Содержимое рамки */
+.item-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+/* Изображение в рамке */
+.item-image {
+  max-width: 70%; /* Максимальная ширина изображения */
+  max-height: 60%; /* Максимальная высота изображения */
+  object-fit: contain; /* Сохраняем пропорции */
+  margin-bottom: 5px; /* Отступ между изображением и ценой */
+}
+
+/* Цена в рамке (обычная) */
+.item-price {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 12px;
+  line-height: 100%;
+  letter-spacing: 0%;
+  color: white;
+  text-align: center;
+  /* Бордер у букв */
+  -webkit-text-stroke: 1.5px rgba(58, 171, 237, 1);
+  paint-order: stroke fill;
+}
+
+/* Цена от 11 до 50 (синий градиент) */
+.item-price-gradient-1 {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 12px;
+  letter-spacing: 0%;
+  /* Градиентный цвет текста */
+  background: rgb(98, 140, 231);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* Бордер у букв */
+  -webkit-text-stroke: 1.5px rgb(0, 81, 255);
+  paint-order: stroke fill;
+}
+
+/* Цена от 51 до 500 (фиолетовый градиент) */
+.item-price-gradient-2 {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 12px;
+  letter-spacing: 0%;
+  /* Градиентный цвет текста */
+  background: rgb(206, 161, 248);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* Бордер у букв */
+  -webkit-text-stroke: 1.5px rgb(158, 63, 248);
+  paint-order: stroke fill;
+}
+
+/* Цена 501+ (желто-оранжевый градиент) */
+.item-price-gradient-3 {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 12px;
+  letter-spacing: 0%;
+  /* Градиентный цвет текста */
+  background: rgb(255, 237, 156);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* Бордер у букв */
+  -webkit-text-stroke: 1.5px rgba(255, 210, 0, 1);
+  paint-order: stroke fill;
+}
+
 

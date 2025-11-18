@@ -1,4 +1,3 @@
-// components/ProfileScreen.jsx
 import React, { useState } from 'react';
 import '../styles/ProfileScreen.css';
 
@@ -9,6 +8,7 @@ import footover from '../assets/MainPage/foot-on.svg';
 import closeIcon from '../assets/MainPage/close.svg';
 import modalCloseIcon from '../assets/Profile/close.svg'; 
 import giftchange from '../assets/Profile/giftchange.png';
+import gift from '../assets/Profile/gift.png';
 
 export default function ProfileScreen({ onNavigate }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,13 +36,14 @@ export default function ProfileScreen({ onNavigate }) {
     }
   };
 
-  // Функция для перехода в профиль
+  // Функция для перехода к боту
   const handleOpenProfile = () => {
-    const username = "@bouncegifts"; // Замените на нужный ник
-    if (window.Telegram && window.Telegram.WebApp) {
-      window.Telegram.WebApp.openTelegramLink(`https://t.me/${username.replace('@', '')}`);
+    const username = "bouncegifts"; // без @
+    const url = `https://t.me/${username}`; // Исправлена ошибка с лишними пробелами
+    if (window.Telegram?.WebApp) {
+      window.Telegram.WebApp.openTelegramLink(url);
     } else {
-      window.open(`https://t.me/${username.replace('@', '')}`, '_blank');
+      window.open(url, '_blank');
     }
   };
 
@@ -57,7 +58,6 @@ export default function ProfileScreen({ onNavigate }) {
     if (startY === null) return;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     setCurrentY(clientY);
-    // Предотвращаем прокрутку фона под модалкой
     if (e.cancelable) e.preventDefault();
   };
 
@@ -68,9 +68,7 @@ export default function ProfileScreen({ onNavigate }) {
       return;
     }
 
-    const deltaY = currentY - startY; // >0 = вниз
-
-    // Порог свайпа вниз — 60px
+    const deltaY = currentY - startY;
     if (deltaY > 60) {
       handleCloseModal();
     }
@@ -104,7 +102,28 @@ export default function ProfileScreen({ onNavigate }) {
         </div>
       </div>
 
-      <main className="profile-content"></main>
+      <main className="profile-content">
+        {/* Старый контейнер с балансом */}
+        <div className='gift-balance-container'>
+          <span className='gift-balance-title'>GIFT BALANCE:</span>
+        </div>
+
+        {/* Новый блок с анимацией и текстом - размещается под ним */}
+<div className='empty-gifts-container'>
+  <div className="empty-gifts-animation-wrapper">
+    <img
+      src={gift}
+      className="empty-gifts-animation"
+      alt="Empty gifts animation"
+      loading="lazy"
+    />
+  </div>
+  <div className="empty-gifts-text">
+    <p className="no-gifts-text">No gifts yet.</p>
+    <p className="how-to-add-text" onClick={handleOpenModal}>How to add?</p>
+  </div>
+</div>
+      </main>
 
       <footer className="profile-footer">
         <div className="footer-close-container">
@@ -120,46 +139,49 @@ export default function ProfileScreen({ onNavigate }) {
         </div>
       </footer>
 
-     {/* Модальное окно */}
-{isModalOpen && (
-  <div className="profile-modal-overlay" onClick={handleCloseModal}>
-    {/* Слой размытия — размывает всё под модалкой */}
-    <div className="profile-modal-blur-layer"></div>
+      {/* Модальное окно */}
+      {isModalOpen && (
+        <div className="profile-modal-overlay" onClick={handleCloseModal}>
+          <div className="profile-modal-blur-layer"></div>
 
-    {/* Контент модалки */}
-    <div
-      className={`profile-modal-content ${isClosing ? 'closing' : ''}`}
-      onClick={(e) => e.stopPropagation()}
-      onAnimationEnd={handleAnimationEnd}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      onMouseDown={handleTouchStart}
-      onMouseMove={handleTouchMove}
-      onMouseUp={handleTouchEnd}
-      onMouseLeave={handleTouchEnd}
-    >
-      {/* Декоративное изображение — ВНЕ body, поэтому во всю ширину и в самом верху */}
-      <img src={giftchange} alt="" className="profile-modal-top-decor" />
+          <div
+            className={`profile-modal-content ${isClosing ? 'closing' : ''}`}
+            onClick={(e) => e.stopPropagation()}
+            onAnimationEnd={handleAnimationEnd}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onMouseDown={handleTouchStart}
+            onMouseMove={handleTouchMove}
+            onMouseUp={handleTouchEnd}
+            onMouseLeave={handleTouchEnd}
+          >
+            <img src={giftchange} alt="" className="profile-modal-top-decor" />
 
-      {/* Основной контент — с отступами */}
-      <div className="profile-modal-body">
-        {/* Кликабельный ник профиля */}
-        <div 
-          className="profile-modal-username" 
-          onClick={handleOpenProfile}
-        >
-          @bouncegifts
+            <div className="profile-modal-body">
+              <h2 className="profile-modal-title">ADD GIFTS</h2>
+              <p className="profile-modal-instruction">
+                Send the gift to the&ensp;
+                <span 
+                  className="profile-modal-username-link"
+                  onClick={handleOpenProfile}
+                >
+                  @bouncegifts
+                </span>
+                &ensp;bot, and the gift balance will be updated
+              </p>
+            </div>
+
+            <button className="profile-modal-action-btn" onClick={handleOpenProfile}>
+              ADD GIFT
+            </button>
+
+            <button className="profile-modal-close-btn" onClick={handleCloseModal}>
+              <img src={modalCloseIcon} alt="Close" className="profile-modal-close-icon" />
+            </button>
+          </div>
         </div>
-      </div>
-
-      {/* Кнопка закрытия — на 20px выше модалки */}
-      <button className="profile-modal-close-btn" onClick={handleCloseModal}>
-        <img src={modalCloseIcon} alt="Close" className="profile-modal-close-icon" />
-      </button>
-    </div>
-  </div>
-)}
+      )}
     </div>
   );
 }

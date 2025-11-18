@@ -1,0 +1,427 @@
+/* Стили для спин-экрана */
+.spin-screen-content {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* Кнопка прижата к низу */
+    align-items: center;
+    flex: 1;
+    /* Фон задается в MainLayout для правильного слоя */
+  }
+  
+  /* Контейнер с прокручиваемыми рамками */
+  .spin-frames-container {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0px 0;
+    box-sizing: border-box;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  /* Скроллер рамок - теперь горизонтальный */
+  .spin-frames-scroller {
+    display: flex;
+    flex-direction: row; /* Горизонтальное расположение */
+    align-items: center;
+    gap: 10px; /* Отступы между рамками */
+    height: calc(100% - 40px); /* Высота минус отступы */
+    overflow-x: auto; /* Горизонтальная прокрутка */
+    overflow-y: hidden; /* Скрываем вертикальный скролл */
+    padding: 0 0px; /* Отступы по бокам */
+    box-sizing: border-box;
+    position: relative;
+    scroll-behavior: auto; /* Отключаем плавную прокрутку по умолчанию */
+    scrollbar-width: none; /* Скрываем скроллбар в Firefox */
+    pointer-events: none;
+  }
+  
+  .spin-frames-scroller::-webkit-scrollbar {
+    display: none; /* Скрываем скроллбар в WebKit */
+  }
+  
+  /* Стили для каждой рамки */
+  .spin-item-frame {
+    width: calc((100vw - 30px) / 3); /* Ширина одной рамки из 3 на экране минус отступы */
+    min-width: calc((100vw - 30px) / 3); /* Минимальная ширина */
+    max-width: calc((100vw - 30px) / 3); /* Максимальная ширина */
+    aspect-ratio: 100 / 120; /* Соотношение сторон 100:120 (то же что и 5:6) */
+    min-height: 130px; /* Минимальная высота */
+    max-height: 150px; /* Максимальная высота */
+    background-image: url('../assets/MainPage/chest3/back.png');
+    background-size: cover;
+    background-position: center;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-sizing: border-box;
+    flex-shrink: 0; /* Не сжимать рамку */
+  }
+  
+  /* Содержимое рамки */
+  .spin-item-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+  }
+  
+  /* Изображение в рамке */
+  .spin-item-image {
+    max-width: 70%; /* Максимальная ширина изображения */
+    max-height: 60%; /* Максимальная высота изображения */
+    object-fit: contain; /* Сохраняем пропорции */
+    margin-bottom: 5px; /* Отступ между изображением и ценой */
+  }
+  
+  /* Цена в рамке (обычная) */
+  .item-price {
+    font-family: 'KZ Supercell-Magic', sans-serif;
+    font-weight: 800;
+    font-style: normal;
+    font-size: 12px;
+    line-height: 100%;
+    letter-spacing: 0%;
+    color: white;
+    text-align: center;
+    /* Бордер у букв */
+    -webkit-text-stroke: 1.5px rgba(58, 171, 237, 1);
+    paint-order: stroke fill;
+  }
+  
+  /* Цена от 11 до 50 (синий градиент) */
+  .item-price-gradient-1 {
+    font-family: 'KZ Supercell-Magic', sans-serif;
+    font-weight: 800;
+    font-style: normal;
+    font-size: 12px;
+    letter-spacing: 0%;
+    /* Градиентный цвет текста */
+    background: rgb(98, 140, 231);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    /* Бордер у букв */
+    -webkit-text-stroke: 1.5px rgb(0, 81, 255);
+    paint-order: stroke fill;
+  }
+  
+  /* Цена от 51 до 500 (фиолетовый градиент) */
+  .item-price-gradient-2 {
+    font-family: 'KZ Supercell-Magic', sans-serif;
+    font-weight: 800;
+    font-style: normal;
+    font-size: 12px;
+    letter-spacing: 0%;
+    /* Градиентный цвет текста */
+    background: rgb(206, 161, 248);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    /* Бордер у букв */
+    -webkit-text-stroke: 1.5px rgb(158, 63, 248);
+    paint-order: stroke fill;
+  }
+  
+  /* Цена 501+ (желто-оранжевый градиент) */
+  .item-price-gradient-3 {
+    font-family: 'KZ Supercell-Magic', sans-serif;
+    font-weight: 800;
+    font-style: normal;
+    font-size: 12px;
+    letter-spacing: 0%;
+    /* Градиентный цвет текста */
+    background: rgb(255, 237, 156);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    /* Бордер у букв */
+    -webkit-text-stroke: 1.5px rgba(255, 210, 0, 1);
+    paint-order: stroke fill;
+  }
+  
+  /* Кнопка Skip - фиксированное позиционирование внизу */
+  .spin-skip-footer {
+    width: 100%;
+    padding: 20px 20px 20px; /* Отступы со всех сторон */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 20; /* Поверх фона */
+    box-sizing: border-box;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.3)); /* Полупрозрачный фон */
+    flex-shrink: 0; /* Не сжимать футер */
+  }
+  
+  .spin-skip-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .spin-skip-button {
+    padding: 15px 40px;
+    font-family: 'KZ Supercell-Magic', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    background: linear-gradient(180deg, rgba(237, 123, 255, 1), rgba(106, 50, 188, 1));
+    border: 2px solid white;
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    min-width: 150px;
+    width: calc(100% - 40px); /* Ширина с учетом паддингов */
+    max-width: 300px; /* Максимальная ширина */
+  }
+
+  .spin-arrow-container {
+    position: absolute;
+    top: 30%; /* Отступ сверху */
+    left: 52%;
+    transform: translateX(-59%); /* Центрируем по горизонтали */
+    z-index: 10; /* Поверх рамок */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .spin-arrow {
+    width: 47px;
+    height: auto;
+  }
+
+  .spin-item-frame-center {
+    box-shadow: 0 0 15px 5px rgba(58, 171, 237, 0.7);
+    border: 2px solid #3aabed;
+  }
+  
+ /* Контейнер для снежных частиц - ПОВЕРХ фона но ПОД основным контентом */
+.snow-particles-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5; /* Выше фона, но ниже контента */
+  overflow: hidden;
+}
+
+/* Отдельная снежная частица - теперь более заметные */
+.snow-particle {
+  position: absolute;
+  top: -10px;
+  background: rgba(255, 255, 255, 0.9); /* Более непрозрачные */
+  border-radius: 50%;
+  animation: snowfall linear infinite;
+  box-shadow: 
+    0 0 25px rgba(255, 255, 255, 1), /* Более яркое свечение */
+    0 0 30px rgba(255, 255, 255, 0.7),
+    0 0 45px rgba(255, 255, 255, 0.4);
+  filter: blur(0.8px); /* Немного больше размытия для мягкости */
+}
+
+/* Улучшенная анимация падения снега с лучшей видимостью */
+@keyframes snowfall {
+  0% {
+    transform: translateY(-20px) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.9; /* Быстрее появляются */
+  }
+  70% {
+    opacity: 0.8; /* Дольше остаются видимыми */
+  }
+  100% {
+    transform: translateY(100vh) translateX(25px) rotate(360deg);
+    opacity: 0.3; /* Не полностью исчезают */
+  }
+}
+
+/* Убедитесь, что основной контент поверх частиц */
+.spin-screen-content {
+  position: relative;
+  z-index: 1;
+}
+
+.spin-frames-container {
+  position: relative;
+  z-index: 10; /* Выше частиц */
+}
+
+.spin-skip-footer {
+  position: relative;
+  z-index: 10; /* Выше частиц */
+}
+
+
+/* === Модалка === */
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: inherit;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  z-index: 100;
+  pointer-events: auto;
+  backdrop-filter: blur(5px); /* ✅ Эффект размытия фона */
+}
+
+.modal-content {
+  width: 100%;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  box-sizing: border-box;
+  background: inherit; /* Наследуем фон */
+  transform: translateY(100%); /* Скрыта внизу */
+  animation: slideUp 0.5s forwards; /* Плавный выезд */
+}
+
+@keyframes slideUp {
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* ✅ Рамка с фоном (без фиолетового бордера) */
+.winning-frame-large {
+  width: 260px;
+  max-width: 350px;
+  aspect-ratio: 100 / 120;
+  background-image: url('../assets/MainPage/chest3/back.png');
+  background-size: cover;
+  background-position: center;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  margin-top: 20px;
+  position: relative;
+  /* ✅ Убраны старые стили бордера */
+}
+
+.winning-content-large {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.winning-image-large {
+  max-width: 69%;
+  max-height: 70%;
+  object-fit: contain;
+  margin-bottom: 8px;
+}
+
+.winning-price-large {
+  font-size: 18px !important;
+  padding-top: 15px;
+  line-height: 100%;
+  letter-spacing: 0%;
+  paint-order: stroke fill;
+}
+
+/* ✅ Отдельная фиолетовая рамка */
+.purple-border-overlay {
+  position: absolute;
+  top: 10%;
+  left: 6%;
+  width: 88%;
+  height: 80%;
+  pointer-events: none; 
+  border-radius: 15px;
+  border: 5px solid transparent;
+  background-clip: padding-box;
+  box-shadow: 
+    inset 0 0 10px rgba(255, 255, 255, 0.3),
+    0 0 20px rgba(106, 50, 188, 0.7),
+    0 0 30px rgba(106, 50, 188, 0.4);
+  z-index: 105; /* Поверх содержимого, но под текстом/изображением */
+}
+
+.modal-secondary-button {
+  padding: 15px 40px;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  background: linear-gradient(180deg, rgb(235, 146, 248), rgb(135, 74, 226));
+  border: 2px solid white;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  min-width: 150px;
+  width: calc(100% - 40px);
+  max-width: 300px;
+  margin-bottom: -130px;
+}
+
+@media (max-height:770px) {
+  .modal-secondary-button {
+    margin-bottom: -100px;
+  }
+}
+
+@media (max-height:730px) {
+  .modal-secondary-button {
+    margin-bottom: -80px;
+  }
+}
+
+@media (max-height:700px) {
+  .modal-secondary-button {
+    margin-bottom: -60px;
+  }
+}
+
+
+.modal-exit-button {
+  padding: 15px 40px;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  background: linear-gradient(180deg, rgb(161, 68, 175), rgba(106, 50, 188, 1));
+  border: 2px solid white;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  min-width: 150px;
+  width: calc(100% - 40px);
+  max-width: 300px;
+}
+
+@keyframes glowEffect {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(106, 50, 188, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(106, 50, 188, 0.7);
+  }
+}

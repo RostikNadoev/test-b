@@ -1,7 +1,8 @@
+// components/LoadingScreen.jsx
+
 import { useEffect } from 'react';
 import '../styles/LoadingScreen.css';
 import { useState } from 'react';
-
 import logoImage from '../assets/LoadPage/logo.png';
 import l1 from '../assets/LoadPage/b.png';
 import l2 from '../assets/LoadPage/o.png';
@@ -20,24 +21,22 @@ const inactiveLetters = [l1, l2, l3, l4, l5, l6];
 const activeLetters = [l1a, l2a, l3a, l4a, l5a, l6a];
 
 export default function LoadingScreen({ onLoaded }) {
-  // НЕ ждём загрузки — показываем сразу
+  // Анимация длится 3 круга по 6 букв с задержкой 200мс = 3600мс
   useEffect(() => {
-    // Запускаем анимацию и вызов onLoaded как раньше
-    const ROUNDS = 3;
+    const ROUNDS = 3.5;
     const LETTERS = 6;
     const DELAY = 200;
     const totalTime = ROUNDS * LETTERS * DELAY;
-
     const timer = setTimeout(() => {
-      onLoaded();
+      console.log('✅ Анимация LoadingScreen завершена');
+      onLoaded(); // ✅ Вызывается после анимации
     }, totalTime);
-
     return () => clearTimeout(timer);
   }, [onLoaded]);
 
   return (
     <div className="loading-screen">
-      <img src={logoImage} alt="Logo" className="loading-logo" />
+      <img src={logoImage} alt="Logo" className="loading-logo" loading="eager" />
       <div className="letters-container">
         <div className="loading-word">
           {inactiveLetters.map((_, index) => (
@@ -58,26 +57,25 @@ function AnimatedLetter({ index, inactiveSrc, activeSrc }) {
   const [opacity, setOpacity] = useState(0);
 
   useEffect(() => {
-    const ROUNDS = 3;
+    const ROUNDS = 3.5;
     const LETTERS = 6;
     const DELAY = 200;
     const timeouts = [];
-
     for (let round = 0; round < ROUNDS; round++) {
       timeouts.push(setTimeout(() => setOpacity(0), round * LETTERS * DELAY));
       timeouts.push(setTimeout(() => setOpacity(1), round * LETTERS * DELAY + index * DELAY));
     }
-
     return () => timeouts.forEach(clearTimeout);
   }, [index]);
 
   return (
     <div className="letter-wrapper">
-      <img src={inactiveSrc} alt="" className="loading-letter loading-letter--base" />
+      <img src={inactiveSrc} alt="" className="loading-letter loading-letter--base" loading="eager" />
       <img
         src={activeSrc}
         alt=""
         className="loading-letter loading-letter--active"
+        loading="eager"
         style={{
           opacity,
           transition: 'opacity 300ms ease-in-out',
