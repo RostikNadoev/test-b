@@ -37,6 +37,9 @@ export default function Spin2Screen({ onNavigate }) {
   const [showModal, setShowModal] = useState(false);
   const [winningItem, setWinningItem] = useState(null);
   const [particles, setParticles] = useState([]);
+  const [glowOpacity, setGlowOpacity] = useState(0); // Прозрачность рамки
+  const animationRef = useRef(null);
+  const glowAnimationRef = useRef(null);
 
   // Создаем частицы для снежного эффекта
   useEffect(() => {
@@ -64,7 +67,7 @@ export default function Spin2Screen({ onNavigate }) {
   useEffect(() => {
     const generateFrames = (targetIndex = 0) => {
       const frames = [];
-      for (let i = 0; i < 30; i++) {
+      for (let i = 0; i < 95; i++) {
         const randomIndex = Math.floor(Math.random() * frameContents.length);
         frames.push(frameContents[randomIndex]);
       }
@@ -93,6 +96,34 @@ export default function Spin2Screen({ onNavigate }) {
     return () => clearTimeout(timer);
   }, [frames.length]);
 
+  // Функция для остановки анимации
+  const stopAnimation = () => {
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
+    if (glowAnimationRef.current) {
+      cancelAnimationFrame(glowAnimationRef.current);
+      glowAnimationRef.current = null;
+    }
+    setIsSpinning(false);
+  };
+
+  // Функция для показа модалки с выигрышем
+  const showWinningModal = () => {
+    if (targetItemIndex !== null) {
+      setWinningItem(frameContents[targetItemIndex]);
+      setShowModal(true);
+    }
+  };
+
+  // Функция для пропуска анимации
+  const handleSkip = () => {
+    stopAnimation();
+    setGlowOpacity(1); // Полностью показать рамку при пропуске
+    showWinningModal();
+  };
+
   useEffect(() => {
     if (!isSpinning || targetItemIndex === null || !scrollerRef.current || frames.length === 0) return;
 
@@ -106,7 +137,8 @@ export default function Spin2Screen({ onNavigate }) {
     const visibleWidth = scroller.offsetWidth;
     const targetScroll = targetFrameIndex * totalFrameWidth - (visibleWidth / 2) + (frameWidth / 2);
 
-    const duration = 4000;
+    const duration = 9000;
+    const glowStartTime = duration - 400; // Начать появление рамки за 400мс до конца
     const startTime = performance.now();
     const startScroll = scroller.scrollLeft;
 
@@ -119,17 +151,34 @@ export default function Spin2Screen({ onNavigate }) {
 
       scroller.scrollLeft = startScroll + (targetScroll - startScroll) * easedProgress;
 
+      // Управление прозрачностью рамки
+      if (elapsed >= glowStartTime) {
+        const glowProgress = Math.min((elapsed - glowStartTime) / 400, 1);
+        setGlowOpacity(glowProgress);
+      }
+
       if (progress < 1) {
-        requestAnimationFrame(animate);
+        animationRef.current = requestAnimationFrame(animate);
       } else {
         scroller.scrollLeft = targetScroll;
+        setGlowOpacity(1); // Убедиться, что рамка полностью видна в конце
         setIsSpinning(false);
         setWinningItem(frameContents[targetItemIndex]);
         setTimeout(() => setShowModal(true), 500);
       }
     };
 
-    requestAnimationFrame(animate);
+    animationRef.current = requestAnimationFrame(animate);
+
+    // Очистка при размонтировании
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+      if (glowAnimationRef.current) {
+        cancelAnimationFrame(glowAnimationRef.current);
+      }
+    };
   }, [isSpinning, targetItemIndex, frames.length]);
 
   const getPriceClass = (priceStr) => {
@@ -179,7 +228,21 @@ export default function Spin2Screen({ onNavigate }) {
           {frames.map((content, index) => (
             <div
               key={index}
-              className={`spin-item-frame ${index === getTargetFrameIndex() ? 'spin-item-frame-center' : ''}`}
+              className={`spin-item-frame ${
+                index === getTargetFrameIndex() && glowOpacity > 0 
+                  ? `spin-item-frame-glowing` 
+                  : index === getTargetFrameIndex() 
+                    ? 'spin-item-frame-center' 
+                    : ''
+              }`}
+              style={{
+                boxShadow: index === getTargetFrameIndex() 
+                  ? `0 0 15px ${glowOpacity * 7}px rgba(58, 171, 237, ${glowOpacity * 0.7})` 
+                  : undefined,
+                border: index === getTargetFrameIndex() 
+                  ? `2px solid rgba(58, 171, 237, ${glowOpacity})` 
+                  : undefined
+              }}
             >
               <div className="spin-item-content">
                 <img src={content.img} alt={`Item ${index + 1}`} className="spin-item-image" loading="lazy" />
@@ -191,7 +254,7 @@ export default function Spin2Screen({ onNavigate }) {
       </div>
 
       <div className="spin-skip-footer">
-        <button className="spin-skip-button" onClick={() => onNavigate('card2')} disabled={true}>
+        <button className="spin-skip-button" onClick={handleSkip}>
           Skip
         </button>
       </div>
@@ -210,7 +273,7 @@ export default function Spin2Screen({ onNavigate }) {
               SELL FOR {winningItem.price}
             </button>
             <button className="modal-exit-button" onClick={handleExit}>
-              EXIT
+              ADD TO INVENTORY
             </button>
           </div>
         </div>

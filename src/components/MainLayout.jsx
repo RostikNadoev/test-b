@@ -26,7 +26,7 @@ export default function MainLayout({ children, onNavigate, currentScreen = 'main
 
             <div className="balance-container">
               <img src={ton} alt="TON" className="balance-icon" />
-              <span className="balance-amount">1337</span>
+              <span className="balance-amount">1338</span>
             </div>
 
             <div className="add_balance-button">
