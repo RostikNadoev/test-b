@@ -45,7 +45,7 @@ export default function PvpScreen({ onNavigate }) {
 
     const animateScroll = () => {
       // Увеличиваем скорость для мини-аппа
-      position += 4; // Увеличил с 2 до 8 для мини-аппа
+      position += 3; // Увеличил с 2 до 8 для мини-аппа
       if (position > scroller.scrollWidth / 2) {
         position = 0;
       }

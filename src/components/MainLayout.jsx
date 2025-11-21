@@ -1,40 +1,27 @@
+// components/MainLayout.jsx
 import '../styles/MainScreen.css';
-
-import ava from '../assets/MainPage/ava.jpg';
-import ton from '../assets/MainPage/ton.svg';
-import add_balance from '../assets/MainPage/add_balance.svg';
+import Header from './Header';
 import foot from '../assets/MainPage/foot.png';
 import footover from '../assets/MainPage/foot-on.svg';
 import pvpicon from '../assets/MainPage/pvp-icon.svg';
 import homeicon from '../assets/MainPage/home-icon.svg';
 import tasksicon from '../assets/MainPage/tasks-icon.svg';
 
-export default function MainLayout({ children, onNavigate, currentScreen = 'main', hideFooter = false, customBackground = null }) {
-  // Если задан кастомный фон, то не используем стандартный фон из main-screen
+export default function MainLayout({ 
+  children, 
+  onNavigate, 
+  currentScreen = 'main', 
+  hideFooter = false, 
+  customBackground = null 
+}) {
   const layoutClassName = customBackground ? 
     "main-screen-no-bg" : 
     "main-screen";
 
   return (
     <div className={layoutClassName}>
-      {/* Header */}
-      <header className="header-outer">
-        <div className="header-inner">
-          <div className="user-info" onClick={() => onNavigate('profile')}>
-            <img src={ava} alt="User" className="user-avatar" loading="lazy" />
-            <span className="user-username">Username</span>
-
-            <div className="balance-container">
-              <img src={ton} alt="TON" className="balance-icon" />
-              <span className="balance-amount">1338</span>
-            </div>
-
-            <div className="add_balance-button">
-              <img src={add_balance} alt="add" className="add_balance-icon" />
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Используем компонент Header */}
+      <Header onNavigate={onNavigate} />
 
       {/* Main Content */}
       <main className="main-content">

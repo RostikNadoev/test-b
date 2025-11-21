@@ -1,61 +1,163 @@
+/* styles/LoadingScreen.css */
+
 .loading-screen {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    height: 100%;
-    width: 100%;
-    padding-top: 30vh;
-    box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  padding-top: 30vh;
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+  border: none;
+}
+
+/* Ультра-плавная анимация плавания для логотипа */
+.pulsing-logo {
+  animation: smoothFloat 4s ease-in-out infinite;
+}
+
+@keyframes smoothFloat {
+  0%, 100% {
+    transform: translateY(0px);
+    filter: drop-shadow(0 5px 15px rgba(255, 255, 255, 0.2));
   }
-  
-  .letters-container {
-    width: 100%;
-    padding: 0 25px;
-    box-sizing: border-box;
-    display: flex;
-    justify-content: center;
+  25% {
+    transform: translateY(-8px);
+    filter: drop-shadow(0 8px 20px rgba(255, 255, 255, 0.3));
   }
-  
-  .loading-word {
-    display: flex;
-    align-items: center;
-    gap: clamp(2px, 0.6vw, 3px);
-    width: 100%; 
-    max-width: 100%; 
+  50% {
+    transform: translateY(-12px);
+    filter: drop-shadow(0 12px 25px rgba(255, 255, 255, 0.4));
   }
-  
-  .letter-wrapper {
-    height: clamp(40px, 12.5vh, 67px);
-    width: calc((100% - 15px) / 6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    flex: none;
-    min-width: 0;
-    max-width: 100%;
+  75% {
+    transform: translateY(-4px);
+    filter: drop-shadow(0 6px 18px rgba(255, 255, 255, 0.25));
   }
-  
-  .loading-letter--base {
-    max-height: 100%;
-    height: auto;
-    width: auto;
-    display: block;
-    max-width: 100%;
+}
+
+
+.letters-container {
+  width: 100%;
+  padding: 0 25px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  position: relative;
+  z-index: 2;
+}
+
+.loading-word {
+  display: flex;
+  align-items: center;
+  gap: clamp(2px, 0.6vw, 3px);
+  width: 100%; 
+  max-width: 100%; 
+}
+
+.letter-wrapper {
+  height: clamp(40px, 12.5vh, 67px);
+  width: calc((100% - 15px) / 6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex: none;
+  min-width: 0;
+  max-width: 100%;
+  animation: letterFloat 3s ease-in-out infinite alternate;
+  animation-delay: calc(var(--letter-index, 0) * 0.2s);
+}
+
+/* Анимация плавающего движения для каждой буквы */
+.letter-wrapper:nth-child(1) { --letter-index: 0; }
+.letter-wrapper:nth-child(2) { --letter-index: 1; }
+.letter-wrapper:nth-child(3) { --letter-index: 2; }
+.letter-wrapper:nth-child(4) { --letter-index: 3; }
+.letter-wrapper:nth-child(5) { --letter-index: 4; }
+.letter-wrapper:nth-child(6) { --letter-index: 5; }
+
+@keyframes letterFloat {
+  0% {
+    transform: translateY(0px) rotate(0deg);
   }
-  
-  .loading-letter--active {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    pointer-events: none;
+  50% {
+    transform: translateY(-10px) rotate(2deg);
   }
-  
-  .loading-logo {
-    width: clamp(120px, 35vw, 190px);
-    height: auto;
-    margin-bottom: clamp(38px, 8vw, 64px);
+  100% {
+    transform: translateY(0px) rotate(0deg);
   }
+}
+
+.loading-letter--base {
+  max-height: 100%;
+  height: auto;
+  width: auto;
+  display: block;
+  max-width: 100%;
+}
+
+.loading-letter--active {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  animation: letterGlow 2s ease-in-out infinite alternate;
+}
+
+
+.loading-logo {
+  width: clamp(120px, 35vw, 190px);
+  height: auto;
+  margin-bottom: clamp(38px, 8vw, 64px);
+  animation: logoFloat 3s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Добавляем декоративные частицы */
+.loading-screen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  animation: backgroundShift 8s ease-in-out infinite;
+  z-index: 1;
+}
+
+@keyframes backgroundShift {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Добавляем анимацию масштабирования для активных букв */
+.loading-letter--active {
+  animation: letterGlow 2s ease-in-out infinite alternate, letterScale 4s ease-in-out infinite;
+}
+
+@keyframes letterScale {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}

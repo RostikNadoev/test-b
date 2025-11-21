@@ -36,7 +36,7 @@ export default function LoadingScreen({ onLoaded }) {
 
   return (
     <div className="loading-screen">
-      <img src={logoImage} alt="Logo" className="loading-logo" loading="eager" />
+      <img src={logoImage} alt="Logo" className="loading-logo pulsing-logo" loading="eager" />
       <div className="letters-container">
         <div className="loading-word">
           {inactiveLetters.map((_, index) => (

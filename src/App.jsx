@@ -110,6 +110,11 @@ import l4a from './assets/LoadPage/4a.png';
 import l5a from './assets/LoadPage/5a.png';
 import l6a from './assets/LoadPage/6a.png';
 
+//PVP
+import emptypat from './assets/PVP/empty-pat.png';
+import mainpvp from './assets/PVP/main.png';
+
+
 export default function App() {
   const [isLoading, setIsLoading] = useState(true); // Состояние остаётся
   const [currentScreen, setCurrentScreen] = useState('main');
@@ -157,6 +162,8 @@ export default function App() {
     tasksicon,
     closeIcon,
     star,
+    emptypat,
+    mainpvp,
     tonIcon,
     arrow,
     coinIcon,
