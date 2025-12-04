@@ -1055,3 +1055,36 @@
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
+
+.refresh-data-container {
+  display: flex;
+  justify-content: center;
+  margin: 10px 0 20px;
+}
+
+.refresh-data-button {
+  background: linear-gradient(135deg, #667eea 0%, #5a3985 100%);
+  border: none;
+  border-radius: 25px;
+  padding: 8px 20px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.refresh-data-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.refresh-data-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

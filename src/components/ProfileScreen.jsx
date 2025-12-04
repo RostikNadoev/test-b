@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/ProfileScreen.css';
 import { useDemo } from '../contexts/DemoContext';
+import { authApi } from '../utils/api';
 
 import ava from '../assets/MainPage/ava.jpg';
 import tonGift from '../assets/Profile/ton-gift.svg';
@@ -20,6 +21,9 @@ export default function ProfileScreen({ onNavigate }) {
   const [isSellModalOpen, setIsSellModalOpen] = useState(false);
   const [isSellAllModalOpen, setIsSellAllModalOpen] = useState(false);
   const [newItems, setNewItems] = useState(new Set());
+  const [userData, setUserData] = useState(null);
+  const [inventoryCount, setInventoryCount] = useState(0);
+  const [loading, setLoading] = useState(true);
   
   const { 
     isDemoMode, 
@@ -28,9 +32,76 @@ export default function ProfileScreen({ onNavigate }) {
     toggleDemoMode,
     removeFromDemoInventory,
     addToDemoBalance,
-    formatBalance,
+    formatBalance: demoFormatBalance,
     clearDemoInventory
   } = useDemo();
+
+  // Загружаем данные пользователя и статистику
+  useEffect(() => {
+    const loadUserDataAndStats = async () => {
+      try {
+        setLoading(true);
+        
+        if (!isDemoMode) {
+          // Загружаем данные пользователя из localStorage
+          const user = authApi.getCurrentUser();
+          setUserData(user);
+          
+          // Загружаем статистику для получения inventory_count
+          await loadUserStats();
+        } else {
+          // В демо-режиме используем демо данные
+          setUserData({
+            username: 'Demo User',
+            name: 'Demo User',
+            photo_url: ava,
+            balance_ton: 500
+          });
+          // В демо-режиме inventory_count = количество предметов в демо-инвентаре
+          setInventoryCount(demoInventory.length);
+        }
+      } catch (error) {
+        console.error('❌ Ошибка загрузки данных пользователя:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUserDataAndStats();
+  }, [isDemoMode, demoInventory.length]);
+
+  // Функция загрузки статистики пользователя
+  const loadUserStats = async () => {
+    try {
+      const api = (await import('../utils/api')).default;
+      const response = await api.get('/api/v1/users/stats');
+      if (response.data?.stats?.inventory_count !== undefined) {
+        setInventoryCount(response.data.stats.inventory_count);
+        console.log('📊 Inventory count loaded:', response.data.stats.inventory_count);
+      }
+    } catch (error) {
+      console.error('❌ Ошибка загрузки статистики:', error);
+      setInventoryCount(0); // В случае ошибки ставим 0
+    }
+  };
+
+  // Функция для обновления данных пользователя
+  const refreshUserData = async () => {
+    if (isDemoMode) return;
+    
+    try {
+      console.log('🔄 Обновляем данные пользователя...');
+      const data = await authApi.getMe();
+      setUserData(data.user);
+      
+      // Обновляем статистику
+      await loadUserStats();
+      
+      console.log('✅ Данные пользователя обновлены');
+    } catch (error) {
+      console.error('❌ Ошибка обновления данных пользователя:', error);
+    }
+  };
 
   // Функция для расчета общей суммы инвентаря
   const calculateTotalValue = () => {
@@ -41,14 +112,13 @@ export default function ProfileScreen({ onNavigate }) {
     }, 0);
   };
 
- // Функция для продажи всех предметов
-const handleSellAll = () => {
-  const totalValue = calculateTotalValue();
-  addToDemoBalance(totalValue);
-  // Очищаем инвентарь используя функцию из контекста
-  clearDemoInventory();
-  setIsSellAllModalOpen(false);
-};
+  // Функция для продажи всех предметов
+  const handleSellAll = () => {
+    const totalValue = calculateTotalValue();
+    addToDemoBalance(totalValue);
+    clearDemoInventory();
+    setIsSellAllModalOpen(false);
+  };
 
   // Эффект для анимации новых предметов
   useEffect(() => {
@@ -147,24 +217,84 @@ const handleSellAll = () => {
     setCurrentY(null);
   };
 
+  // Функция для форматирования имени пользователя
+  const formatUsername = (username, name) => {
+    return username || name || 'User';
+  };
+
+  // Получаем username пользователя
+  const getUsername = () => {
+    if (isDemoMode) return 'Demo User';
+    if (userData) {
+      return formatUsername(userData.username, userData.name);
+    }
+    return 'Loading...';
+  };
+
+  // Получаем аватар пользователя
+  const getAvatar = () => {
+    if (isDemoMode) return ava;
+    if (userData?.photo_url) {
+      try {
+        new URL(userData.photo_url);
+        return userData.photo_url;
+      } catch (error) {
+        console.warn('⚠️ Некорректный URL аватара:', userData.photo_url);
+        return ava;
+      }
+    }
+    return ava;
+  };
+
+  // Получаем ID пользователя (всегда из реальных данных)
+  const getUserId = () => {
+    if (userData?.id) {
+      return userData.id.toString();
+    }
+    return '123456'; // Fallback ID
+  };
+
+  // Получаем количество гифтов
+  const getGiftsCount = () => {
+    if (isDemoMode) return demoInventory.length;
+    return inventoryCount;
+  };
+
+  // Форматирование баланса
+  const formatBalance = (balance) => {
+    if (typeof balance === 'number') {
+      return balance.toFixed(2);
+    }
+    if (typeof balance === 'string') {
+      const num = parseFloat(balance);
+      return isNaN(num) ? '0.00' : num.toFixed(2);
+    }
+    return '0.00';
+  };
+
   return (
     <div className="profile-screen">
       {/* Основной контент профиля */}
       <div className="profile-header">
-        <div className="profile-username">Username</div>
-        <div className="profile-id">ID: 123456</div>
+        <div className="profile-username">{getUsername()}</div>
+        <div className="profile-id">ID: {getUserId()}</div>
       </div>
 
       <div className="profile-main-row">
         <div className="profile-avatar-container">
-          <img src={ava} alt="User" className="profile-avatar" loading="lazy" />
+          <img 
+            src={getAvatar()} 
+            alt="User" 
+            className="profile-avatar" 
+            loading="lazy" 
+          />
         </div>
 
         <div className="gifts-container">
           <div className="gifts-box">
             <img src={tonGift} alt="TON Gift" className="gifts-icon" />
             <span className="gifts-count">
-              {isDemoMode ? demoInventory.length : 27}
+              {getGiftsCount()}
             </span>
           </div>
 
@@ -187,6 +317,19 @@ const handleSellAll = () => {
         </div>
       </div>
 
+      {/* Кнопка обновления данных (только в обычном режиме) */}
+      {!isDemoMode && (
+        <div className="refresh-data-container">
+          <button 
+            className="refresh-data-button"
+            onClick={refreshUserData}
+            disabled={loading}
+          >
+            {loading ? 'Loading...' : '🔄 Refresh Data'}
+          </button>
+        </div>
+      )}
+
       <main className="profile-content">
         <div className='gift-balance-container'>
           <span className='gift-balance-title'>GIFT BALANCE:</span>
@@ -201,43 +344,63 @@ const handleSellAll = () => {
         </div>
 
         {/* Отображаем инвентарь или пустое состояние */}
-        {isDemoMode && demoInventory.length > 0 ? (
-          <div className="demo-inventory-container">
-            <div className="items-grid">
-              {demoInventory.map((item, index) => (
-                <div 
-                  key={index} 
-                  className={`inventory-item-frame ${newItems.has(index) ? 'new-item-pulse' : ''}`}
-                  onClick={() => handleItemClick(item, index)}
-                >
-                  <div className="inventory-item-content">
-                    <img 
-                      src={item.img} 
-                      alt={`Item ${index + 1}`} 
-                      className="inventory-item-image"
-                      loading="lazy"
-                    />
-                    <div className={`inventory-item-price ${getPriceClass(item.price)}`}>
-                      {item.price}
+        {isDemoMode ? (
+          demoInventory.length > 0 ? (
+            <div className="demo-inventory-container">
+              <div className="items-grid">
+                {demoInventory.map((item, index) => (
+                  <div 
+                    key={index} 
+                    className={`inventory-item-frame ${newItems.has(index) ? 'new-item-pulse' : ''}`}
+                    onClick={() => handleItemClick(item, index)}
+                  >
+                    <div className="inventory-item-content">
+                      <img 
+                        src={item.img} 
+                        alt={`Item ${index + 1}`} 
+                        className="inventory-item-image"
+                        loading="lazy"
+                      />
+                      <div className={`inventory-item-price ${getPriceClass(item.price)}`}>
+                        {item.price}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className='empty-gifts-container'>
+              <div className="empty-gifts-animation-wrapper">
+                <img
+                  src={gift}
+                  className="empty-gifts-animation"
+                  alt="Empty gifts animation"
+                  loading="lazy"
+                />
+              </div>
+              <div className="empty-gifts-text">
+                <p className="no-gifts-text">No gifts yet.</p>
+                <p className="how-to-add-text" onClick={handleOpenModal}>How to add?</p>
+              </div>
+            </div>
+          )
         ) : (
-          <div className='empty-gifts-container'>
-            <div className="empty-gifts-animation-wrapper">
-              <img
-                src={gift}
-                className="empty-gifts-animation"
-                alt="Empty gifts animation"
-                loading="lazy"
-              />
-            </div>
-            <div className="empty-gifts-text">
-              <p className="no-gifts-text">No gifts yet.</p>
-              <p className="how-to-add-text" onClick={handleOpenModal}>How to add?</p>
+          // Реальный режим - показываем сообщение о реальном инвентаре
+          <div className="real-inventory-info">
+            <div className="empty-gifts-container">
+              <div className="empty-gifts-animation-wrapper">
+                <img
+                  src={gift}
+                  className="empty-gifts-animation"
+                  alt="Empty gifts animation"
+                  loading="lazy"
+                />
+              </div>
+              <div className="empty-gifts-text">
+                <p className="no-gifts-text">No gifts yet.</p>
+                <p className="how-to-add-text" onClick={handleOpenModal}>How to add?</p>
+              </div>
             </div>
           </div>
         )}
@@ -301,8 +464,8 @@ const handleSellAll = () => {
         </div>
       )}
 
-      {/* Модальное окно продажи предмета */}
-      {isSellModalOpen && selectedItem && (
+      {/* Модальное окно продажи предмета (только в демо-режиме) */}
+      {isSellModalOpen && selectedItem && isDemoMode && (
         <div className="sell-modal-overlay" onClick={() => setIsSellModalOpen(false)}>
           <div className="sell-modal-blur-layer"></div>
           
@@ -338,8 +501,8 @@ const handleSellAll = () => {
         </div>
       )}
 
-      {/* Модальное окно продажи всех предметов */}
-      {isSellAllModalOpen && (
+      {/* Модальное окно продажи всех предметов (только в демо-режиме) */}
+      {isSellAllModalOpen && isDemoMode && (
         <div className="sell-all-modal-overlay" onClick={() => setIsSellAllModalOpen(false)}>
           <div className="sell-all-modal-blur-layer"></div>
           
@@ -347,7 +510,9 @@ const handleSellAll = () => {
             className="sell-all-modal-content"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="sell-all-modal-title">Are you sure you want to sell all for {formatBalance(calculateTotalValue())} TON?</h2>
+            <h2 className="sell-all-modal-title">
+              Are you sure you want to sell all for {formatBalance(calculateTotalValue())} TON?
+            </h2>
             
             <div className="sell-all-modal-buttons">
               <button 

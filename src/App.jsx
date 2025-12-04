@@ -15,6 +15,7 @@ import MainLayout from './components/MainLayout';
 
 // Импортируем AssetLoader
 import { preloadImages } from './utils/AssetLoader';
+import { authApi } from './utils/api';
 
 // === 🔥 ИМПОРТ ВСЕХ ИЗОБРАЖЕНИЙ ===
 // ProfileScreen
@@ -115,16 +116,78 @@ import mainpvp from './assets/PVP/main.png';
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticating, setIsAuthenticating] = useState(true);
   const [currentScreen, setCurrentScreen] = useState('main');
   const [currentCardIndex, setCurrentCardIndex] = useState(2);
+  const [userData, setUserData] = useState(null);
 
-  useEffect(() => {
-    if (window.Telegram?.WebApp) {
-      const webApp = window.Telegram.WebApp;
-      webApp.ready();
-      webApp.expand();
-      console.log('✅ Telegram WebApp запущен в полноэкранном режиме');
+  // Функция авторизации пользователя
+  const authenticateUser = async () => {
+    try {
+      console.log('🔐 Начинаем авторизацию пользователя...');
+      
+      // Проверяем, есть ли сохраненный токен
+      if (authApi.isAuthenticated()) {
+        console.log('✅ Найден сохраненный токен, получаем данные пользователя...');
+        try {
+          const data = await authApi.getMe();
+          setUserData(data.user);
+          console.log('✅ Данные пользователя загружены:', data.user.username);
+        } catch (error) {
+          console.warn('❌ Токен невалиден, пробуем авторизоваться через Telegram');
+          // Если токен невалиден, пробуем авторизоваться через Telegram
+          await authenticateWithTelegram();
+        }
+      } else {
+        // Авторизация через Telegram
+        await authenticateWithTelegram();
+      }
+    } catch (error) {
+      console.error('❌ Ошибка авторизации:', error);
+      // В случае ошибки продолжаем без данных пользователя
+    } finally {
+      setIsAuthenticating(false);
     }
+  };
+
+  // Авторизация через Telegram
+  const authenticateWithTelegram = async () => {
+    if (window.Telegram?.WebApp?.initData) {
+      console.log('📱 Получаем initData от Telegram WebApp...');
+      const initData = window.Telegram.WebApp.initData;
+      
+      try {
+        const authData = await authApi.login(initData);
+        setUserData(authData.user);
+        console.log('✅ Авторизация через Telegram успешна:', authData.user.username);
+      } catch (error) {
+        console.error('❌ Ошибка авторизации через Telegram:', error);
+        // Можно показать сообщение об ошибке пользователю
+      }
+    } else {
+      console.warn('⚠️ Telegram WebApp initData недоступен');
+      // Если нет initData, работаем без авторизации
+    }
+  };
+
+  // Инициализация Telegram WebApp и авторизация
+  useEffect(() => {
+    const initTelegram = () => {
+      if (window.Telegram?.WebApp) {
+        const webApp = window.Telegram.WebApp;
+        webApp.ready();
+        webApp.expand();
+        console.log('✅ Telegram WebApp запущен в полноэкранном режиме');
+        
+        // Запускаем авторизацию
+        authenticateUser();
+      } else {
+        console.warn('⚠️ Telegram WebApp не обнаружен');
+        setIsAuthenticating(false);
+      }
+    };
+
+    initTelegram();
   }, []);
 
   // === 🔥 Список всех URL-адресов изображений для предзагрузки ===
@@ -177,9 +240,17 @@ export default function App() {
     console.log('✅ Все изображения загружены');
   };
 
+  // Загрузка ассетов
   useEffect(() => {
     loadAssetsAndAnimate();
   }, []);
+
+  // Завершение загрузки когда все готово
+  useEffect(() => {
+    if (!isAuthenticating && !isLoading) {
+      console.log('🚀 Приложение полностью загружено и готово к работе');
+    }
+  }, [isAuthenticating, isLoading]);
 
   const navigateTo = (screen, cardIndex = 2) => {
     setCurrentScreen(screen);
@@ -193,6 +264,11 @@ export default function App() {
   };
 
   const renderScreen = () => {
+    // Показываем LoadingScreen пока идет загрузка или авторизация
+    if (isLoading || isAuthenticating) {
+      return <LoadingScreen onLoaded={handleLoadingComplete} />;
+    }
+
     switch (currentScreen) {
       case 'profile':
         return <ProfileScreen onNavigate={navigateTo} />;
@@ -248,11 +324,7 @@ export default function App() {
   return (
     <DemoProvider>
       <div>
-        {isLoading ? (
-          <LoadingScreen onLoaded={handleLoadingComplete} />
-        ) : (
-          renderScreen()
-        )}
+        {renderScreen()}
       </div>
     </DemoProvider>
   );
