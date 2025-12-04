@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import CardScreen from './CardScreen';
+import { useDemo } from '../contexts/DemoContext';
+
 import cardBack3 from '../assets/MainPage/chest1/back3.png';
 import cardMain3 from '../assets/MainPage/chest3/main.png';
 import cardton3 from '../assets/MainPage/chest3/ton.png';
@@ -20,6 +22,7 @@ import item11 from '../assets/MainPage/chest3/in/3-11.png';
 
 export default function Card3Screen({ onNavigate, currentCardIndex = 2 }) {
   const [isSwitched, setIsSwitched] = useState(false);
+  const { isDemoMode } = useDemo();
 
   const handleCardClick = () => {
     console.log('Card 3 clicked! Opening spin page...');
@@ -27,6 +30,7 @@ export default function Card3Screen({ onNavigate, currentCardIndex = 2 }) {
   };
 
   const handleSwitchClick = () => {
+    if ( isDemoMode ) return;
     setIsSwitched(!isSwitched);
   };
 
@@ -127,7 +131,7 @@ export default function Card3Screen({ onNavigate, currentCardIndex = 2 }) {
           
           {/* Переключатель (левая) кнопка */}
           <div 
-            className={`card-detail-button card-1-button-left card3-left ${isSwitched ? 'card3-left-switched' : ''}`} 
+            className={`card-detail-button card-1-button-left card3-left ${isSwitched ? 'card3-left-switched' : ''} ${isDemoMode ? 'card-button-disabled' : ''}`} 
             onClick={handleSwitchClick}
           >
             <span className="card-detail-button-text">

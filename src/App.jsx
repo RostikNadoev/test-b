@@ -1,6 +1,5 @@
-// App.jsx
-
 import { useState, useEffect } from 'react';
+import { DemoProvider } from './contexts/DemoContext';
 import LoadingScreen from './components/LoadingScreen';
 import MainScreen from './components/MainScreen';
 import PvpScreen from './components/PvpScreen';
@@ -114,9 +113,8 @@ import l6a from './assets/LoadPage/6a.png';
 import emptypat from './assets/PVP/empty-pat.png';
 import mainpvp from './assets/PVP/main.png';
 
-
 export default function App() {
-  const [isLoading, setIsLoading] = useState(true); // Состояние остаётся
+  const [isLoading, setIsLoading] = useState(true);
   const [currentScreen, setCurrentScreen] = useState('main');
   const [currentCardIndex, setCurrentCardIndex] = useState(2);
 
@@ -177,7 +175,6 @@ export default function App() {
     console.log('🔄 Начинаем предзагрузку изображений...');
     await preloadImages(allImageUrls);
     console.log('✅ Все изображения загружены');
-    // setIsLoading(false); // ❌ УБРАНО ОТСЮДА
   };
 
   useEffect(() => {
@@ -192,7 +189,7 @@ export default function App() {
   };
 
   const handleLoadingComplete = () => {
-    setIsLoading(false); // ✅ Вызывается из LoadingScreen
+    setIsLoading(false);
   };
 
   const renderScreen = () => {
@@ -249,12 +246,14 @@ export default function App() {
   };
 
   return (
-    <div>
-      {isLoading ? (
-        <LoadingScreen onLoaded={handleLoadingComplete} />
-      ) : (
-        renderScreen()
-      )}
-    </div>
+    <DemoProvider>
+      <div>
+        {isLoading ? (
+          <LoadingScreen onLoaded={handleLoadingComplete} />
+        ) : (
+          renderScreen()
+        )}
+      </div>
+    </DemoProvider>
   );
 }

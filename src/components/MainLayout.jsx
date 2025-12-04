@@ -1,6 +1,8 @@
 // components/MainLayout.jsx
 import '../styles/MainScreen.css';
 import Header from './Header';
+import { useDemo } from '../contexts/DemoContext';
+
 import foot from '../assets/MainPage/foot.png';
 import footover from '../assets/MainPage/foot-on.svg';
 import pvpicon from '../assets/MainPage/pvp-icon.svg';
@@ -14,25 +16,27 @@ export default function MainLayout({
   hideFooter = false, 
   customBackground = null 
 }) {
+  const { isDemoMode } = useDemo();
   const layoutClassName = customBackground ? 
     "main-screen-no-bg" : 
     "main-screen";
 
   return (
     <div className={layoutClassName}>
-      {/* Используем компонент Header */}
       <Header onNavigate={onNavigate} />
 
-      {/* Main Content */}
       <main className="main-content">
         {children}
       </main>
 
-      {/* Footer - отображаем только если не скрыт */}
       {!hideFooter && (
         <footer className="main-footer">
           <div className="footer-blocks-container">
-            <div className={`footer-block-item ${currentScreen === 'pvp' ? 'footer-block-item--active' : ''}`} onClick={() => onNavigate('pvp')}>
+            {/* PVP кнопка - disabled в демо-режиме */}
+            <div 
+              className={`footer-block-item ${currentScreen === 'pvp' ? 'footer-block-item--active' : ''} ${isDemoMode ? 'footer-block-item--disabled' : ''}`} 
+              onClick={!isDemoMode ? () => onNavigate('pvp') : undefined}
+            >
               {currentScreen === 'pvp' && <div className="footer-active-indicator"></div>}
               <div className="footer-block-wrapper">
                 <img src={foot} alt="block" className="footer-block"/>
@@ -42,7 +46,11 @@ export default function MainLayout({
               <span className="footer-label">PVP</span>
             </div>
             
-            <div className={`footer-block-item ${currentScreen === 'main' ? 'footer-block-item--active' : ''}`} onClick={() => onNavigate('main')}>
+            {/* MAIN кнопка - всегда активна */}
+            <div 
+              className={`footer-block-item ${currentScreen === 'main' ? 'footer-block-item--active' : ''}`} 
+              onClick={() => onNavigate('main')}
+            >
               {currentScreen === 'main' && <div className="footer-active-indicator"></div>}
               <div className="footer-block-wrapper">
                 <img src={foot} alt="block" className="footer-block"/>
@@ -52,7 +60,11 @@ export default function MainLayout({
               <span className="footer-label">MAIN</span>
             </div>
             
-            <div className={`footer-block-item ${currentScreen === 'tasks' ? 'footer-block-item--active' : ''}`} onClick={() => onNavigate('tasks')}>
+            {/* TASKS кнопка - disabled в демо-режиме */}
+            <div 
+              className={`footer-block-item ${currentScreen === 'tasks' ? 'footer-block-item--active' : ''} ${isDemoMode ? 'footer-block-item--disabled' : ''}`} 
+              onClick={!isDemoMode ? () => onNavigate('tasks') : undefined}
+            >
               {currentScreen === 'tasks' && <div className="footer-active-indicator"></div>}
               <div className="footer-block-wrapper">
                 <img src={foot} alt="block" className="footer-block"/>

@@ -1,6 +1,7 @@
-// components/Header.jsx
 import '../styles/Header.css';
 import { useState, useRef, useEffect } from 'react';
+import { useDemo } from '../contexts/DemoContext';
+
 import ava from '../assets/MainPage/ava.jpg';
 import ton from '../assets/MainPage/ton.svg';
 import add_balance from '../assets/MainPage/add_balance.svg';
@@ -12,15 +13,29 @@ export default function Header({ onNavigate, balance = "1337" }) {
   const [isClosing, setIsClosing] = useState(false);
   const modalRef = useRef(null);
   const inputRef = useRef(null);
+  
+  const { isDemoMode, demoBalance } = useDemo();
+
+  // Функция для форматирования баланса до сотых
+  const formatBalance = (balanceValue) => {
+    if (typeof balanceValue === 'number') {
+      return balanceValue.toFixed(2);
+    }
+    if (typeof balanceValue === 'string') {
+      const num = parseFloat(balanceValue);
+      return isNaN(num) ? '0.00' : num.toFixed(2);
+    }
+    return '0.00';
+  };
 
   const handleOpenBalanceModal = () => {
+    if (isDemoMode) return;
     setIsBalanceModalOpen(true);
     setIsClosing(false);
   };
 
   const handleCloseBalanceModal = () => {
     setIsClosing(true);
-    // Скрываем клавиатуру если она открыта
     if (inputRef.current) {
       inputRef.current.blur();
     }
@@ -43,9 +58,7 @@ export default function Header({ onNavigate, balance = "1337" }) {
     setTopUpAmount(value);
   };
 
-  // Обработчик для закрытия клавиатуры при тапе вне инпута
   const handleModalClick = (e) => {
-    // Если клик не по инпуту и не по кнопкам, скрываем клавиатуру
     if (inputRef.current && !inputRef.current.contains(e.target)) {
       inputRef.current.blur();
     }
@@ -61,7 +74,9 @@ export default function Header({ onNavigate, balance = "1337" }) {
 
             <div className="balance-container">
               <img src={ton} alt="TON" className="balance-icon" />
-              <span className="balance-amount">{balance}</span>
+              <span className="balance-amount">
+                {isDemoMode ? formatBalance(demoBalance) : formatBalance(balance)}
+              </span>
             </div>
 
             <div className="add_balance-button" onClick={handleOpenBalanceModal}>
@@ -71,8 +86,8 @@ export default function Header({ onNavigate, balance = "1337" }) {
         </div>
       </header>
 
-      {/* Модальное окно пополнения баланса */}
-      {isBalanceModalOpen && (
+      {/* Модальное окно пополнения баланса (только в обычном режиме) */}
+      {isBalanceModalOpen && !isDemoMode && (
         <div className="balance-modal-overlay">
           <div className="balance-modal-blur-layer"></div>
 

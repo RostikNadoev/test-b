@@ -379,25 +379,35 @@
   min-width: 150px;
   width: calc(100% - 40px);
   max-width: 300px;
-  margin-bottom: -130px;
+  margin-bottom: -70px;
 }
 
-@media (max-height:770px) {
+@media (max-height:690px) {
   .modal-secondary-button {
-    margin-bottom: -100px;
+    margin-bottom: -50px;
   }
 }
 
-@media (max-height:730px) {
+@media (max-height:663px) {
   .modal-secondary-button {
-    margin-bottom: -80px;
+    margin-bottom: -30px;
   }
 }
 
-@media (max-height:700px) {
+@media (max-height:637px) {
   .modal-secondary-button {
-    margin-bottom: -60px;
+    margin-bottom: -10px;
   }
+}
+
+
+
+
+/* Стиль для одиночной кнопки (когда выпал cardton) */
+.modal-single-button {
+  margin-bottom: 0px !important; /* Фиксированная позиция выше */
+  position: relative;
+  z-index: 110;
 }
 
 

@@ -388,3 +388,19 @@
   background-image: none; /* Убираем стандартный фон */
   overflow: hidden;
 }
+
+
+
+/* styles/MainScreen.css - добавляем disabled состояния */
+.footer-block-item--disabled {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+}
+
+.footer-block-item--disabled .footer-block-wrapper {
+  pointer-events: none;
+}
+
+.footer-block-item--disabled .footer-label {
+  opacity: 0.7;
+}

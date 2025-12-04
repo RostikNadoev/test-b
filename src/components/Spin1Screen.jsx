@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/SpinScreen.css';
+import { useDemo } from '../contexts/DemoContext';
+
 import item1 from '../assets/MainPage/chest1/in/1-1.png';
 import item2 from '../assets/MainPage/chest1/in/1-2.png';
 import item3 from '../assets/MainPage/chest1/in/1-3.png';
@@ -16,7 +18,33 @@ import cardton1 from '../assets/MainPage/chest1/ton.png';
 import arrow from '../assets/SpinPage/arrow.png';
 
 export default function Spin1Screen({ onNavigate }) {
-  const frameContents = [
+  const { 
+    isDemoMode, 
+    demoBalance, 
+    removeFromDemoBalance, 
+    addToDemoBalance, 
+    addToDemoInventory 
+  } = useDemo();
+
+  const demoProbabilities = [
+    { img: item1, price: '150 TON', probability: 0.005 },   // 0.2% (увеличено)
+    { img: item2, price: '80 TON', probability: 0.02 },    // 0.4% (увеличено)
+    { img: item3, price: '65 TON', probability: 0.03 },    // 0.6% (увеличено)
+    { img: item4, price: '7.5 TON', probability: 0.1 },   // 1.5% (увеличено)
+    { img: item5, price: '3 TON', probability: 0.12 },      // 4% (увеличено)
+    { img: item6, price: '2.5 TON', probability: 0.15 },    // 6% (увеличено)
+    { img: item7, price: '2.5 TON', probability: 0.15 },    // 6% (увеличено)
+    { img: item8, price: '1.7 TON', probability: 0.15 },   // 8.5%
+    { img: item9, price: '1.7 TON', probability: 0.15 },   // 8.5%
+    { img: item10, price: '1.7 TON', probability: 0.15 },  // 8.5%
+    { img: item11, price: '1.7 TON', probability: 0.15 },  // 8.5%
+    { img: item12, price: '1.7 TON', probability: 0.15 },  // 8.5%
+    { img: cardton1, price: '1.5 TON', probability: 0.15 }, // 12% (уменьшено)
+    { img: cardton1, price: '1 TON', probability: 0.15 },   // 15% (уменьшено)
+    { img: cardton1, price: '0.5 TON', probability: 0.15 }  // 18% (уменьшено)
+  ];
+
+  const normalProbabilities = [
     { img: item1, price: '150 TON' },
     { img: item2, price: '80 TON' },
     { img: item3, price: '65 TON' },
@@ -34,6 +62,8 @@ export default function Spin1Screen({ onNavigate }) {
     { img: cardton1, price: '0.5 TON' }
   ];
 
+  const frameContents = isDemoMode ? demoProbabilities : normalProbabilities;
+
   const scrollerRef = useRef(null);
   const [isSpinning, setIsSpinning] = useState(false);
   const [targetItemIndex, setTargetItemIndex] = useState(null);
@@ -41,16 +71,35 @@ export default function Spin1Screen({ onNavigate }) {
   const [showModal, setShowModal] = useState(false);
   const [winningItem, setWinningItem] = useState(null);
   const [particles, setParticles] = useState([]);
-  const [glowOpacity, setGlowOpacity] = useState(0); // Прозрачность рамки
+  const [glowOpacity, setGlowOpacity] = useState(0);
+  const [hasCharged, setHasCharged] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const animationRef = useRef(null);
-  const glowAnimationRef = useRef(null);
 
-  // Создаем частицы для снежного эффекта
+  const isCardtonItem = (item) => {
+    return item && item.img === cardton1;
+  };
+
+  const getRandomItemIndex = () => {
+    if (!isDemoMode) {
+      return Math.floor(Math.random() * frameContents.length);
+    }
+
+    const rand = Math.random();
+    let cumulativeProbability = 0;
+    for (let i = 0; i < demoProbabilities.length; i++) {
+      cumulativeProbability += demoProbabilities[i].probability;
+      if (rand <= cumulativeProbability) {
+        return i;
+      }
+    }
+    return demoProbabilities.length - 1;
+  };
+
   useEffect(() => {
     const createParticles = () => {
       const newParticles = [];
       const particleCount = 25;
-
       for (let i = 0; i < particleCount; i++) {
         newParticles.push({
           id: i,
@@ -64,68 +113,88 @@ export default function Spin1Screen({ onNavigate }) {
       }
       return newParticles;
     };
-
     setParticles(createParticles());
   }, []);
 
-  useEffect(() => {
-    const generateFrames = (targetIndex = 0) => {
-      const frames = [];
-      for (let i = 0; i < 95; i++) {
-        const randomIndex = Math.floor(Math.random() * frameContents.length);
-        frames.push(frameContents[randomIndex]);
-      }
-      frames.push(frameContents[targetIndex]);
-      for (let i = 0; i < 2; i++) {
-        const randomIndex = Math.floor(Math.random() * frameContents.length);
-        frames.push(frameContents[randomIndex]);
-      }
-      return frames;
-    };
+  const generateFrames = (targetIndex = 0) => {
+    const frames = [];
+    for (let i = 0; i < 95; i++) {
+      const randomIndex = Math.floor(Math.random() * frameContents.length);
+      frames.push(frameContents[randomIndex]);
+    }
+    frames.push(frameContents[targetIndex]);
+    for (let i = 0; i < 2; i++) {
+      const randomIndex = Math.floor(Math.random() * frameContents.length);
+      frames.push(frameContents[randomIndex]);
+    }
+    return frames;
+  };
 
-    setFrames(generateFrames(0));
-  }, []);
+  const startSpin = () => {
+    if (isDemoMode && !hasCharged) {
+      if (demoBalance < 2.5) {
+        alert("Not enough TON in demo balance!");
+        onNavigate('card1');
+        return;
+      }
+      removeFromDemoBalance(2);
+      setHasCharged(true);
+    }
+
+    const serverResultIndex = getRandomItemIndex();
+    setTargetItemIndex(serverResultIndex);
+    const newFrames = generateFrames(serverResultIndex);
+    setFrames(newFrames);
+    setIsSpinning(true);
+    setWinningItem(frameContents[serverResultIndex]);
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      const serverResultIndex = Math.floor(Math.random() * frameContents.length);
-      setTargetItemIndex(serverResultIndex);
-      const newFrames = [...frames];
-      const targetFrameIndex = frames.length - 3;
-      newFrames[targetFrameIndex] = frameContents[serverResultIndex];
-      setFrames(newFrames);
-      setIsSpinning(true);
+      startSpin();
     }, 100);
-
     return () => clearTimeout(timer);
-  }, [frames.length]);
+  }, []);
 
-  // Функция для остановки анимации
   const stopAnimation = () => {
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
       animationRef.current = null;
     }
-    if (glowAnimationRef.current) {
-      cancelAnimationFrame(glowAnimationRef.current);
-      glowAnimationRef.current = null;
-    }
     setIsSpinning(false);
   };
 
-  // Функция для показа модалки с выигрышем
-  const showWinningModal = () => {
-    if (targetItemIndex !== null) {
-      setWinningItem(frameContents[targetItemIndex]);
-      setShowModal(true);
-    }
-  };
-
-  // Функция для пропуска анимации
   const handleSkip = () => {
     stopAnimation();
-    setGlowOpacity(1); // Полностью показать рамку при пропуске
-    showWinningModal();
+    setGlowOpacity(1);
+    setShowModal(true);
+  };
+
+  const handleSell = () => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+
+    if (isDemoMode && winningItem) {
+      const priceValue = parseFloat(winningItem.price.replace(/[^\d.-]/g, ''));
+      addToDemoBalance(priceValue);
+    }
+
+    setShowModal(false);
+    onNavigate('card1');
+    setIsProcessing(false);
+  };
+
+  const handleAddToInventory = () => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+
+    if (isDemoMode && winningItem) {
+      addToDemoInventory(winningItem);
+    }
+
+    setShowModal(false);
+    onNavigate('card1');
+    setIsProcessing(false);
   };
 
   useEffect(() => {
@@ -142,7 +211,7 @@ export default function Spin1Screen({ onNavigate }) {
     const targetScroll = targetFrameIndex * totalFrameWidth - (visibleWidth / 2) + (frameWidth / 2);
 
     const duration = 9000;
-    const glowStartTime = duration - 400; // Начать появление рамки за 400мс до конца
+    const glowStartTime = duration - 400;
     const startTime = performance.now();
     const startScroll = scroller.scrollLeft;
 
@@ -155,9 +224,8 @@ export default function Spin1Screen({ onNavigate }) {
 
       scroller.scrollLeft = startScroll + (targetScroll - startScroll) * easedProgress;
 
-      // Управление прозрачностью рамки
       if (elapsed >= glowStartTime) {
-        const glowProgress = Math.min((elapsed - glowStartTime) / 400, 1);
+        const glowProgress = Math.min((elapsed - glowStartTime) / 800, 1);
         setGlowOpacity(glowProgress);
       }
 
@@ -165,22 +233,17 @@ export default function Spin1Screen({ onNavigate }) {
         animationRef.current = requestAnimationFrame(animate);
       } else {
         scroller.scrollLeft = targetScroll;
-        setGlowOpacity(1); // Убедиться, что рамка полностью видна в конце
+        setGlowOpacity(1);
         setIsSpinning(false);
-        setWinningItem(frameContents[targetItemIndex]);
         setTimeout(() => setShowModal(true), 500);
       }
     };
 
     animationRef.current = requestAnimationFrame(animate);
 
-    // Очистка при размонтировании
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
-      }
-      if (glowAnimationRef.current) {
-        cancelAnimationFrame(glowAnimationRef.current);
       }
     };
   }, [isSpinning, targetItemIndex, frames.length]);
@@ -195,13 +258,8 @@ export default function Spin1Screen({ onNavigate }) {
 
   const getTargetFrameIndex = () => frames.length - 3;
 
-  const handleExit = () => {
-    onNavigate('card1');
-  };
-
   return (
     <div className="spin-screen-content">
-      {/* Эффект падающих частиц */}
       <div className="snow-particles-container">
         {particles.map(particle => (
           <div
@@ -269,16 +327,39 @@ export default function Spin1Screen({ onNavigate }) {
             <div className="winning-frame-large">
               <div className="winning-content-large">
                 <img src={winningItem.img} alt="Winning Item" className="winning-image-large" loading="lazy" />
-                <div className={`${getPriceClass(winningItem.price)} winning-price-large`}>{winningItem.price}</div>
+                <div className={`${getPriceClass(winningItem.price)} winning-price-large`}>
+                  {winningItem.price}
+                </div>
               </div>
               <div className="purple-border-overlay"></div>
             </div>
-            <button className="modal-secondary-button">
-              SELL FOR {winningItem.price}
-            </button>
-            <button className="modal-exit-button" onClick={handleExit}>
-              ADD TO INVENTORY
-            </button>
+            
+            {isCardtonItem(winningItem) ? (
+              <button 
+                className="modal-secondary-button modal-single-button" 
+                onClick={handleSell}
+                disabled={isProcessing}
+              >
+                SELL FOR {winningItem.price}
+              </button>
+            ) : (
+              <>
+                <button 
+                  className="modal-secondary-button" 
+                  onClick={handleSell}
+                  disabled={isProcessing}
+                >
+                  SELL FOR {winningItem.price}
+                </button>
+                <button 
+                  className="modal-exit-button" 
+                  onClick={handleAddToInventory}
+                  disabled={isProcessing}
+                >
+                  ADD TO INVENTORY
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}

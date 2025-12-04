@@ -505,3 +505,19 @@ font-size: 13px;
   -webkit-text-stroke: 1.5px rgba(255, 210, 0, 1);
   paint-order: stroke fill;
 }
+
+/* styles/CardScreen.css - добавляем эти стили */
+
+/* Стиль для disabled кнопки */
+.card-button-disabled {
+  opacity: 0.6;
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
+
+/* Дополнительные стили для лучшей визуализации disabled состояния */
+.card-button-disabled .card-detail-star-icon,
+.card-button-disabled .card-detail-star-icon-white {
+  filter: grayscale(0.7) brightness(0.8);
+}
+
