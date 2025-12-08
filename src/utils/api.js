@@ -1,39 +1,39 @@
 import axios from 'axios';
 
-// Базовый URL бэкенда из переменных окружения
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL 
+// Base backend URL from environment variables
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 console.log('🌐 API Base URL:', API_BASE_URL);
 
-// Создаем экземпляр axios с базовыми настройками
+// Create axios instance with basic settings
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
-  timeout: 10000, // 10 секунд таймаут
+  timeout: 10000, // 10 second timeout
 });
 
-// Интерсептор для добавления токена к запросам
+// Interceptor for adding token to requests
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('🔑 Добавлен токен в заголовок запроса');
+      console.log('🔑 Token added to request header');
     } else {
-      console.log('⚠️ Токен не найден, запрос без авторизации');
+      console.log('⚠️ Token not found, request without authorization');
     }
     return config;
   },
   (error) => {
-    console.error('❌ Ошибка в интерсепторе запроса:', error);
+    console.error('❌ Error in request interceptor:', error);
     return Promise.reject(error);
   }
 );
 
-// Интерсептор для обработки ответов
+// Interceptor for response handling
 api.interceptors.response.use(
   (response) => {
     console.log(`✅ ${response.config.method?.toUpperCase()} ${response.config.url}:`, response.status);
@@ -41,20 +41,32 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response) {
-      console.error(`❌ Ошибка ${error.config?.method?.toUpperCase()} ${error.config?.url}:`, {
+      console.error(`❌ Error ${error.config?.method?.toUpperCase()} ${error.config?.url}:`, {
         status: error.response.status,
         data: error.response.data
       });
+      
+      // Handle specific error cases
+      if (error.response.status === 401) {
+        console.warn('⚠️ Unauthorized, clearing local storage');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        
+        // You might want to redirect to login page here
+        if (window.location.pathname !== '/') {
+          window.location.href = '/';
+        }
+      }
     } else if (error.request) {
-      console.error('❌ Нет ответа от сервера:', error.request);
+      console.error('❌ No response from server:', error.request);
     } else {
-      console.error('❌ Ошибка настройки запроса:', error.message);
+      console.error('❌ Request setup error:', error.message);
     }
     return Promise.reject(error);
   }
 );
 
-// Утилитарные функции
+// Utility functions
 export const formatBalance = (balance) => {
   if (balance === undefined || balance === null) return '0.00';
   
@@ -66,32 +78,32 @@ export const formatUsername = (username, name) => {
   return username || name || 'User';
 };
 
-// API для работы с аутентификацией
+// API for authentication
 export const authApi = {
-  // Авторизация через Telegram Mini App
+  // Authorization via Telegram Mini App
   async login(initData) {
     try {
-      console.log('🔐 Отправляем запрос на авторизацию...');
+      console.log('🔐 Sending authorization request...');
       
       const response = await api.post('/api/v1/auth/telegram', { 
         init_data: initData 
       });
       
-      console.log('✅ Авторизация успешна:', response.data);
+      console.log('✅ Authorization successful:', response.data);
       
       if (response.data.token) {
-        // Сохраняем токен и данные пользователя
+        // Save token and user data
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
         
-        console.log('💾 Токен и данные пользователя сохранены в localStorage');
+        console.log('💾 Token and user data saved to localStorage');
       }
       
       return response.data;
     } catch (error) {
-      console.error('❌ Ошибка авторизации:', error);
+      console.error('❌ Authorization error:', error);
       
-      // Очищаем localStorage в случае ошибки
+      // Clear localStorage in case of error
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       
@@ -99,25 +111,25 @@ export const authApi = {
     }
   },
 
-  // Получение данных текущего пользователя
+  // Get current user data
   async getMe() {
     try {
-      console.log('👤 Запрашиваем данные пользователя...');
+      console.log('👤 Requesting user data...');
       
       const response = await api.get('/api/v1/auth/me');
       
-      console.log('✅ Данные пользователя получены:', response.data.user);
+      console.log('✅ User data received:', response.data.user);
       
-      // Обновляем данные пользователя в localStorage
+      // Update user data in localStorage
       localStorage.setItem('user', JSON.stringify(response.data.user));
       
       return response.data;
     } catch (error) {
-      console.error('❌ Ошибка получения данных пользователя:', error);
+      console.error('❌ Error getting user data:', error);
       
-      // Если токен истек или невалиден (401), очищаем localStorage
+      // If token expired or invalid (401), clear localStorage
       if (error.response?.status === 401) {
-        console.warn('⚠️ Токен истек или невалиден, очищаем localStorage');
+        console.warn('⚠️ Token expired or invalid, clearing localStorage');
         localStorage.removeItem('token');
         localStorage.removeItem('user');
       }
@@ -126,77 +138,196 @@ export const authApi = {
     }
   },
 
-  // Проверяем, авторизован ли пользователь
+  // Check if user is authenticated
   isAuthenticated() {
     const token = localStorage.getItem('token');
     const hasToken = !!token;
-    console.log('🔍 Проверка авторизации:', hasToken ? 'Авторизован' : 'Не авторизован');
+    console.log('🔍 Authentication check:', hasToken ? 'Authenticated' : 'Not authenticated');
     return hasToken;
   },
 
-  // Выход из системы
+  // Logout
   logout() {
-    console.log('👋 Выход из системы...');
+    console.log('👋 Logging out...');
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    console.log('🗑️ Данные очищены из localStorage');
+    console.log('🗑️ Data cleared from localStorage');
   },
 
-  // Получаем данные пользователя из localStorage
+  // Get user data from localStorage
   getCurrentUser() {
     const userStr = localStorage.getItem('user');
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
-        console.log('👤 Данные пользователя из localStorage:', user.username);
+        console.log('👤 User data from localStorage:', user.username);
         return user;
       } catch (error) {
-        console.error('❌ Ошибка парсинга данных пользователя:', error);
+        console.error('❌ Error parsing user data:', error);
         return null;
       }
     }
-    console.log('👤 Данные пользователя не найдены в localStorage');
+    console.log('👤 User data not found in localStorage');
     return null;
   },
 
-  // Обновление данных пользователя
+  // Update user data
   updateUserData(newUserData) {
     const currentUser = this.getCurrentUser();
     if (currentUser) {
       const updatedUser = { ...currentUser, ...newUserData };
       localStorage.setItem('user', JSON.stringify(updatedUser));
-      console.log('🔄 Данные пользователя обновлены');
+      console.log('🔄 User data updated');
     }
   }
 };
 
 export const usersApi = {
-  // Получение статистики пользователя
+  // Get user statistics
   async getStats() {
     try {
-      console.log('📊 Запрашиваем статистику пользователя...');
+      console.log('📊 Requesting user statistics...');
       const response = await api.get('/api/v1/users/stats');
-      console.log('✅ Статистика получена:', response.data.stats);
+      console.log('✅ Statistics received:', response.data.stats);
       return response.data;
     } catch (error) {
-      console.error('❌ Ошибка получения статистики:', error);
+      console.error('❌ Error getting statistics:', error);
       throw error;
     }
   },
 
-  // Получение инвентаря пользователя (если есть такой endpoint)
+  // Get user inventory
   async getInventory() {
     try {
-      console.log('🎒 Запрашиваем инвентарь пользователя...');
+      console.log('🎒 Requesting user inventory...');
       const response = await api.get('/api/v1/users/inventory');
-      console.log('✅ Инвентарь получен:', response.data);
+      console.log('✅ Inventory received:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Ошибка получения инвентаря:', error);
+      console.error('❌ Error getting inventory:', error);
+      throw error;
+    }
+  },
+
+  // Get user balance
+  async getBalance() {
+    try {
+      console.log('💰 Requesting user balance...');
+      const response = await api.get('/api/v1/users/balance');
+      console.log('✅ Balance received:', response.data.balances);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error getting balance:', error);
+      throw error;
+    }
+  },
+
+  // Get user quests
+  async getQuests() {
+    try {
+      console.log('🎯 Requesting user quests...');
+      const response = await api.get('/api/v1/quests/');
+      console.log('✅ Quests received:', response.data.quests?.length || 0);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error getting quests:', error);
+      throw error;
+    }
+  },
+
+  // Claim quest reward
+  async claimQuest(questId) {
+    try {
+      console.log(`🎁 Claiming reward for quest ${questId}...`);
+      const response = await api.post(`/api/v1/quests/${questId}/claim`, {});
+      console.log('✅ Reward claimed:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error claiming reward:', error);
+      throw error;
+    }
+  },
+
+  
+};
+
+export const starsApi = {
+  // Создать инвойс для покупки звезд
+  async createInvoice(amount) {
+    try {
+      console.log(`💰 Creating invoice for ${amount} stars...`);
+      
+      // amount должен быть в XTR (1 Star = 1000 XTR)
+      const amountInXTR = amount * 1000;
+      
+      const response = await api.post('/api/v1/stars/create-invoice', {
+        amount: amountInXTR
+      });
+      
+      console.log('✅ Invoice created:', response.data.invoice_link);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error creating invoice:', error);
+      throw error;
+    }
+  },
+
+  // Проверить статус инвойса (опционально)
+  async checkInvoiceStatus(invoiceId) {
+    try {
+      console.log(`🔍 Checking invoice status for ${invoiceId}...`);
+      const response = await api.get(`/api/v1/stars/invoice/${invoiceId}/status`);
+      console.log('✅ Invoice status:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error checking invoice status:', error);
       throw error;
     }
   }
 };
 
-// Экспортируем базовый экземпляр axios для других запросов
+export const tonApi = {
+  // Получить баланс TON
+  async getBalance() {
+    try {
+      console.log('💰 Requesting TON balance...');
+      const response = await api.get('/api/v1/ton/balance');
+      console.log('✅ TON balance received:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error getting TON balance:', error);
+      throw error;
+    }
+  },
+
+  // Создать депозит
+  async createDeposit(amount) {
+    try {
+      console.log(`💰 Creating deposit for ${amount} TON...`);
+      const response = await api.post('/api/v1/ton/deposit', {
+        amount: parseFloat(amount)
+      });
+      console.log('✅ Deposit created:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error creating deposit:', error);
+      throw error;
+    }
+  },
+
+  // Проверить статус депозита (опционально)
+  async checkDepositStatus(depositId) {
+    try {
+      console.log(`🔍 Checking deposit status for ID ${depositId}...`);
+      const response = await api.get(`/api/v1/ton/deposit/${depositId}/status`);
+      console.log('✅ Deposit status:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error checking deposit status:', error);
+      throw error;
+    }
+  }
+};
+
+// Export base axios instance for other requests
 export default api;

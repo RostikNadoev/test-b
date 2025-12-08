@@ -527,3 +527,86 @@
   color: rgba(255, 255, 255, 0.6);
   text-align: center;
 }
+
+/* Добавьте в конец файла Header.css */
+
+/* Стили для информации о подключении кошелька */
+.wallet-connect-info {
+  font-size: 14px;
+  color: #666;
+  text-align: center;
+  margin: 15px 0;
+  line-height: 1.4;
+}
+
+.wallet-connect-info p {
+  margin: 5px 0;
+}
+
+/* Стили для подключенного кошелька */
+.connected-wallet-info {
+  margin-top: 15px;
+  padding: 10px;
+  background: #f5f9ff;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.connected-wallet-info p {
+  margin: 0 0 8px 0;
+  color: #333;
+}
+
+.connected-wallet-info strong {
+  color: #35a3f2;
+}
+
+.disconnect-wallet-btn {
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.disconnect-wallet-btn:hover {
+  background: #ff5252;
+}
+
+/* Стили для статуса подключения в хедере */
+.wallet-status-indicator {
+  display: flex;
+  align-items: center;
+  margin-left: 8px;
+  font-size: 12px;
+}
+
+.wallet-status-indicator.connected {
+  color: #4caf50;
+}
+
+.wallet-status-indicator.disconnected {
+  color: #ff6b6b;
+}
+
+/* Адаптивные стили для модалки */
+@media (max-width: 480px) {
+  .wallet-connect-info {
+    font-size: 12px;
+    padding: 0 10px;
+  }
+  
+  .connected-wallet-info {
+    font-size: 12px;
+    padding: 8px;
+  }
+  
+  .disconnect-wallet-btn {
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+}

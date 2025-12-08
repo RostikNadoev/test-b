@@ -347,3 +347,133 @@
     flex-direction: column;
     gap: 10px;
 }
+
+
+.loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    font-family: 'KZ Supercell-Magic', sans-serif;
+    font-weight: 800;
+    font-style: normal;
+    font-size: 16px;
+    color: #35A3F2;
+  }
+  
+  .error-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    text-align: center;
+    line-height: 1.3;
+    gap: 20px;
+  }
+  
+  .error-message p {
+    font-family: 'KZ Supercell-Magic', sans-serif;
+    font-weight: 800;
+    font-style: normal;
+    font-size: 16px;
+    color: rgba(55, 189, 243, 1)
+  }
+  
+  .error-message button {
+    padding: 10px 20px;
+    background: linear-gradient(180deg, #82D5FE, #BEEDFE);
+    border: 1.5px solid white;
+    border-radius: 10px;
+    font-family: 'KZ Supercell-Magic', sans-serif;
+    font-weight: 800;
+    font-style: normal;
+    font-size: 14px;
+    color: white;
+    cursor: pointer;
+    -webkit-text-stroke: 1px #3AABED;
+    paint-order: stroke fill;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .no-tasks-message {
+    text-align: center;
+    font-family: 'KZ Supercell-Magic', sans-serif;
+    font-weight: 800;
+    font-style: normal;
+    font-size: 16px;
+    color: #35A3F2;
+    padding: 40px 0;
+  }
+  
+  /* Стили для описания задания */
+  .task-description {
+    font-family: 'KZ Supercell-Magic', sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 10px;
+    line-height: 14px;
+    color: rgb(110, 205, 243);
+    margin-top: 2px;
+  }
+  
+  /* Анимация для получения награды */
+  @keyframes rewardClaimed {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+  
+  .task-claim-button:active:not(:disabled) {
+    animation: rewardClaimed 0.3s ease;
+  }
+  
+  /* Анимация пульсации для АКТИВНЫХ кнопок (когда награду можно забрать) */
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+  }
+  
+  /* Мерцание для кнопок, которые МОЖНО нажать (квест выполнен) */
+  .claim-all-button:not(:disabled),
+  .task-claim-button:not(:disabled) {
+    /* Убрали animation из disabled состояний */
+  }
+  
+  /* Добавляем мерцание только когда есть claimable rewards */
+  .claim-all-button--pulse:not(:disabled),
+  .task-claim-button--pulse:not(:disabled) {
+    animation: pulse 1.5s infinite;
+  }
+  
+  /* Стили для отключенных кнопок - без анимации */
+  .claim-all-button--disabled,
+  .claim-all-button:disabled,
+  .task-claim-button--disabled,
+  .task-claim-button:disabled {
+    animation: none !important;
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  /* Плавные переходы для элементов заданий */
+  .task-item {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  
+  .task-item--completed {
+    transition: all 0.3s ease;
+  }
+  
+  /* Для лучшего отображения на мобильных */
+  @media (max-width: 380px) {
+    .task-description {
+      font-size: 10px;
+      line-height: 12px;
+    }
+    
+    .no-tasks-message {
+      font-size: 14px;
+    }
+  }

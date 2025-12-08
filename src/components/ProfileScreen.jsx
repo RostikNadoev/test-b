@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/ProfileScreen.css';
 import { useDemo } from '../contexts/DemoContext';
-import { authApi } from '../utils/api';
+import { authApi, tonApi } from '../utils/api';
+import { tonConnect } from '../utils/tonConnect';
 
 import ava from '../assets/MainPage/ava.jpg';
 import tonGift from '../assets/Profile/ton-gift.svg';
@@ -24,86 +25,163 @@ export default function ProfileScreen({ onNavigate }) {
   const [userData, setUserData] = useState(null);
   const [inventoryCount, setInventoryCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [walletInfo, setWalletInfo] = useState(null);
+  const [tonBalanceData, setTonBalanceData] = useState(null);
   
   const { 
     isDemoMode, 
-    demoGiftCount, 
     demoInventory, 
     toggleDemoMode,
     removeFromDemoInventory,
     addToDemoBalance,
-    formatBalance: demoFormatBalance,
     clearDemoInventory
   } = useDemo();
 
-  // Загружаем данные пользователя и статистику
+  // Загружаем данные пользователя и информацию о кошельке
   useEffect(() => {
-    const loadUserDataAndStats = async () => {
+    const loadUserDataAndWallet = async () => {
       try {
         setLoading(true);
         
+        // Загружаем данные пользователя
+        const user = authApi.getCurrentUser();
+        setUserData(user);
+        
         if (!isDemoMode) {
-          // Загружаем данные пользователя из localStorage
-          const user = authApi.getCurrentUser();
-          setUserData(user);
+          // Загружаем баланс TON и статус кошелька
+          try {
+            const balanceData = await tonApi.getBalance();
+            setTonBalanceData(balanceData);
+            
+            // Если кошелек подключен через TonConnect
+            if (balanceData.wallet_connected) {
+              const connected = await tonConnect.isConnected();
+              if (connected) {
+                const wallet = await tonConnect.getWallet();
+                setWalletInfo(wallet);
+              }
+            }
+          } catch (error) {
+            console.error('Error loading TON balance:', error);
+          }
           
-          // Загружаем статистику для получения inventory_count
+          // Загружаем статистику
           await loadUserStats();
         } else {
-          // В демо-режиме используем демо данные
-          setUserData({
-            username: 'Demo User',
-            name: 'Demo User',
-            photo_url: ava,
-            balance_ton: 500
-          });
-          // В демо-режиме inventory_count = количество предметов в демо-инвентаре
+          // В демо-режиме
           setInventoryCount(demoInventory.length);
         }
       } catch (error) {
-        console.error('❌ Ошибка загрузки данных пользователя:', error);
+        console.error('Ошибка загрузки данных:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    loadUserDataAndStats();
+    loadUserDataAndWallet();
+    
+    // Слушаем изменения статуса TonConnect
+    const handleStatusChange = (wallet) => {
+      if (wallet) {
+        setWalletInfo(wallet);
+        // Обновляем данные о балансе
+        tonApi.getBalance().then(data => setTonBalanceData(data));
+      } else {
+        setWalletInfo(null);
+      }
+    };
+    
+    tonConnect.onStatusChange(handleStatusChange);
+    
+    return () => {
+      // Очистка слушателя
+    };
   }, [isDemoMode, demoInventory.length]);
 
-  // Функция загрузки статистики пользователя
+  // Функция загрузки статистики
   const loadUserStats = async () => {
     try {
       const api = (await import('../utils/api')).default;
       const response = await api.get('/api/v1/users/stats');
       if (response.data?.stats?.inventory_count !== undefined) {
         setInventoryCount(response.data.stats.inventory_count);
-        console.log('📊 Inventory count loaded:', response.data.stats.inventory_count);
       }
     } catch (error) {
-      console.error('❌ Ошибка загрузки статистики:', error);
-      setInventoryCount(0); // В случае ошибки ставим 0
+      console.error('Ошибка загрузки статистики:', error);
+      setInventoryCount(0);
     }
   };
 
-  // Функция для обновления данных пользователя
+  // Обновление данных пользователя
   const refreshUserData = async () => {
     if (isDemoMode) return;
     
     try {
-      console.log('🔄 Обновляем данные пользователя...');
       const data = await authApi.getMe();
       setUserData(data.user);
       
-      // Обновляем статистику
+      // Обновляем данные о кошельке
+      try {
+        const balanceData = await tonApi.getBalance();
+        setTonBalanceData(balanceData);
+        
+        if (balanceData.wallet_connected) {
+          const connected = await tonConnect.isConnected();
+          if (connected) {
+            const wallet = await tonConnect.getWallet();
+            setWalletInfo(wallet);
+          }
+        }
+      } catch (error) {
+        console.error('Error updating wallet info:', error);
+      }
+      
       await loadUserStats();
       
-      console.log('✅ Данные пользователя обновлены');
     } catch (error) {
-      console.error('❌ Ошибка обновления данных пользователя:', error);
+      console.error('Ошибка обновления данных:', error);
     }
   };
 
-  // Функция для расчета общей суммы инвентаря
+  // 🔥 ФУНКЦИЯ ПОДКЛЮЧЕНИЯ КОШЕЛЬКА
+  const handleConnectWallet = async () => {
+    if (isDemoMode) return;
+    
+    try {
+      await tonConnect.connectWallet();
+      
+      // Ждем подключения
+      setTimeout(async () => {
+        const connected = await tonConnect.isConnected();
+        if (connected) {
+          const wallet = await tonConnect.getWallet();
+          setWalletInfo(wallet);
+          await refreshUserData();
+        }
+      }, 2000);
+      
+    } catch (error) {
+      console.error('Error connecting wallet:', error);
+    }
+  };
+
+  // 🔥 ФУНКЦИЯ ОТКЛЮЧЕНИЯ КОШЕЛЬКА
+  const handleDisconnectWallet = async () => {
+    if (isDemoMode) return;
+    
+    if (!window.confirm('Are you sure you want to disconnect your wallet?')) {
+      return;
+    }
+    
+    try {
+      await tonConnect.disconnect();
+      setWalletInfo(null);
+      await refreshUserData();
+    } catch (error) {
+      console.error('Error disconnecting wallet:', error);
+    }
+  };
+
   const calculateTotalValue = () => {
     if (!demoInventory.length) return 0;
     return demoInventory.reduce((total, item) => {
@@ -112,7 +190,6 @@ export default function ProfileScreen({ onNavigate }) {
     }, 0);
   };
 
-  // Функция для продажи всех предметов
   const handleSellAll = () => {
     const totalValue = calculateTotalValue();
     addToDemoBalance(totalValue);
@@ -120,7 +197,6 @@ export default function ProfileScreen({ onNavigate }) {
     setIsSellAllModalOpen(false);
   };
 
-  // Эффект для анимации новых предметов
   useEffect(() => {
     if (demoInventory.length > 0) {
       const lastItemIndex = demoInventory.length - 1;
@@ -158,7 +234,6 @@ export default function ProfileScreen({ onNavigate }) {
     }
   };
 
-  // Функция для перехода к боту
   const handleOpenProfile = () => {
     const username = "bouncegifts";
     const url = `https://t.me/${username}`;
@@ -169,14 +244,12 @@ export default function ProfileScreen({ onNavigate }) {
     }
   };
 
-  // Обработчик клика по предмету в инвентаре
   const handleItemClick = (item, index) => {
     if (!isDemoMode) return;
     setSelectedItem({ ...item, index });
     setIsSellModalOpen(true);
   };
 
-  // Обработчик продажи предмета
   const handleSellItem = () => {
     if (selectedItem) {
       const priceValue = parseFloat(selectedItem.price.replace(/[^\d.-]/g, ''));
@@ -187,7 +260,6 @@ export default function ProfileScreen({ onNavigate }) {
     }
   };
 
-  // Touch / Mouse handlers for swipe-to-close
   const handleTouchStart = (e) => {
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     setStartY(clientY);
@@ -217,59 +289,44 @@ export default function ProfileScreen({ onNavigate }) {
     setCurrentY(null);
   };
 
-  // Функция для форматирования имени пользователя
-  const formatUsername = (username, name) => {
-    return username || name || 'User';
-  };
-
-  // Получаем username пользователя
   const getUsername = () => {
-    if (isDemoMode) return 'Demo User';
-    if (userData) {
-      return formatUsername(userData.username, userData.name);
+    if (!userData) return 'Loading...';
+    
+    const username = userData.username || userData.name || 'User';
+    
+    if (isDemoMode) {
+      return `[DEMO] ${username}`;
     }
-    return 'Loading...';
+    
+    return username;
   };
 
-  // Получаем аватар пользователя
   const getAvatar = () => {
-    if (isDemoMode) return ava;
     if (userData?.photo_url) {
       try {
         new URL(userData.photo_url);
         return userData.photo_url;
       } catch (error) {
-        console.warn('⚠️ Некорректный URL аватара:', userData.photo_url);
+        console.warn('Некорректный URL аватара:', userData.photo_url);
         return ava;
       }
     }
     return ava;
   };
 
-  // Получаем ID пользователя (всегда из реальных данных)
   const getUserId = () => {
     if (userData?.id) {
       return userData.id.toString();
     }
-    return '123456'; // Fallback ID
+    if (userData?.telegram_id) {
+      return userData.telegram_id.toString();
+    }
+    return 'Loading...';
   };
 
-  // Получаем количество гифтов
   const getGiftsCount = () => {
     if (isDemoMode) return demoInventory.length;
     return inventoryCount;
-  };
-
-  // Форматирование баланса
-  const formatBalance = (balance) => {
-    if (typeof balance === 'number') {
-      return balance.toFixed(2);
-    }
-    if (typeof balance === 'string') {
-      const num = parseFloat(balance);
-      return isNaN(num) ? '0.00' : num.toFixed(2);
-    }
-    return '0.00';
   };
 
   return (
@@ -298,37 +355,87 @@ export default function ProfileScreen({ onNavigate }) {
             </span>
           </div>
 
-          <button className="add-button" onClick={handleOpenModal}>
+          <button 
+            className="add-button" 
+            onClick={handleOpenModal}
+            disabled={isDemoMode}
+            style={isDemoMode ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
+          >
             <span className="add-button-text">ADD</span>
           </button>
         </div>
       </div>
 
-      {/* Тумблер DEMO режима */}
-      <div className="demo-toggle-container">
-        <span className={`demo-toggle-label ${isDemoMode ? 'demo-toggle-label--active' : ''}`}>
-          DEMO
-        </span>
-        <div 
-          className={`demo-toggle ${isDemoMode ? 'demo-toggle--active' : ''}`}
-          onClick={toggleDemoMode}
-        >
-          <div className="demo-toggle-slider"></div>
-        </div>
+      {/* 🔥 Кнопка подключения кошелька - всегда видна, но disabled в демо */}
+      <div className="wallet-connect-section">
+        {!walletInfo ? (
+          <button 
+            className="connect-wallet-btn-profile"
+            onClick={handleConnectWallet}
+            disabled={isDemoMode}
+            style={isDemoMode ? { 
+              opacity: 0.6, 
+              cursor: 'not-allowed',
+              background: 'linear-gradient(135deg, #888, #999)'
+            } : {}}
+          >
+            Connect Wallet
+          </button>
+        ) : (
+          <div className="wallet-info-section">
+            <div className="connected-wallet-info-profile">
+              <div className="wallet-status connected">
+                <span className="wallet-status-indicator">🟢</span>
+                <span className="wallet-name">{walletInfo.name}</span>
+              </div>
+              <div className="wallet-address">
+                {walletInfo.account.address.slice(0, 6)}...{walletInfo.account.address.slice(-4)}
+              </div>
+              <button 
+                className="disconnect-wallet-btn-profile"
+                onClick={handleDisconnectWallet}
+                disabled={isDemoMode}
+                style={isDemoMode ? { 
+                  opacity: 0.6, 
+                  cursor: 'not-allowed',
+                  background: 'linear-gradient(135deg, #888, #999)'
+                } : {}}
+              >
+                Disconnect
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Кнопка обновления данных (только в обычном режиме) */}
-      {!isDemoMode && (
-        <div className="refresh-data-container">
-          <button 
-            className="refresh-data-button"
-            onClick={refreshUserData}
-            disabled={loading}
+      {/* Ряд с тумблером DEMO и кнопкой Refresh */}
+      <div className="controls-row">
+        <div className="demo-toggle-container">
+          <span className={`demo-toggle-label ${isDemoMode ? 'demo-toggle-label--active' : ''}`}>
+            DEMO
+          </span>
+          <div 
+            className={`demo-toggle ${isDemoMode ? 'demo-toggle--active' : ''}`}
+            onClick={toggleDemoMode}
           >
-            {loading ? 'Loading...' : '🔄 Refresh Data'}
-          </button>
+            <div className="demo-toggle-slider"></div>
+          </div>
         </div>
-      )}
+
+        {/* Кнопка обновления данных - всегда видна, но disabled в демо */}
+        <button 
+          className="refresh-data-button"
+          onClick={refreshUserData}
+          disabled={isDemoMode || loading}
+          style={isDemoMode ? { 
+            opacity: 0.6, 
+            cursor: 'not-allowed',
+            background: 'linear-gradient(135deg, #888, #999)'
+          } : {}}
+        >
+          {loading ? 'Loading...' : '🔄 Refresh'}
+        </button>
+      </div>
 
       <main className="profile-content">
         <div className='gift-balance-container'>
@@ -343,7 +450,7 @@ export default function ProfileScreen({ onNavigate }) {
           )}
         </div>
 
-        {/* Отображаем инвентарь или пустое состояние */}
+        {/* Отображаем инвентарь */}
         {isDemoMode ? (
           demoInventory.length > 0 ? (
             <div className="demo-inventory-container">
@@ -386,7 +493,6 @@ export default function ProfileScreen({ onNavigate }) {
             </div>
           )
         ) : (
-          // Реальный режим - показываем сообщение о реальном инвентаре
           <div className="real-inventory-info">
             <div className="empty-gifts-container">
               <div className="empty-gifts-animation-wrapper">
@@ -420,11 +526,10 @@ export default function ProfileScreen({ onNavigate }) {
         </div>
       </footer>
 
-      {/* Модальное окно добавления гифтов */}
+      {/* Модальные окна */}
       {isModalOpen && (
         <div className="profile-modal-overlay" onClick={handleCloseModal}>
           <div className="profile-modal-blur-layer"></div>
-
           <div
             className={`profile-modal-content ${isClosing ? 'closing' : ''}`}
             onClick={(e) => e.stopPropagation()}
@@ -438,7 +543,6 @@ export default function ProfileScreen({ onNavigate }) {
             onMouseLeave={handleTouchEnd}
           >
             <img src={giftchange} alt="" className="profile-modal-top-decor" />
-
             <div className="profile-modal-body">
               <h2 className="profile-modal-title">ADD GIFTS</h2>
               <p className="profile-modal-instruction">
@@ -452,11 +556,9 @@ export default function ProfileScreen({ onNavigate }) {
                 &ensp;bot, and the gift balance will be updated
               </p>
             </div>
-
             <button className="profile-modal-action-btn" onClick={handleOpenProfile}>
               ADD GIFT
             </button>
-
             <button className="profile-modal-close-btn" onClick={handleCloseModal}>
               <img src={modalCloseIcon} alt="Close" className="profile-modal-close-icon" />
             </button>
@@ -464,11 +566,9 @@ export default function ProfileScreen({ onNavigate }) {
         </div>
       )}
 
-      {/* Модальное окно продажи предмета (только в демо-режиме) */}
       {isSellModalOpen && selectedItem && isDemoMode && (
         <div className="sell-modal-overlay" onClick={() => setIsSellModalOpen(false)}>
           <div className="sell-modal-blur-layer"></div>
-          
           <div 
             className="sell-modal-content"
             onClick={(e) => e.stopPropagation()}
@@ -486,11 +586,9 @@ export default function ProfileScreen({ onNavigate }) {
                 </div>
               </div>
             </div>
-            
             <button className="sell-modal-button" onClick={handleSellItem}>
               SELL FOR {selectedItem.price}
             </button>
-            
             <button 
               className="sell-modal-close-btn"
               onClick={() => setIsSellModalOpen(false)}
@@ -501,19 +599,16 @@ export default function ProfileScreen({ onNavigate }) {
         </div>
       )}
 
-      {/* Модальное окно продажи всех предметов (только в демо-режиме) */}
       {isSellAllModalOpen && isDemoMode && (
         <div className="sell-all-modal-overlay" onClick={() => setIsSellAllModalOpen(false)}>
           <div className="sell-all-modal-blur-layer"></div>
-          
           <div 
             className="sell-all-modal-content"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="sell-all-modal-title">
-              Are you sure you want to sell all for {formatBalance(calculateTotalValue())} TON?
+              Are you sure you want to sell all for {calculateTotalValue().toFixed(2)} TON?
             </h2>
-            
             <div className="sell-all-modal-buttons">
               <button 
                 className="sell-all-cancel-button"
@@ -535,7 +630,6 @@ export default function ProfileScreen({ onNavigate }) {
   );
 }
 
-// Вспомогательная функция для классов цен
 const getPriceClass = (priceStr) => {
   const priceValue = parseFloat(priceStr.replace(/[^\d.-]/g, ''));
   if (priceValue >= 501) return 'item-price-gradient-3';

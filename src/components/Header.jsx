@@ -1,7 +1,8 @@
 import '../styles/Header.css';
 import { useState, useRef, useEffect } from 'react';
 import { useDemo } from '../contexts/DemoContext';
-import { authApi, formatBalance, formatUsername } from '../utils/api';
+import { authApi, formatBalance, tonApi } from '../utils/api';
+import { tonConnect } from '../utils/tonConnect';
 
 import ava from '../assets/MainPage/ava.jpg';
 import ton from '../assets/MainPage/ton.svg';
@@ -13,293 +14,362 @@ export default function Header({ onNavigate }) {
   const [topUpAmount, setTopUpAmount] = useState('');
   const [isClosing, setIsClosing] = useState(false);
   const [user, setUser] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [walletInfo, setWalletInfo] = useState(null);
+  const [tonBalanceData, setTonBalanceData] = useState(null);
   const modalRef = useRef(null);
   const inputRef = useRef(null);
   
   const { isDemoMode, demoBalance } = useDemo();
 
-  // Загружаем данные пользователя
   useEffect(() => {
+    // Загружаем данные пользователя
     const loadUserData = () => {
       const userData = authApi.getCurrentUser();
-      if (userData) {
-        setUser(userData);
-        console.log('👤 Загружены данные пользователя в Header:', userData.username);
-      } else {
-        console.log('👤 Данные пользователя не найдены в Header');
-      }
+      if (userData) setUser(userData);
     };
 
-    // Загружаем данные при монтировании
     loadUserData();
     
-    // Слушаем изменения в localStorage для синхронизации между вкладками
-    const handleStorageChange = (e) => {
-      if (e.key === 'user') {
-        console.log('🔄 Обнаружено изменение данных пользователя в localStorage');
-        loadUserData();
-      }
-    };
+    // Проверяем кошелек если не в демо режиме
+    if (!isDemoMode) {
+      checkWalletStatus();
+      
+      // Слушаем изменения статуса кошелька
+      tonConnect.onStatusChange((wallet) => {
+        if (wallet) {
+          console.log('🔔 Wallet connected:', wallet);
+          setWalletInfo(wallet);
+          refreshUserData();
+          
+          // Если модалка была открыта, закрываем ее
+          if (isBalanceModalOpen) {
+            setTimeout(() => {
+              handleCloseBalanceModal();
+            }, 500);
+          }
+        } else {
+          console.log('🔔 Wallet disconnected');
+          setWalletInfo(null);
+          refreshUserData();
+        }
+      });
+    }
     
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Слушаем кастомные события для обновления данных
-    const handleUserUpdate = () => {
-      console.log('🔄 Получено событие обновления пользователя');
-      loadUserData();
-    };
-    
-    window.addEventListener('userUpdated', handleUserUpdate);
+    window.addEventListener('userUpdated', loadUserData);
     
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('userUpdated', handleUserUpdate);
+      window.removeEventListener('userUpdated', loadUserData);
     };
-  }, []);
+  }, [isDemoMode]);
 
-  // Функция для форматирования баланса
-  const getFormattedBalance = () => {
-    if (isDemoMode) {
-      return formatBalance(demoBalance);
-    }
-    
-    if (user?.balance_ton !== undefined) {
-      return formatBalance(user.balance_ton);
-    }
-    
-    return '0.00';
-  };
-
-  // Получаем username пользователя
-  const getUsername = () => {
-    if (isDemoMode) return 'Demo User';
-    
-    if (user) {
-      return formatUsername(user.username, user.name);
-    }
-    
-    return 'Loading...';
-  };
-
-  // Получаем аватар пользователя
-  const getAvatar = () => {
-    if (isDemoMode) return ava;
-    
-    if (user?.photo_url) {
-      // Проверяем, является ли URL валидным
-      try {
-        new URL(user.photo_url);
-        return user.photo_url;
-      } catch (error) {
-        console.warn('⚠️ Некорректный URL аватара:', user.photo_url);
-        return ava;
+  const checkWalletStatus = async () => {
+    try {
+      const balanceData = await tonApi.getBalance();
+      setTonBalanceData(balanceData);
+      
+      const connected = await tonConnect.isConnected();
+      if (connected) {
+        const wallet = await tonConnect.getWallet();
+        setWalletInfo(wallet);
       }
+    } catch (error) {
+      console.log('Wallet check:', error.message);
     }
-    
-    return ava;
   };
 
-  // Обновление данных пользователя (для кнопки обновления, если нужно)
   const refreshUserData = async () => {
     if (isDemoMode) return;
     
     try {
-      console.log('🔄 Обновляем данные пользователя...');
       const data = await authApi.getMe();
       setUser(data.user);
       
-      // Отправляем событие для других компонентов
-      window.dispatchEvent(new Event('userUpdated'));
-      
-      console.log('✅ Данные пользователя обновлены');
+      const balanceData = await tonApi.getBalance();
+      setTonBalanceData(balanceData);
     } catch (error) {
-      console.error('❌ Ошибка обновления данных пользователя:', error);
+      console.error('Refresh error:', error);
+    }
+  };
+
+  // 🔥 ФУНКЦИЯ ПОДКЛЮЧЕНИЯ С ЗАКРЫТИЕМ МОДАЛКИ
+  const handleConnectWallet = async () => {
+    if (isProcessing) return;
+    
+    try {
+      setIsProcessing(true);
+      console.log('🔄 Opening TonConnect modal...');
+      
+      // Закрываем нашу модалку ПЕРЕД открытием TonConnect
+      handleCloseBalanceModal();
+      
+      // Даем время на анимацию закрытия
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Открываем TonConnect модалку
+      const wallet = await tonConnect.connectWallet();
+      
+      if (wallet) {
+        setWalletInfo(wallet);
+        await refreshUserData();
+        // Уведомление можно показывать, но модалка уже закрыта
+        console.log(`✅ Connected to ${wallet.device?.appName || 'Wallet'}!`);
+      }
+    } catch (error) {
+      console.error('Connection error:', error);
+      
+      // Если ошибка не "таймаут" или "отмена", показываем alert
+      if (!error.message.includes('timeout') && !error.message.includes('cancelled')) {
+        alert(`❌ ${error.message}`);
+      }
+      
+      // Снова открываем нашу модалку при ошибке
+      setIsBalanceModalOpen(true);
+      setIsClosing(false);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // 🔥 ФУНКЦИЯ ПОПОЛНЕНИЯ
+  const handleTopUp = async () => {
+    const amountNum = parseFloat(topUpAmount);
+    if (isNaN(amountNum) || amountNum <= 0) {
+      alert('Please enter a valid amount');
+      return;
+    }
+
+    if (isProcessing) return;
+
+    try {
+      setIsProcessing(true);
+      
+      // Создаем депозит
+      const depositData = await tonApi.createDeposit(amountNum);
+      const { to_address, amount, comment } = depositData.ton;
+      
+      // Проверяем подключение
+      const connected = await tonConnect.isConnected();
+      if (!connected) {
+        throw new Error('Please connect wallet first');
+      }
+      
+      // Закрываем нашу модалку перед отправкой транзакции
+      handleCloseBalanceModal();
+      
+      // Даем время на анимацию
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Подготавливаем транзакцию
+      const transaction = {
+        validUntil: Math.floor(Date.now() / 1000) + 300,
+        messages: [
+          {
+            address: to_address,
+            amount: tonConnect.toNano(amount),
+            payload: comment
+          }
+        ]
+      };
+      
+      // Отправляем транзакцию
+      await tonConnect.sendTransaction(transaction);
+      
+      // Показываем уведомление (модалка уже закрыта)
+      alert('✅ Transaction sent! Please confirm in your wallet.');
+      
+      // Обновляем данные через 5 секунд
+      setTimeout(() => {
+        refreshUserData();
+      }, 5000);
+      
+    } catch (error) {
+      console.error('Top up error:', error);
+      
+      // Снова открываем модалку при ошибке
+      setIsBalanceModalOpen(true);
+      setIsClosing(false);
+      
+      alert(`❌ ${error.message}`);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const handleOpenBalanceModal = () => {
-    if (isDemoMode) {
-      console.log('ℹ️ В демо-режиме пополнение баланса недоступно');
-      return;
-    }
+    if (isDemoMode) return;
     
-    console.log('💰 Открываем модальное окно пополнения баланса');
     setIsBalanceModalOpen(true);
     setIsClosing(false);
     
-    // Фокусируемся на поле ввода
     setTimeout(() => {
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
+      if (inputRef.current) inputRef.current.focus();
     }, 100);
   };
 
   const handleCloseBalanceModal = () => {
-    console.log('❌ Закрываем модальное окно пополнения баланса');
     setIsClosing(true);
-    if (inputRef.current) {
-      inputRef.current.blur();
-    }
+    setTopUpAmount('');
+    
+    // Не сбрасываем сразу, ждем анимацию
+    setTimeout(() => {
+      if (isClosing) {
+        setIsBalanceModalOpen(false);
+        setIsClosing(false);
+      }
+    }, 300);
   };
 
   const handleAnimationEnd = () => {
     if (isClosing) {
       setIsBalanceModalOpen(false);
       setIsClosing(false);
-      setTopUpAmount('');
-      console.log('✅ Модальное окно полностью закрыто');
     }
   };
 
-  const handleTopUp = () => {
-    if (!topUpAmount || isDemoMode) return;
+  const handleDisconnectWallet = async () => {
+    if (!window.confirm('Disconnect wallet?')) return;
     
-    console.log(`💰 Пополнение баланса на ${topUpAmount} TON`);
-    
-    // Здесь будет логика пополнения баланса через API
-    // Пока просто закрываем модалку
-    handleCloseBalanceModal();
-    
-    // Можно показать уведомление об успехе
-    alert(`Баланс успешно пополнен на ${topUpAmount} TON`);
-  };
-
-  const handleInputChange = (e) => {
-    // Разрешаем только цифры
-    const value = e.target.value.replace(/[^\d]/g, '');
-    setTopUpAmount(value);
-  };
-
-  const handleModalClick = (e) => {
-    // Если клик не по инпуту, снимаем фокус
-    if (inputRef.current && !inputRef.current.contains(e.target)) {
-      inputRef.current.blur();
+    try {
+      await tonConnect.disconnect();
+      setWalletInfo(null);
+      await refreshUserData();
+      alert('Wallet disconnected');
+    } catch (error) {
+      console.error('Disconnect error:', error);
     }
   };
 
-  // Обработчик клика по аватару или имени пользователя
-  const handleUserClick = () => {
-    console.log('👤 Переход в профиль пользователя');
-    onNavigate('profile');
+  // Получаем данные
+  const getUsername = () => {
+    if (!user) return 'Loading...';
+    
+    if (isDemoMode) {
+      return `[DEMO] ${user.username || user.name || 'User'}`;
+    }
+    
+    return user.username || user.name || 'User';
   };
+
+  const getBalance = () => {
+    if (isDemoMode) return formatBalance(demoBalance);
+    if (tonBalanceData?.balance !== undefined) return formatBalance(tonBalanceData.balance);
+    if (user?.balance_ton !== undefined) return formatBalance(user.balance_ton);
+    return '0.00';
+  };
+
+  const isWalletConnected = !!walletInfo;
 
   return (
     <>
       <header className="header-outer">
         <div className="header-inner">
           <div className="user-info">
-            {/* Аватар пользователя */}
             <img 
-              src={getAvatar()} 
+              src={user?.photo_url || ava} 
               alt="User" 
               className="user-avatar" 
-              loading="lazy" 
-              onClick={handleUserClick}
-              title={isDemoMode ? "Демо-режим" : "Перейти в профиль"}
+              onClick={() => onNavigate('profile')}
             />
             
-            {/* Имя пользователя */}
-            <span 
-              className="user-username" 
-              onClick={handleUserClick}
-              title={isDemoMode ? "Демо-режим" : user?.telegram_id ? `ID: ${user.telegram_id}` : "Пользователь"}
-            >
+            <span className="user-username" onClick={() => onNavigate('profile')}>
               {getUsername()}
             </span>
 
-            {/* Баланс TON */}
-            <div className="balance-container" title={`Баланс: ${getFormattedBalance()} TON`}>
+            <div className="balance-container">
               <img src={ton} alt="TON" className="balance-icon" />
-              <span className="balance-amount">
-                {getFormattedBalance()}
-              </span>
+              <span className="balance-amount">{getBalance()}</span>
             </div>
 
-            {/* Кнопка пополнения баланса */}
             <div 
               className="add_balance-button" 
               onClick={handleOpenBalanceModal}
-              title={isDemoMode ? "В демо-режиме недоступно" : "Пополнить баланс"}
+              title={isDemoMode ? "Demo mode" : "Top up"}
             >
               <img src={add_balance} alt="add" className="add_balance-icon" />
             </div>
-            
-            {/* Кнопка обновления данных (опционально) */}
-            {!isDemoMode && user && (
-              <button 
-                className="refresh-user-btn"
-                onClick={refreshUserData}
-                title="Обновить данные"
-              >
-                ↻
-              </button>
-            )}
           </div>
         </div>
       </header>
 
-      {/* Модальное окно пополнения баланса (только в обычном режиме) */}
       {isBalanceModalOpen && !isDemoMode && (
-        <div className="balance-modal-overlay">
-          <div className="balance-modal-blur-layer"></div>
-
+        <div className="balance-modal-overlay" onClick={handleCloseBalanceModal}>
+          <div className="balance-modal-blur-layer" />
+          
           <div
             ref={modalRef}
             className={`balance-modal-content ${isClosing ? 'closing' : ''}`}
-            onClick={handleModalClick}
+            onClick={(e) => e.stopPropagation()}
             onAnimationEnd={handleAnimationEnd}
           >
             <div className="balance-modal-body">
-              <h2 className="balance-modal-title">Top up Ton balance</h2>
-              <p className="balance-modal-instruction">Enter the amount</p>
               
-              <div className="balance-input-container">
-                <input
-                  ref={inputRef}
-                  type="text"
-                  className="balance-input"
-                  value={topUpAmount}
-                  onChange={handleInputChange}
-                  placeholder="0"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength="6"
-                  autoFocus
-                />
-                <span className="balance-input-suffix">TON</span>
-              </div>
-
-              <div className="balance-presets">
-                <button className="balance-preset-btn" onClick={() => setTopUpAmount('10')}>10</button>
-                <button className="balance-preset-btn" onClick={() => setTopUpAmount('50')}>50</button>
-                <button className="balance-preset-btn" onClick={() => setTopUpAmount('100')}>100</button>
-                <button className="balance-preset-btn" onClick={() => setTopUpAmount('500')}>500</button>
-              </div>
-
-              <button 
-                className={`balance-modal-action-btn ${!topUpAmount ? 'disabled' : ''}`}
-                onClick={handleTopUp}
-                disabled={!topUpAmount}
-              >
-                <span className="balance-btn-text">
-                  Top up 
-                  {topUpAmount && (
-                    <>
-                      <img src={ton} alt="TON" className="balance-btn-ton-icon" />
-                      {topUpAmount}
-                    </>
-                  )}
-                </span>
-              </button>
+              {!isWalletConnected ? (
+                // 🔥 ЭКРАН ПОДКЛЮЧЕНИЯ
+                <>
+                  <h2 className="balance-modal-title">Connect TON Wallet</h2>
+                  <p className="balance-modal-instruction">
+                    Connect your wallet to top up balance
+                  </p>
+                  
+                  <button 
+                    className="balance-modal-action-btn"
+                    onClick={handleConnectWallet}
+                    disabled={isProcessing}
+                  >
+                    {isProcessing ? 'Opening TonConnect...' : 'Connect Wallet'}
+                  </button>
+                  
+                </>
+              ) : (
+                // 🔥 ЭКРАН ПОПОЛНЕНИЯ
+                <>
+                  <h2 className="balance-modal-title">Top Up Balance</h2>
+                  <p className="balance-modal-instruction">Enter TON amount</p>
+                  
+                  <div className="balance-input-container">
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      className="balance-input"
+                      value={topUpAmount}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^\d.]/g, '');
+                        if (val.split('.').length <= 2) setTopUpAmount(val);
+                      }}
+                      placeholder="0.00"
+                      inputMode="decimal"
+                    />
+                    <span className="balance-input-suffix">TON</span>
+                  </div>
+                  
+                  <button 
+                    className="balance-modal-action-btn"
+                    onClick={handleTopUp}
+                    disabled={!topUpAmount || isNaN(parseFloat(topUpAmount)) || isProcessing}
+                  >
+                    {isProcessing ? 'Processing...' : `Top Up ${topUpAmount || ''} TON`}
+                  </button>
+                  
+                  <div className="wallet-info-display">
+                    <p>Connected: <strong>{walletInfo?.device?.appName || 'Wallet'}</strong></p>
+                    <button 
+                      className="disconnect-btn"
+                      onClick={handleDisconnectWallet}
+                    >
+                      Disconnect
+                    </button>
+                  </div>
+                </>
+              )}
               
               <p className="balance-modal-note">
-                Текущий баланс: <strong>{getFormattedBalance()} TON</strong>
+                Balance: <strong>{getBalance()} TON</strong>
               </p>
             </div>
-
+            
             <button className="balance-modal-close-btn" onClick={handleCloseBalanceModal}>
-              <img src={modalCloseIcon} alt="Close" className="balance-modal-close-icon" />
+              <img src={modalCloseIcon} alt="Close" />
             </button>
           </div>
         </div>

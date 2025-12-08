@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DemoProvider } from './contexts/DemoContext';
+import { BalanceProvider } from './contexts/BalanceContext'; // 🔥 Добавляем BalanceProvider
 import LoadingScreen from './components/LoadingScreen';
 import MainScreen from './components/MainScreen';
 import PvpScreen from './components/PvpScreen';
@@ -323,9 +324,11 @@ export default function App() {
 
   return (
     <DemoProvider>
-      <div>
-        {renderScreen()}
-      </div>
+      <BalanceProvider> {/* 🔥 Обертываем в BalanceProvider */}
+        <div>
+          {renderScreen()}
+        </div>
+      </BalanceProvider>
     </DemoProvider>
   );
 }

@@ -521,3 +521,42 @@ font-size: 13px;
   filter: grayscale(0.7) brightness(0.8);
 }
 
+
+/* Добавьте в стили CardScreen.css или Card1Screen.css */
+
+/* Индикатор загрузки */
+.processing-text {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+/* Заблокированная кнопка */
+.card-button-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.card-button-disabled:hover {
+  transform: none !important;
+}
+
+/* Анимация для иконки звезды при оплате */
+.card-detail-star-icon.pulsing {
+  animation: starPulse 1s infinite;
+}
+
+@keyframes starPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
