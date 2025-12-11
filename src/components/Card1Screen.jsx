@@ -78,21 +78,24 @@ export default function Card1Screen({ onNavigate, currentCardIndex = 0 }) {
   };
 
   // 🔥 Обработка нажатия на кнопку 1 STAR
-  const handleStarClick = async () => {
-    if (isDemoMode) {
-      console.log('Demo mode: skipping payment, opening spin page...');
-      onNavigate('spin1');
-      return;
-    }
+  // 🔥 Обработка нажатия на кнопку 1 STAR
+const handleStarClick = async () => {
+  if (isDemoMode) {
+    console.log('Demo mode: skipping payment, opening spin page...');
+    onNavigate('spin1');
+    return;
+  }
 
-    if (isProcessing) return;
+  if (isProcessing) return;
 
-    try {
-      setIsProcessing(true);
-      console.log('Opening invoice for 1 star (1000 XTR)...');
-
-      // Создаем инвойс для 1 звезды
-      const invoiceData = await starsApi.createInvoice(1); // 1 звезда = 1000 XTR
+  try {
+    setIsProcessing(true);
+    console.log('Opening invoice for 1 star...'); // ⚠️ Убрали "(1000 XTR)"
+    
+    // Создаем инвойс для 1 звезды
+    const invoiceData = await starsApi.createInvoice(1); // 1 звезда = 1 (без умножения)
+    
+    // ... остальной код без изменений
       
       // Открываем инвойс через Telegram WebApp
       if (window.Telegram?.WebApp?.openInvoice) {

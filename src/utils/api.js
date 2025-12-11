@@ -252,16 +252,17 @@ export const usersApi = {
 };
 
 export const starsApi = {
-  // Создать инвойс для покупки звезд
   async createInvoice(amount) {
     try {
       console.log(`💰 Creating invoice for ${amount} stars...`);
       
-      // amount должен быть в XTR (1 Star = 1000 XTR)
-      const amountInXTR = amount * 1000;
+      // ⚠️ УБИРАЕМ умножение на 1000
+      // Было: const amountInXTR = amount * 1000;
+      // Стало: передаем amount как есть (звезды)
+      const starsCount = amount; // Просто передаем количество звезд
       
       const response = await api.post('/api/v1/stars/create-invoice', {
-        amount: amountInXTR
+        amount: starsCount  // Теперь это количество звезд, а не XTR
       });
       
       console.log('✅ Invoice created:', response.data.invoice_link);
