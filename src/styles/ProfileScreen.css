@@ -3,10 +3,6 @@
   height: var(--app-height, 100vh);
   display: flex;
   flex-direction: column;
-  background-image: url('../assets/MainPage/main.png');
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-  background-position: center;
   overflow: hidden;
   position: relative;
 }

@@ -1,6 +1,8 @@
+// components/Spin1Screen.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/SpinScreen.css';
 import { useDemo } from '../contexts/DemoContext';
+import { usersApi } from '../utils/api';
 
 import item1 from '../assets/MainPage/chest1/in/1-1.png';
 import item2 from '../assets/MainPage/chest1/in/1-2.png';
@@ -17,7 +19,7 @@ import item12 from '../assets/MainPage/chest1/in/1-12.png';
 import cardton1 from '../assets/MainPage/chest1/ton.png';
 import arrow from '../assets/SpinPage/arrow.png';
 
-export default function Spin1Screen({ onNavigate }) {
+export default function Spin1Screen({ onNavigate, winData }) {
   const { 
     isDemoMode, 
     demoBalance, 
@@ -27,60 +29,75 @@ export default function Spin1Screen({ onNavigate }) {
   } = useDemo();
 
   const demoProbabilities = [
-    { img: item1, price: '150 TON', probability: 0.005 },   // 0.2% (увеличено)
-    { img: item2, price: '80 TON', probability: 0.02 },    // 0.4% (увеличено)
-    { img: item3, price: '65 TON', probability: 0.03 },    // 0.6% (увеличено)
-    { img: item4, price: '7.5 TON', probability: 0.1 },   // 1.5% (увеличено)
-    { img: item5, price: '3 TON', probability: 0.12 },      // 4% (увеличено)
-    { img: item6, price: '2.5 TON', probability: 0.15 },    // 6% (увеличено)
-    { img: item7, price: '2.5 TON', probability: 0.15 },    // 6% (увеличено)
-    { img: item8, price: '1.7 TON', probability: 0.15 },   // 8.5%
-    { img: item9, price: '1.7 TON', probability: 0.15 },   // 8.5%
-    { img: item10, price: '1.7 TON', probability: 0.15 },  // 8.5%
-    { img: item11, price: '1.7 TON', probability: 0.15 },  // 8.5%
-    { img: item12, price: '1.7 TON', probability: 0.15 },  // 8.5%
-    { img: cardton1, price: '1.5 TON', probability: 0.15 }, // 12% (уменьшено)
-    { img: cardton1, price: '1 TON', probability: 0.15 },   // 15% (уменьшено)
-    { img: cardton1, price: '0.5 TON', probability: 0.15 }  // 18% (уменьшено)
+    { img: item1, price: '150 TON', probability: 0.005 },
+    { img: item2, price: '80 TON', probability: 0.02 },
+    { img: item3, price: '65 TON', probability: 0.03 },
+    { img: item4, price: '7.5 TON', probability: 0.1 },
+    { img: item5, price: '3 TON', probability: 0.12 },
+    { img: item6, price: '2.5 TON', probability: 0.15 },
+    { img: item7, price: '2.5 TON', probability: 0.15 },
+    { img: item8, price: '1.7 TON', probability: 0.15 },
+    { img: item9, price: '1.7 TON', probability: 0.15 },
+    { img: item10, price: '1.7 TON', probability: 0.15 },
+    { img: item11, price: '1.7 TON', probability: 0.15 },
+    { img: item12, price: '1.7 TON', probability: 0.15 },
+    { img: cardton1, price: '1.5 TON', probability: 0.15 },
+    { img: cardton1, price: '1 TON', probability: 0.15 },
+    { img: cardton1, price: '0.5 TON', probability: 0.15 }
   ];
 
-  const normalProbabilities = [
-    { img: item1, price: '150 TON' },
-    { img: item2, price: '80 TON' },
-    { img: item3, price: '65 TON' },
-    { img: item4, price: '7.5 TON' },
-    { img: item5, price: '3 TON' },
-    { img: item6, price: '2.5 TON' },
-    { img: item7, price: '2.5 TON' },
-    { img: item8, price: '1.7 TON' },
-    { img: item9, price: '1.7 TON' },
-    { img: item10, price: '1.7 TON' },
-    { img: item11, price: '1.7 TON' },
-    { img: item12, price: '1.7 TON' },
-    { img: cardton1, price: '1.5 TON' },
-    { img: cardton1, price: '1 TON' },
-    { img: cardton1, price: '0.5 TON' }
-  ];
-
-  const frameContents = isDemoMode ? demoProbabilities : normalProbabilities;
-
+  const [winningItem, setWinningItem] = useState(null);
+  const [frameContents, setFrameContents] = useState([]);
   const scrollerRef = useRef(null);
   const [isSpinning, setIsSpinning] = useState(false);
   const [targetItemIndex, setTargetItemIndex] = useState(null);
   const [frames, setFrames] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [winningItem, setWinningItem] = useState(null);
   const [particles, setParticles] = useState([]);
   const [glowOpacity, setGlowOpacity] = useState(0);
   const [hasCharged, setHasCharged] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const animationRef = useRef(null);
 
+  // Инициализация данных
+  useEffect(() => {
+    if (isDemoMode) {
+      setFrameContents(demoProbabilities);
+    } else if (winData?.winItem) {
+      // Используем данные из API для реального режима
+      const apiItem = winData.winItem;
+      const winItem = {
+        img: apiItem.image_url ? getImageFromUrl(apiItem.image_url) : cardton1,
+        price: `${apiItem.price_ton || 0} TON`,
+        name: apiItem.name || 'Item',
+        item_type: apiItem.item_type
+      };
+      setWinningItem(winItem);
+      
+      // Создаем содержимое фреймов с выигранным предметом
+      const contents = [...demoProbabilities];
+      // Заменяем один случайный предмет на выигранный
+      const randomIndex = Math.floor(Math.random() * contents.length);
+      contents[randomIndex] = winItem;
+      setFrameContents(contents);
+    } else {
+      setFrameContents(demoProbabilities);
+    }
+  }, [isDemoMode, winData]);
+
   const isCardtonItem = (item) => {
     return item && item.img === cardton1;
   };
 
   const getRandomItemIndex = () => {
+    if (!isDemoMode && winningItem) {
+      // В реальном режиме используем выигранный предмет из API
+      return frameContents.findIndex(item => 
+        item.price === winningItem.price && 
+        item.img === winningItem.img
+      ) || 0;
+    }
+
     if (!isDemoMode) {
       return Math.floor(Math.random() * frameContents.length);
     }
@@ -146,7 +163,11 @@ export default function Spin1Screen({ onNavigate }) {
     const newFrames = generateFrames(serverResultIndex);
     setFrames(newFrames);
     setIsSpinning(true);
-    setWinningItem(frameContents[serverResultIndex]);
+    
+    // В демо-режиме используем случайный предмет
+    if (isDemoMode) {
+      setWinningItem(frameContents[serverResultIndex]);
+    }
   };
 
   useEffect(() => {
@@ -154,7 +175,7 @@ export default function Spin1Screen({ onNavigate }) {
       startSpin();
     }, 100);
     return () => clearTimeout(timer);
-  }, []);
+  }, [frameContents]);
 
   const stopAnimation = () => {
     if (animationRef.current) {
@@ -170,13 +191,22 @@ export default function Spin1Screen({ onNavigate }) {
     setShowModal(true);
   };
 
-  const handleSell = () => {
+  const handleSell = async () => {
     if (isProcessing) return;
     setIsProcessing(true);
 
     if (isDemoMode && winningItem) {
       const priceValue = parseFloat(winningItem.price.replace(/[^\d.-]/g, ''));
       addToDemoBalance(priceValue);
+    } else if (winningItem && !isDemoMode) {
+      // В реальном режиме - продажа через API
+      try {
+        // TODO: Добавить API для продажи предметов
+        console.log('Selling item:', winningItem);
+        // await usersApi.sellItem(winningItem.id);
+      } catch (error) {
+        console.error('Error selling item:', error);
+      }
     }
 
     setShowModal(false);
@@ -184,12 +214,15 @@ export default function Spin1Screen({ onNavigate }) {
     setIsProcessing(false);
   };
 
-  const handleAddToInventory = () => {
+  const handleAddToInventory = async () => {
     if (isProcessing) return;
     setIsProcessing(true);
 
     if (isDemoMode && winningItem) {
       addToDemoInventory(winningItem);
+    } else if (winData?.inventoryAdded && !isDemoMode) {
+      // В реальном режиме предмет уже добавлен через API
+      console.log('Item already added to inventory via API');
     }
 
     setShowModal(false);
@@ -257,6 +290,13 @@ export default function Spin1Screen({ onNavigate }) {
   };
 
   const getTargetFrameIndex = () => frames.length - 3;
+
+  // Вспомогательная функция для получения изображения
+  const getImageFromUrl = (url) => {
+    // Здесь можно реализовать логику загрузки изображений из URL
+    // Пока возвращаем дефолтное изображение
+    return cardton1;
+  };
 
   return (
     <div className="spin-screen-content">
@@ -334,7 +374,7 @@ export default function Spin1Screen({ onNavigate }) {
               <div className="purple-border-overlay"></div>
             </div>
             
-            {isCardtonItem(winningItem) ? (
+            {isCardtonItem(winningItem) || winningItem.item_type === 'reward_ton' ? (
               <button 
                 className="modal-secondary-button modal-single-button" 
                 onClick={handleSell}

@@ -1,8 +1,9 @@
+// components/Card1Screen.jsx
 import React, { useState, useEffect } from 'react';
 import CardScreen from './CardScreen';
 import { useDemo } from '../contexts/DemoContext';
-import { useBalance } from '../contexts/BalanceContext'; // 🔥 Используем контекст баланса
-import { starsApi, authApi } from '../utils/api';
+import { useBalance } from '../contexts/BalanceContext';
+import { casesApi, authApi, starsApi } from '../utils/api';
 
 import cardBack1 from '../assets/MainPage/chest1/back.png';
 import cardMain1 from '../assets/MainPage/chest1/main.png';
@@ -26,12 +27,36 @@ import item12 from '../assets/MainPage/chest1/in/1-12.png';
 export default function Card1Screen({ onNavigate, currentCardIndex = 0 }) {
   const [isSwitched, setIsSwitched] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [caseData, setCaseData] = useState(null);
+  const [caseItems, setCaseItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { isDemoMode } = useDemo();
-  const { balance, checkBalance, openTopUpModal, loadBalance } = useBalance(); // 🔥 Используем функции баланса
+  const { loadBalance, openTopUpModal } = useBalance();
 
-  // 🔥 Обработка нажатия на кнопку 0.1 TON (проверяем баланс)
+  // Загружаем данные кейса ID: 1 (Light Blue Case)
+  useEffect(() => {
+    const loadCaseData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await casesApi.getCaseById(1); // ID: 1
+        setCaseData(response.case);
+        setCaseItems(response.items || []);
+        console.log('✅ Case 1 (Light Blue) data loaded:', response.case);
+      } catch (error) {
+        console.error('❌ Error loading case data:', error);
+        // Используем дефолтные данные в случае ошибки
+        setCaseData({ price_ton: 2, price_stars: 200 });
+        setCaseItems([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadCaseData();
+  }, []);
+
+  // Обработка нажатия на кнопку TON
   const handleTonClick = async () => {
-    console.log('Card 1 TON clicked! Checking balance...');
+    console.log('Card 1 (Light Blue) TON clicked! Checking balance...');
     
     if (isDemoMode) {
       console.log('Demo mode: opening spin page...');
@@ -39,99 +64,82 @@ export default function Card1Screen({ onNavigate, currentCardIndex = 0 }) {
       return;
     }
     
-    const requiredAmount = 0.1; // Сумма, необходимая для входа
+    if (!caseData) {
+      alert('Case data not loaded. Please try again.');
+      return;
+    }
+    
+    const requiredAmount = caseData.price_ton || 2;
     
     try {
-      // Загружаем актуальный баланс
       await loadBalance();
-      
-      // Проверяем достаточно ли баланса
       const userData = authApi.getCurrentUser();
       const currentBalance = userData?.balance_ton || 0;
       
       console.log(`Checking balance: ${currentBalance} TON, required: ${requiredAmount} TON`);
       
       if (parseFloat(currentBalance) >= requiredAmount) {
-        // Баланс достаточен - открываем спин
-        console.log('✅ Sufficient balance, opening spin page...');
-        onNavigate('spin1');
-        
-        // 🔥 TODO: Здесь можно вычесть сумму со счета пользователя
-        // после успешного открытия спина
-        
+        await handleOpenCase('ton');
       } else {
-        // Баланс недостаточен - показываем пополнение
         console.log('❌ Insufficient balance, showing top-up modal');
         const missingAmount = requiredAmount - parseFloat(currentBalance);
-        
-        // Используем контекст баланса для открытия модалки пополнения
         openTopUpModal(missingAmount);
-        
-        // Показываем сообщение
         alert(`Insufficient balance. You need ${requiredAmount} TON to open this chest. Current balance: ${currentBalance.toFixed(2)} TON`);
       }
-      
     } catch (error) {
       console.error('❌ Error checking balance:', error);
       alert('Error checking balance. Please try again.');
     }
   };
 
-  // 🔥 Обработка нажатия на кнопку 1 STAR
-  // 🔥 Обработка нажатия на кнопку 1 STAR
-const handleStarClick = async () => {
-  if (isDemoMode) {
-    console.log('Demo mode: skipping payment, opening spin page...');
-    onNavigate('spin1');
-    return;
-  }
+  // Обработка нажатия на кнопку STAR
+  const handleStarClick = async () => {
+    if (isDemoMode) {
+      console.log('Demo mode: skipping payment, opening spin page...');
+      onNavigate('spin1');
+      return;
+    }
 
-  if (isProcessing) return;
+    if (isProcessing) return;
 
-  try {
-    setIsProcessing(true);
-    console.log('Opening invoice for 1 star...'); // ⚠️ Убрали "(1000 XTR)"
-    
-    // Создаем инвойс для 1 звезды
-    const invoiceData = await starsApi.createInvoice(1); // 1 звезда = 1 (без умножения)
-    
-    // ... остальной код без изменений
+    try {
+      setIsProcessing(true);
       
-      // Открываем инвойс через Telegram WebApp
+      if (!caseData) {
+        alert('Case data not loaded. Please try again.');
+        return;
+      }
+      
+      const starsCount = caseData.price_stars || 200;
+      console.log(`Opening invoice for ${starsCount} stars...`);
+      
+      const invoiceData = await starsApi.createInvoice(starsCount);
+      
       if (window.Telegram?.WebApp?.openInvoice) {
-        // Используем Telegram WebApp API для открытия инвойса
         window.Telegram.WebApp.openInvoice(invoiceData.invoice_link, (status) => {
           console.log('Invoice payment status:', status);
           
           if (status === 'paid') {
-            // Успешная оплата - обновляем баланс и открываем спин
-            console.log('✅ Payment successful! Updating user data...');
-            
-            // Обновляем баланс через контекст
             loadBalance().then(() => {
-              console.log('✅ Balance updated, opening spin page...');
-              onNavigate('spin1');
+              console.log('✅ Payment successful! Opening case...');
+              handleOpenCase('stars');
             }).catch(error => {
               console.error('Error updating balance:', error);
-              onNavigate('spin1'); // Все равно открываем спин
+              handleOpenCase('stars');
             });
-            
           } else if (status === 'failed' || status === 'cancelled') {
             console.log('❌ Payment failed or cancelled');
             alert('Payment was cancelled or failed. Please try again.');
           }
-          
           setIsProcessing(false);
         });
       } else {
-        // Fallback для браузера - открываем ссылку в новом окне
         console.log('Opening invoice in new window (fallback)...');
         window.open(invoiceData.invoice_link, '_blank');
         
-        // В демо или для теста - сразу открываем спин
         setTimeout(() => {
-          console.log('Opening spin page after payment simulation...');
-          onNavigate('spin1');
+          console.log('Opening case after payment simulation...');
+          handleOpenCase('stars');
           setIsProcessing(false);
         }, 2000);
       }
@@ -142,43 +150,94 @@ const handleStarClick = async () => {
     }
   };
 
+  // Функция для открытия кейса
+ // Функция для открытия кейса
+const handleOpenCase = async (payType) => {
+  try {
+    setIsProcessing(true);
+    console.log(`🔄 Opening case 1 with payType: "${payType}"`);
+    console.log(`🔍 PayType проверка:`, {
+      value: payType,
+      type: typeof payType,
+      isTon: payType === 'ton',
+      isStars: payType === 'stars'
+    });
+    
+    const result = await casesApi.openCase(1, payType);
+    console.log('✅ Case opened result:', result);
+    
+    onNavigate('spin1', { 
+      winItem: result.win_item,
+      caseOpeningId: result.case_opening_id,
+      inventoryAdded: result.inventory_added
+    });
+  } catch (error) {
+    console.error('❌ Error opening case:', error);
+    console.error('💾 Error details:', error.response?.data);
+    alert('Error opening case. Please try again.');
+    setIsProcessing(false);
+  }
+};
+
   const handleSwitchClick = () => {
     if (isDemoMode) return;
     setIsSwitched(!isSwitched);
   };
 
-  // Определяем содержимое рамок для карты 1
-  const frameContents = [
-    { img: item1, price: '150 TON' },  // 1
-    { img: item2, price: '80 TON' },   // 2
-    { img: item3, price: '65 TON' },   // 3
-    { img: item4, price: '7.5 TON' },  // 4
-    { img: item5, price: '3 TON' },    // 5
-    { img: item6, price: '2.5 TON' },  // 6
-    { img: item7, price: '2.5 TON' },  // 7
-    { img: item8, price: '1.7 TON' },  // 8
-    { img: item9, price: '1.7 TON' },  // 9
-    { img: item10, price: '1.7 TON' },   // 10
-    { img: item11, price: '1.7 TON' },   // 11
-    { img: item12, price: '1.7 TON' }, // 12
-    { img: cardton1, price: '1.5 TON' },// 14
-    { img: cardton1, price: '1 TON' }, // 15
-    { img: cardton1, price: '0.5 TON' } // 16
-  ];
+  // Определяем содержимое рамок из данных API
+  const getFrameContents = () => {
+    if (caseItems.length > 0) {
+      return caseItems.map((item, index) => {
+        let img;
+        let price;
+        
+        if (item.item_type === 'tg_gift') {
+          const itemImages = [
+            item1, item2, item3, item4, item5, item6, 
+            item7, item8, item9, item10, item11, item12
+          ];
+          img = itemImages[index % itemImages.length] || cardton1;
+          price = `${item.price_ton} TON`;
+        } else if (item.item_type === 'reward_ton') {
+          img = cardton1;
+          price = `${item.price_ton} TON`;
+        } else {
+          img = cardton1;
+          price = '0 TON';
+        }
+        
+        return { img, price };
+      });
+    }
+    
+    // Дефолтное содержимое если API не вернул данные
+    return [
+      { img: item1, price: '150 TON' },
+      { img: item2, price: '80 TON' },
+      { img: item3, price: '65 TON' },
+      { img: item4, price: '7.5 TON' },
+      { img: item5, price: '3 TON' },
+      { img: item6, price: '2.5 TON' },
+      { img: item7, price: '2.5 TON' },
+      { img: item8, price: '1.7 TON' },
+      { img: item9, price: '1.7 TON' },
+      { img: item10, price: '1.7 TON' },
+      { img: item11, price: '1.7 TON' },
+      { img: item12, price: '1.7 TON' },
+      { img: cardton1, price: '1.5 TON' },
+      { img: cardton1, price: '1 TON' },
+      { img: cardton1, price: '0.5 TON' }
+    ];
+  };
 
-  // Функция для получения класса стиля цены
+  const frameContents = getFrameContents();
+
   const getPriceClass = (priceStr) => {
     const priceValue = parseFloat(priceStr.replace(/[^\d.-]/g, ''));
-
-    if (priceValue >= 501) {
-      return 'item-price-gradient-3';
-    } else if (priceValue >= 51) {
-      return 'item-price-gradient-2';
-    } else if (priceValue >= 11) {
-      return 'item-price-gradient-1';
-    } else {
-      return 'item-price';
-    }
+    if (priceValue >= 501) return 'item-price-gradient-3';
+    if (priceValue >= 51) return 'item-price-gradient-2';
+    if (priceValue >= 11) return 'item-price-gradient-1';
+    return 'item-price';
   };
 
   const frames = frameContents.map((content, index) => (
@@ -194,23 +253,6 @@ const handleStarClick = async () => {
       </div>
     </div>
   ));
-
-  // 🔥 Добавляем слушатель для открытия модалки пополнения
-  useEffect(() => {
-    const handleOpenTopUpModal = (e) => {
-      console.log('Received openTopUpModal event:', e.detail);
-      // Используем контекст для открытия модалки
-      if (e.detail?.defaultAmount) {
-        openTopUpModal(e.detail.defaultAmount);
-      }
-    };
-
-    window.addEventListener('openTopUpModal', handleOpenTopUpModal);
-    
-    return () => {
-      window.removeEventListener('openTopUpModal', handleOpenTopUpModal);
-    };
-  }, [openTopUpModal]);
 
   return (
     <CardScreen 
@@ -238,34 +280,32 @@ const handleStarClick = async () => {
             loading="lazy"
           />
           
-          {/* Основная (правая) кнопка */}
           <div 
             className={`card-detail-button card-1-button-right card1-right ${isSwitched ? 'card1-right-switched' : ''} ${isProcessing ? 'card-button-disabled' : ''}`} 
             onClick={isSwitched ? handleStarClick : handleTonClick}
           >
             <span className="card-detail-button-text">
-              {isSwitched ? (
-                isProcessing ? (
-                  <span className="processing-text">
-                    Processing...
+              {isProcessing ? (
+                <span className="processing-text">Processing...</span>
+              ) : isSwitched ? (
+                <>
+                  <img src={star} alt='star' className='card-detail-star-icon' loading='lazy'/>
+                  <span className="card-detail-button-number">
+                    {caseData?.price_stars || '200'}
                   </span>
-                ) : (
-                  <>
-                    <img src={star} alt='star' className='card-detail-star-icon' loading='lazy'/>
-                    <span className="card-detail-button-number">1</span>
-                    <img src={star} alt='star' className='card-detail-star-icon' loading='lazy'/>
-                  </>
-                )
+                  <img src={star} alt='star' className='card-detail-star-icon' loading='lazy'/>
+                </>
               ) : (
                 <>
-                  <span className="card-detail-button-number">0.1</span>
+                  <span className="card-detail-button-number">
+                    {caseData?.price_ton || '2'}
+                  </span>
                   <span className="card-detail-button-ton">TON</span>
                 </>
               )}
             </span>
           </div>
           
-          {/* Переключатель (левая) кнопка */}
           <div 
             className={`card-detail-button card-1-button-left card1-left ${isSwitched ? 'card1-left-switched' : ''} ${isDemoMode || isProcessing ? 'card-button-disabled' : ''}`}
             onClick={handleSwitchClick}
@@ -280,12 +320,10 @@ const handleStarClick = async () => {
           </div>
         </div>
 
-        {/* Контейнер для рамок */}
         <div className="items-container">
           {frames}
         </div>
         
-        {/* Блюр-зона над кнопкой Close */}
         <div className="blur-overlay"></div>
       </div>
     </CardScreen>

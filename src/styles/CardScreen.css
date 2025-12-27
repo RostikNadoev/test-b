@@ -5,10 +5,6 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-image: url('../assets/MainPage/main.png');
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-  background-position: center;
   overflow: hidden;
 }
 

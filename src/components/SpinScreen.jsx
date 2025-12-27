@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/SpinScreen.css';
 import { useDemo } from '../contexts/DemoContext';
+import { usersApi } from '../utils/api';
 
 import item1 from '../assets/MainPage/chest3/in/3-1.png';
 import item2 from '../assets/MainPage/chest3/in/3-2.png';
@@ -16,7 +17,7 @@ import item11 from '../assets/MainPage/chest3/in/3-11.png';
 import cardton3 from '../assets/MainPage/chest3/ton.png';
 import arrow from '../assets/SpinPage/arrow.png';
 
-export default function Spin3Screen({ onNavigate }) {
+export default function Spin3Screen({ onNavigate, winData }) {
   const { 
     isDemoMode, 
     demoBalance, 
@@ -26,41 +27,23 @@ export default function Spin3Screen({ onNavigate }) {
   } = useDemo();
 
   const demoProbabilities = [
-    { img: item11, price: '1800 TON', probability: 0.002 },  // 0.05% (увеличено)
-    { img: item10, price: '150 TON', probability: 0.007 },    // 0.2% (увеличено)
-    { img: item1, price: '30 TON', probability: 0.01 },      // 0.8% (увеличено)
-    { img: item4, price: '26 TON', probability: 0.02 },      // 1.1% (увеличено)
-    { img: item2, price: '12 TON', probability: 0.03 },      // 1.8% (увеличено)
-    { img: item3, price: '11 TON', probability: 0.04 },      // 2.5% (увеличено)
-    { img: item8, price: '10 TON', probability: 0.05 },      // 3.5% (увеличено)
-    { img: item9, price: '7 TON', probability: 0.1 },       // 5.5% (увеличено)
-    { img: item5, price: '4 TON', probability: 0.2 },       // 7.5% (уменьшено)
-    { img: cardton3, price: '2 TON', probability: 0.26 },     // 11% (уменьшено)
-    { img: item7, price: '1.7 TON', probability: 0.23 },      // 14% (уменьшено)
-    { img: item6, price: '1.7 TON', probability: 0.22 },      // 14% (уменьшено)
-    { img: cardton3, price: '1.5 TON', probability: 0.22 },   // 18% (уменьшено)
-    { img: cardton3, price: '1 TON', probability: 0.22 }      // 22% (уменьшено)
+    { img: item11, price: '1800 TON', probability: 0.002, item_type: 'tg_gift' },
+    { img: item10, price: '150 TON', probability: 0.007, item_type: 'tg_gift' },
+    { img: item1, price: '30 TON', probability: 0.01, item_type: 'tg_gift' },
+    { img: item4, price: '26 TON', probability: 0.02, item_type: 'tg_gift' },
+    { img: item2, price: '12 TON', probability: 0.03, item_type: 'tg_gift' },
+    { img: item3, price: '11 TON', probability: 0.04, item_type: 'tg_gift' },
+    { img: item8, price: '10 TON', probability: 0.05, item_type: 'tg_gift' },
+    { img: item9, price: '7 TON', probability: 0.1, item_type: 'tg_gift' },
+    { img: item5, price: '4 TON', probability: 0.2, item_type: 'tg_gift' },
+    { img: cardton3, price: '2 TON', probability: 0.26, item_type: 'reward_ton' },
+    { img: item7, price: '1.7 TON', probability: 0.23, item_type: 'tg_gift' },
+    { img: item6, price: '1.7 TON', probability: 0.22, item_type: 'tg_gift' },
+    { img: cardton3, price: '1.5 TON', probability: 0.22, item_type: 'reward_ton' },
+    { img: cardton3, price: '1 TON', probability: 0.22, item_type: 'reward_ton' }
   ];
 
-  const normalProbabilities = [
-    { img: item11, price: '1800 TON' },
-    { img: item10, price: '150 TON' },
-    { img: item1, price: '30 TON' },
-    { img: item4, price: '26 TON' },
-    { img: item2, price: '12 TON' },
-    { img: item3, price: '11 TON' },
-    { img: item8, price: '10 TON' },
-    { img: item9, price: '7 TON' },
-    { img: item5, price: '4 TON' },
-    { img: cardton3, price: '2 TON' },
-    { img: item7, price: '1.7 TON' },
-    { img: item6, price: '1.7 TON' },
-    { img: cardton3, price: '1.5 TON' },
-    { img: cardton3, price: '1 TON' }
-  ];
-
-  const frameContents = isDemoMode ? demoProbabilities : normalProbabilities;
-
+  const [frameContents, setFrameContents] = useState([]);
   const scrollerRef = useRef(null);
   const [isSpinning, setIsSpinning] = useState(false);
   const [targetItemIndex, setTargetItemIndex] = useState(null);
@@ -73,11 +56,75 @@ export default function Spin3Screen({ onNavigate }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const animationRef = useRef(null);
 
+  // Инициализация данных
+  useEffect(() => {
+    if (isDemoMode) {
+      setFrameContents(demoProbabilities);
+    } else if (winData?.winItem) {
+      // Используем данные из API для реального режима
+      const apiItem = winData.winItem;
+      
+      // Создаем выигранный предмет из данных API
+      const winItem = {
+        img: getItemImage(apiItem, 2), // caseId = 2 для третьего кейса
+        price: `${apiItem.price_ton || 0} TON`,
+        name: apiItem.name || 'Item',
+        item_type: apiItem.item_type,
+        id: apiItem.id || apiItem.telegram_gift_id
+      };
+      
+      setWinningItem(winItem);
+      
+      // Создаем содержимое фреймов с выигранным предметом
+      const contents = [...demoProbabilities];
+      
+      // Заменяем один случайный предмет на выигранный
+      const randomIndex = Math.floor(Math.random() * Math.min(contents.length, 10));
+      contents[randomIndex] = winItem;
+      
+      setFrameContents(contents);
+    } else {
+      setFrameContents(demoProbabilities);
+    }
+  }, [isDemoMode, winData]);
+
+  // Получение изображения предмета
+  const getItemImage = (apiItem, caseId) => {
+    if (apiItem.image_url) {
+      // В будущем можно загружать по URL
+      return cardton3; // Пока используем дефолтное
+    }
+    
+    // Для reward_ton используем TON иконку
+    if (apiItem.item_type === 'reward_ton') {
+      return cardton3;
+    }
+    
+    // Для tg_gift используем соответствующее изображение из набора
+    const itemImages = [
+      item11, item10, item1, item4, item2, item3, 
+      item8, item9, item5, item7, item6
+    ];
+    
+    // Простая логика выбора изображения
+    const index = Math.abs((apiItem.telegram_gift_id || '').split(':').pop().hashCode() || 0) % itemImages.length;
+    return itemImages[index] || cardton3;
+  };
+
   const isCardtonItem = (item) => {
-    return item && item.img === cardton3;
+    return item && (item.img === cardton3 || item.item_type === 'reward_ton');
   };
 
   const getRandomItemIndex = () => {
+    if (!isDemoMode && winningItem) {
+      // В реальном режиме используем индекс выигранного предмета
+      const winIndex = frameContents.findIndex(item => 
+        item.item_type === winningItem.item_type && 
+        item.price === winningItem.price
+      );
+      return winIndex >= 0 ? winIndex : Math.floor(Math.random() * frameContents.length);
+    }
+
     if (!isDemoMode) {
       return Math.floor(Math.random() * frameContents.length);
     }
@@ -151,7 +198,11 @@ export default function Spin3Screen({ onNavigate }) {
     const newFrames = generateFrames(serverResultIndex);
     setFrames(newFrames);
     setIsSpinning(true);
-    setWinningItem(frameContents[serverResultIndex]);
+    
+    // В демо-режиме используем случайный предмет
+    if (isDemoMode) {
+      setWinningItem(frameContents[serverResultIndex]);
+    }
   };
 
   useEffect(() => {
@@ -160,7 +211,7 @@ export default function Spin3Screen({ onNavigate }) {
     }, 100);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [frameContents]);
 
   const stopAnimation = () => {
     if (animationRef.current) {
@@ -176,13 +227,22 @@ export default function Spin3Screen({ onNavigate }) {
     setShowModal(true);
   };
 
-  const handleSell = () => {
+  const handleSell = async () => {
     if (isProcessing) return;
     setIsProcessing(true);
 
     if (isDemoMode && winningItem) {
       const priceValue = parseFloat(winningItem.price.replace(/[^\d.-]/g, ''));
       addToDemoBalance(priceValue);
+    } else if (winningItem && !isDemoMode) {
+      // В реальном режиме - продажа через API
+      try {
+        // TODO: Добавить API для продажи предметов
+        console.log('Selling item via API:', winningItem);
+        // await usersApi.sellItem(winningItem.id);
+      } catch (error) {
+        console.error('Error selling item:', error);
+      }
     }
 
     setShowModal(false);
@@ -190,12 +250,15 @@ export default function Spin3Screen({ onNavigate }) {
     setIsProcessing(false);
   };
 
-  const handleAddToInventory = () => {
+  const handleAddToInventory = async () => {
     if (isProcessing) return;
     setIsProcessing(true);
 
     if (isDemoMode && winningItem) {
       addToDemoInventory(winningItem);
+    } else if (winData?.inventoryAdded && !isDemoMode) {
+      // В реальном режиме предмет уже добавлен через API
+      console.log('Item already added to inventory via API');
     }
 
     setShowModal(false);
@@ -266,6 +329,17 @@ export default function Spin3Screen({ onNavigate }) {
   };
 
   const getTargetFrameIndex = () => frames.length - 3;
+
+  // Вспомогательная функция для хэширования строк
+  String.prototype.hashCode = function() {
+    let hash = 0;
+    for (let i = 0; i < this.length; i++) {
+      const char = this.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    return hash;
+  };
 
   return (
     <div className="spin-screen-content">

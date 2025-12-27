@@ -330,5 +330,59 @@ export const tonApi = {
   }
 };
 
+// utils/api.js - добавляем к существующему коду
+export const casesApi = {
+  // Получить список всех активных кейсов
+  async getAllCases() {
+    try {
+      console.log('📦 Requesting all cases...');
+      const response = await api.get('/api/v1/cases/');
+      console.log('✅ Cases received:', response.data?.length || 0);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error getting cases:', error);
+      throw error;
+    }
+  },
+
+  // Получить детали кейса + содержимое
+  async getCaseById(caseId) {
+    try {
+      console.log(`📦 Requesting case ${caseId}...`);
+      const response = await api.get(`/api/v1/cases/${caseId}`);
+      console.log('✅ Case received:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error getting case:', error);
+      throw error;
+    }
+  },
+
+  async openCase(caseId, payType = 'ton') {
+    try {
+      console.log(`🎰 [DEBUG] Отправляем запрос: /api/v1/cases/${caseId}/open`);
+      console.log(`💰 PayType получен: "${payType}" (тип: ${typeof payType})`);
+      
+      // Создаем тело запроса
+      const requestBody = {
+        pay_type: payType
+      };
+      
+      console.log('📦 Тело запроса:', JSON.stringify(requestBody));
+      
+      const response = await api.post(`/api/v1/cases/${caseId}/open`, requestBody);
+      
+      console.log('✅ Ответ от сервера:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Ошибка при открытии кейса:', error);
+      console.error('📡 Полный ответ сервера:', error.response?.data);
+      console.error('🔧 Конфиг запроса:', JSON.parse(error.config?.data || '{}'));
+      throw error;
+    }
+  }
+};
+
+
 // Export base axios instance for other requests
 export default api;

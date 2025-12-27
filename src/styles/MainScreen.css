@@ -4,10 +4,6 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-image: url('../assets/MainPage/main.png');
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-  background-position: center;
   overflow: hidden;
 }
 
@@ -22,22 +18,74 @@
   overflow-y: auto;
 }
 
-.banner-section {
-  width: calc(100% - 20px); 
-  max-width: 430px;         
-  height: 149px;
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 16px;
+/* --- Стили для картинок-кнопок вместо баннера --- */
+.banner-images-container {
+  width: calc(100% - 20px);
+  max-width: 430px;
   display: flex;
+  flex-direction: column;
+  gap: 0px;
+  margin-bottom: -20px;
   align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
 }
 
-.banner-png {
+.banner-image-button {
+  width: 437px;
+  height: auto;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+  outline: none;
+  background: none;
+  border: none;
+  
+  /* Для мобильных устройств */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.banner-image {
   width: 100%;
-  height: 100%;
-  object-fit: contain;
+  height: auto;
+  border-radius: 12px;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.banner-image-button:hover .banner-image {
+  transform: scale(1.02);
+}
+
+.banner-image-button:active .banner-image {
+  transform: scale(0.98);
+}
+
+
+.button-2 {
+  margin-top: -14px;
+}
+
+/* Адаптив для маленьких экранов */
+@media (max-width: 450px) {
+  .banner-images-container {
+    width: 100%;
+    padding: 0 10px;
+    max-width: 100%;
+  }
+  
+  .banner-image-button {
+    width: 100%;
+    max-width: 380px;
+  }
+}
+
+@media (max-width: 360px) {
+  .banner-image-button {
+    max-width: 340px;
+  }
 }
 
 .content-section {
@@ -61,7 +109,7 @@
   width: 100%;
   overflow: hidden;
   position: relative;
-  margin-top: 20px;
+  margin-top: 10px;
 }
 
 .cards-slider-inner {
