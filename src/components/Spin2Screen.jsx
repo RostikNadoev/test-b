@@ -1,18 +1,9 @@
+// components/Spin2Screen.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/SpinScreen.css';
 import { useDemo } from '../contexts/DemoContext';
-import { usersApi } from '../utils/api';
+import { casesApi } from '../utils/api';
 
-import item1 from '../assets/MainPage/chest2/in/2-1.png';
-import item2 from '../assets/MainPage/chest2/in/2-2.png';
-import item3 from '../assets/MainPage/chest2/in/2-3.png';
-import item4 from '../assets/MainPage/chest2/in/2-4.png';
-import item5 from '../assets/MainPage/chest2/in/2-5.png';
-import item6 from '../assets/MainPage/chest2/in/2-6.png';
-import item7 from '../assets/MainPage/chest2/in/2-7.png';
-import item8 from '../assets/MainPage/chest2/in/2-8.png';
-import item9 from '../assets/MainPage/chest2/in/2-9.png';
-import item10 from '../assets/MainPage/chest2/in/2-10.png';
 import cardton2 from '../assets/MainPage/chest2/ton.png';
 import arrow from '../assets/SpinPage/arrow.png';
 
@@ -25,121 +16,245 @@ export default function Spin2Screen({ onNavigate, winData }) {
     addToDemoInventory 
   } = useDemo();
 
-  const demoProbabilities = [
-    { img: item1, price: '6500 TON', probability: 0.003, item_type: 'tg_gift' },
-    { img: item2, price: '1000 TON', probability: 0.005, item_type: 'tg_gift' },
-    { img: item3, price: '80 TON', probability: 0.01, item_type: 'tg_gift' },
-    { img: item4, price: '65 TON', probability: 0.02, item_type: 'tg_gift' },
-    { img: item5, price: '30 TON', probability: 0.03, item_type: 'tg_gift' },
-    { img: item6, price: '5 TON', probability: 0.2, item_type: 'tg_gift' },
-    { img: item7, price: '3 TON', probability: 0.15, item_type: 'tg_gift' },
-    { img: item8, price: '1.7 TON', probability: 0.15, item_type: 'tg_gift' },
-    { img: item9, price: '1.7 TON', probability: 0.15, item_type: 'tg_gift' },
-    { img: item10, price: '1.7 TON', probability: 0.15, item_type: 'tg_gift' },
-    { img: cardton2, price: '1.5 TON', probability: 0.15, item_type: 'reward_ton' },
-    { img: cardton2, price: '1 TON', probability: 0.15, item_type: 'reward_ton' },
-    { img: cardton2, price: '0.5 TON', probability: 0.15, item_type: 'reward_ton' }
-  ];
-
+  const [demoProbabilities, setDemoProbabilities] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [winningItem, setWinningItem] = useState(null);
   const [frameContents, setFrameContents] = useState([]);
   const scrollerRef = useRef(null);
-  const [isSpinning, setIsSpinning] = useState(false);
+  const [isSpinning, setIsSpinning] = useState(false); // Изначально false
   const [targetItemIndex, setTargetItemIndex] = useState(null);
   const [frames, setFrames] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [winningItem, setWinningItem] = useState(null);
   const [particles, setParticles] = useState([]);
   const [glowOpacity, setGlowOpacity] = useState(0);
   const [hasCharged, setHasCharged] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const animationRef = useRef(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [actualWinningFrameItem, setActualWinningFrameItem] = useState(null);
 
-  // Инициализация данных
-  useEffect(() => {
-    if (isDemoMode) {
-      setFrameContents(demoProbabilities);
-    } else if (winData?.winItem) {
-      // Используем данные из API для реального режима
-      const apiItem = winData.winItem;
-      
-      // Создаем выигранный предмет из данных API
-      const winItem = {
-        img: getItemImage(apiItem, 3), // caseId = 1 для второго кейса
-        price: `${apiItem.price_ton || 0} TON`,
-        name: apiItem.name || 'Item',
-        item_type: apiItem.item_type,
-        id: apiItem.id || apiItem.telegram_gift_id
-      };
-      
-      setWinningItem(winItem);
-      
-      // Создаем содержимое фреймов с выигранным предметом
-      const contents = [...demoProbabilities];
-      
-      // Заменяем один случайный предмет на выигранный
-      const randomIndex = Math.floor(Math.random() * Math.min(contents.length, 8));
-      contents[randomIndex] = winItem;
-      
-      setFrameContents(contents);
-    } else {
-      setFrameContents(demoProbabilities);
-    }
-  }, [isDemoMode, winData]);
-
-  // Получение изображения предмета
-  const getItemImage = (apiItem, caseId) => {
-    if (apiItem.image_url) {
-      // В будущем можно загружать по URL
-      return cardton2; // Пока используем дефолтное
+  // Функция для получения URL изображения из API
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return '';
+    
+    // Если это статические файлы бэкенда, добавляем базовый URL
+    if (imagePath.startsWith('/static/')) {
+      return `${import.meta.env.VITE_BACKEND_URL || ''}${imagePath}`;
     }
     
-    // Для reward_ton используем TON иконку
-    if (apiItem.item_type === 'reward_ton') {
-      return cardton2;
-    }
-    
-    // Для tg_gift используем соответствующее изображение из набора
-    const itemImages = [
-      item1, item2, item3, item4, item5, 
-      item6, item7, item8, item9, item10
-    ];
-    
-    // Простая логика выбора изображения
-    const index = Math.abs((apiItem.telegram_gift_id || '').split(':').pop().hashCode() || 0) % itemImages.length;
-    return itemImages[index] || cardton2;
+    return imagePath;
   };
 
+  // Загрузка данных кейса из API
+  useEffect(() => {
+    const loadCaseData = async () => {
+      try {
+        setIsLoading(true);
+        console.log('🔄 Загрузка данных кейса 3 для спина...');
+        
+        const response = await casesApi.getCaseById(3); // ID: 3
+        console.log('📦 Данные кейса для спина:', response);
+        
+        if (response.items && response.items.length > 0) {
+          // Преобразуем данные API в формат для демо
+          const items = response.items.map((item, index) => {
+            let img;
+            let price;
+            
+            if (item.item_type === 'tg_gift') {
+              // Для подарков Telegram используем изображения из API
+              img = getImageUrl(item.image_url);
+              price = `${item.price_ton} TON`;
+            } else if (item.item_type === 'reward_ton') {
+              // Для TON наград используем локальную картинку
+              img = cardton2;
+              price = `${item.price_ton} TON`;
+            } else {
+              img = cardton2;
+              price = '0 TON';
+            }
+            
+            // Определяем вероятность (используем drop_chance из API)
+            const probability = (item.drop_chance || 1) / 100;
+            
+            return {
+              img,
+              price,
+              probability,
+              name: item.name || `Item ${index + 1}`,
+              item_type: item.item_type,
+              id: item.id,
+              apiData: item
+            };
+          });
+          
+          console.log('✅ Созданы демо предметы:', items);
+          setDemoProbabilities(items);
+          setFrameContents(items);
+          
+          // Выбираем случайный предмет для демо
+          if (isDemoMode) {
+            const randomIndex = Math.floor(Math.random() * items.length);
+            console.log('🎮 Демо режим: выбран случайный предмет, индекс:', randomIndex);
+            const demoWinningItem = items[randomIndex];
+            setWinningItem(demoWinningItem);
+            setTargetItemIndex(randomIndex);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Ошибка загрузки данных кейса:', error);
+        // Используем дефолтные демо данные
+        setDemoProbabilities(getDefaultDemoProbabilities());
+        setFrameContents(getDefaultDemoProbabilities());
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Дефолтные демо данные на случай ошибки
+    const getDefaultDemoProbabilities = () => {
+      return [
+        { img: getImageUrl('/static/gifts/plushpepe.png'), price: '5790 TON', probability: 0.003, item_type: 'tg_gift', name: 'Plush Pepe' },
+        { img: getImageUrl('/static/gifts/durovcap.png'), price: '685 TON', probability: 0.005, item_type: 'tg_gift', name: "Durov's Cap" },
+        { img: getImageUrl('/static/gifts/iongem.png'), price: '69.9 TON', probability: 0.01, item_type: 'tg_gift', name: 'Ion Gem' },
+        { img: getImageUrl('/static/gifts/gemsignet.png'), price: '54.88 TON', probability: 0.02, item_type: 'tg_gift', name: 'Gem Signet' },
+        { img: getImageUrl('/static/gifts/lowrider.png'), price: '31 TON', probability: 0.03, item_type: 'tg_gift', name: 'Low Rider' },
+        { img: getImageUrl('/static/gifts/jollychimp.png'), price: '5.35 TON', probability: 0.2, item_type: 'tg_gift', name: 'Jolly Chimp' },
+        { img: getImageUrl('/static/gifts/swagbag.png'), price: '3.7 TON', probability: 0.15, item_type: 'tg_gift', name: 'Swag Bag' },
+        { img: getImageUrl('/static/gifts/lolpop.png'), price: '2.29 TON', probability: 0.15, item_type: 'tg_gift', name: 'Lol Pop' },
+        { img: getImageUrl('/static/gifts/bdaycandle.png'), price: '2.48 TON', probability: 0.15, item_type: 'tg_gift', name: 'B-day Candle' },
+        { img: getImageUrl('/static/gifts/deskcalendar.png'), price: '2.28 TON', probability: 0.15, item_type: 'tg_gift', name: 'Desk Calendar' },
+        { img: cardton2, price: '1.5 TON', probability: 0.15, item_type: 'reward_ton', name: 'TON 1.5' },
+        { img: cardton2, price: '1 TON', probability: 0.15, item_type: 'reward_ton', name: 'TON 1' },
+        { img: cardton2, price: '0.5 TON', probability: 0.15, item_type: 'reward_ton', name: 'TON 0.5' }
+      ];
+    };
+
+    loadCaseData();
+  }, []);
+
+  // Инициализация и запуск спина
+  useEffect(() => {
+    if (isLoading) return;
+    
+    console.log('🔄 Spin2Screen инициализация, isDemoMode:', isDemoMode, 'winData:', winData);
+    
+    const initializeData = () => {
+      if (!isDemoMode && winData?.winItem) {
+        // Реальный режим - используем данные из API
+        console.log('📡 Реальный режим, данные API:', winData.winItem);
+        const apiItem = winData.winItem;
+        
+        // Создаем выигранный предмет из данных API
+        const winItem = createWinningItemFromAPI(apiItem);
+        console.log('🎯 Создан выигрышный предмет:', winItem);
+        setWinningItem(winItem);
+        
+        // Создаем содержимое фреймов с выигранным предметом
+        const contents = [...demoProbabilities];
+        // Заменяем случайный предмет на выигранный
+        const randomIndex = Math.floor(Math.random() * Math.min(contents.length, 10));
+        contents[randomIndex] = winItem;
+        setFrameContents(contents);
+        
+        // Запоминаем индекс выигранного предмета
+        console.log('📊 Индекс выигрышного предмета:', randomIndex);
+        setTargetItemIndex(randomIndex);
+      } else if (isDemoMode && demoProbabilities.length > 0) {
+        // Демо режим - используем демо предметы
+        console.log('🎮 Демо режим: используем демо предметы');
+        setFrameContents(demoProbabilities);
+        const randomIndex = getRandomItemIndex();
+        setWinningItem(demoProbabilities[randomIndex]);
+        setTargetItemIndex(randomIndex);
+      } else if (demoProbabilities.length > 0) {
+        // Fallback - если нет winData в реальном режиме
+        console.log('⚠️ Нет winData, используем демо предметы как fallback');
+        setFrameContents(demoProbabilities);
+        const randomIndex = getRandomItemIndex();
+        setWinningItem(demoProbabilities[randomIndex]);
+        setTargetItemIndex(randomIndex);
+      }
+      
+      setIsInitialized(true);
+      
+      // Запускаем спин с небольшой задержкой
+      setTimeout(() => {
+        console.log('▶️ Запуск спина через 300мс');
+        startSpin();
+      }, 200);
+    };
+
+    initializeData();
+  }, [isDemoMode, winData, demoProbabilities, isLoading]);
+
+  // Создание выигранного предмета из данных API
+  const createWinningItemFromAPI = (apiItem) => {
+    console.log('🔧 Создание предмета из API:', apiItem);
+    
+    let img = cardton2;
+    let price = '0 TON';
+    let itemType = 'unknown';
+    let name = apiItem.name || 'Item';
+    
+    if (apiItem.item_type === 'reward_ton') {
+      itemType = 'reward_ton';
+      img = cardton2;
+      price = `${apiItem.price_ton || 0} TON`;
+    } else if (apiItem.item_type === 'tg_gift') {
+      itemType = 'tg_gift';
+      price = `${apiItem.price_ton || 0} TON`;
+      img = getImageUrl(apiItem.image_url);
+    }
+    
+    const result = {
+      img,
+      price,
+      name,
+      item_type: itemType,
+      id: apiItem.id,
+      apiData: apiItem
+    };
+    
+    console.log('✅ Создан предмет:', result);
+    return result;
+  };
+
+  // Проверка, является ли предмет TON наградой
   const isCardtonItem = (item) => {
-    return item && (item.img === cardton2 || item.item_type === 'reward_ton');
+    return item && (item.item_type === 'reward_ton' || item.img === cardton2);
   };
 
   const getRandomItemIndex = () => {
-    if (!isDemoMode && winningItem) {
-      // В реальном режиме используем индекс выигранного предмета
-      const winIndex = frameContents.findIndex(item => 
-        item.item_type === winningItem.item_type && 
-        item.price === winningItem.price
-      );
-      return winIndex >= 0 ? winIndex : Math.floor(Math.random() * frameContents.length);
-    }
-
-    if (!isDemoMode) {
-      return Math.floor(Math.random() * frameContents.length);
-    }
-
-    const rand = Math.random();
-    let cumulativeProbability = 0;
+    console.log('🎲 Получение случайного индекса, targetItemIndex:', targetItemIndex);
     
-    for (let i = 0; i < demoProbabilities.length; i++) {
-      cumulativeProbability += demoProbabilities[i].probability;
-      if (rand <= cumulativeProbability) {
-        return i;
+    if (!isDemoMode && targetItemIndex !== null) {
+      console.log('🎯 Используем предустановленный индекс:', targetItemIndex);
+      return targetItemIndex;
+    }
+
+    if (isDemoMode && demoProbabilities.length > 0) {
+      // В демо режиме выбираем по вероятностям
+      const rand = Math.random();
+      let cumulativeProbability = 0;
+      for (let i = 0; i < demoProbabilities.length; i++) {
+        cumulativeProbability += demoProbabilities[i].probability;
+        if (rand <= cumulativeProbability) {
+          console.log('🎮 Демо выбран индекс:', i);
+          return i;
+        }
       }
+      const lastIndex = demoProbabilities.length - 1;
+      console.log('🎮 Демо выбран последний индекс:', lastIndex);
+      return lastIndex;
     }
-    
-    return demoProbabilities.length - 1;
+
+    const randomIndex = Math.floor(Math.random() * frameContents.length);
+    console.log('🎲 Случайный индекс:', randomIndex);
+    return randomIndex;
   };
 
+  // Создание снежинок
   useEffect(() => {
     const createParticles = () => {
       const newParticles = [];
@@ -162,25 +277,39 @@ export default function Spin2Screen({ onNavigate, winData }) {
     setParticles(createParticles());
   }, []);
 
+  // Генерация фреймов для анимации
   const generateFrames = (targetIndex = 0) => {
+    console.log('🖼️ Генерация фреймов, targetIndex:', targetIndex);
+    
     const frames = [];
+    
+    // Получаем выигрышный предмет из frameContents
+    const winningItemFromContents = frameContents[targetIndex] || frameContents[0];
+    console.log('🎯 Выигрышный предмет для фреймов:', winningItemFromContents);
+    setActualWinningFrameItem(winningItemFromContents);
     
     for (let i = 0; i < 95; i++) {
       const randomIndex = Math.floor(Math.random() * frameContents.length);
       frames.push(frameContents[randomIndex]);
     }
     
-    frames.push(frameContents[targetIndex]);
+    // Целевой фрейм (выигранный предмет) - третий с конца
+    console.log('🎯 Добавляем целевой фрейм (3й с конца):', winningItemFromContents);
+    frames.push(winningItemFromContents);
     
     for (let i = 0; i < 2; i++) {
       const randomIndex = Math.floor(Math.random() * frameContents.length);
       frames.push(frameContents[randomIndex]);
     }
     
+    console.log('📊 Всего фреймов:', frames.length);
     return frames;
   };
 
+  // Запуск спина
   const startSpin = () => {
+    console.log('🎰 Запуск спина, isDemoMode:', isDemoMode);
+    
     if (isDemoMode && !hasCharged) {
       if (demoBalance < 5) {
         alert("Not enough TON in demo balance!");
@@ -191,85 +320,119 @@ export default function Spin2Screen({ onNavigate, winData }) {
       setHasCharged(true);
     }
 
-    const serverResultIndex = getRandomItemIndex();
-    setTargetItemIndex(serverResultIndex);
-    const newFrames = generateFrames(serverResultIndex);
+    const resultIndex = getRandomItemIndex();
+    console.log('🎲 Результат индекса:', resultIndex);
+    setTargetItemIndex(resultIndex);
+    const newFrames = generateFrames(resultIndex);
     setFrames(newFrames);
     setIsSpinning(true);
-    
-    // В демо-режиме используем случайный предмет
-    if (isDemoMode) {
-      setWinningItem(frameContents[serverResultIndex]);
-    }
+    console.log('✅ Спин запущен, isSpinning:', true);
   };
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      startSpin();
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [frameContents]);
-
+  // Остановка анимации
   const stopAnimation = () => {
+    console.log('🛑 Остановка анимации');
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
       animationRef.current = null;
     }
     setIsSpinning(false);
-  };
-
-  const handleSkip = () => {
-    stopAnimation();
     setGlowOpacity(1);
-    setShowModal(true);
+    setTimeout(() => {
+      console.log('📱 Показываем модалку');
+      setShowModal(true);
+    }, 100);
   };
 
+  // Пропуск анимации
+  const handleSkip = () => {
+    console.log('⏭️ Пропуск анимации');
+    stopAnimation();
+  };
+
+  // Продажа предмета
   const handleSell = async () => {
     if (isProcessing) return;
+    console.log('💰 Продажа предмета');
     setIsProcessing(true);
 
-    if (isDemoMode && winningItem) {
-      const priceValue = parseFloat(winningItem.price.replace(/[^\d.-]/g, ''));
+    // Используем actualWinningFrameItem вместо winningItem
+    const itemToSell = actualWinningFrameItem || winningItem;
+    
+    if (isDemoMode && itemToSell) {
+      // Демо режим
+      const priceValue = parseFloat(itemToSell.price.replace(/[^\d.-]/g, ''));
+      console.log('🎮 Демо продажа за:', priceValue);
       addToDemoBalance(priceValue);
-    } else if (winningItem && !isDemoMode) {
-      // В реальном режиме - продажа через API
+      setShowModal(false);
+      onNavigate('card2');
+    } else if (itemToSell && !isDemoMode && itemToSell.apiData) {
+      // Реальный режим - продажа через API
       try {
-        // TODO: Добавить API для продажи предметов
-        console.log('Selling item via API:', winningItem);
-        // await usersApi.sellItem(winningItem.id);
+        console.log('📡 Реальная продажа:', itemToSell.apiData);
+        // TODO: Реализовать API для продажи
+        setShowModal(false);
+        onNavigate('card2');
       } catch (error) {
-        console.error('Error selling item:', error);
+        console.error('❌ Ошибка продажи:', error);
+        alert('Error selling item. Please try again.');
       }
     }
 
-    setShowModal(false);
-    onNavigate('card2');
     setIsProcessing(false);
   };
 
+  // Добавление в инвентарь
   const handleAddToInventory = async () => {
     if (isProcessing) return;
+    console.log('🎒 Добавление в инвентарь');
     setIsProcessing(true);
 
-    if (isDemoMode && winningItem) {
-      addToDemoInventory(winningItem);
+    // Используем actualWinningFrameItem вместо winningItem
+    const itemToAdd = actualWinningFrameItem || winningItem;
+    
+    if (isDemoMode && itemToAdd) {
+      // Демо режим
+      console.log('🎮 Демо добавление в инвентарь');
+      addToDemoInventory(itemToAdd);
+      setShowModal(false);
+      onNavigate('card2');
     } else if (winData?.inventoryAdded && !isDemoMode) {
       // В реальном режиме предмет уже добавлен через API
-      console.log('Item already added to inventory via API');
+      console.log('📡 Предмет уже добавлен через API');
+      setShowModal(false);
+      onNavigate('card2');
+    } else {
+      // Если не добавлен, добавляем
+      console.log('📝 Добавление в инвентарь');
+      setShowModal(false);
+      onNavigate('card2');
     }
 
-    setShowModal(false);
-    onNavigate('card2');
     setIsProcessing(false);
   };
 
+  // Анимация спина (работает и в демо и в реальном режиме)
   useEffect(() => {
-    if (!isSpinning || targetItemIndex === null || !scrollerRef.current || frames.length === 0) return;
+    console.log('🎬 Эффект анимации, isSpinning:', isSpinning, 'targetItemIndex:', targetItemIndex, 'frames.length:', frames.length);
+    
+    if (!isSpinning || targetItemIndex === null || !scrollerRef.current || frames.length === 0) {
+      console.log('⏸️ Анимация не запускается, условия:',
+        'isSpinning:', isSpinning,
+        'targetItemIndex:', targetItemIndex,
+        'scrollerRef:', !!scrollerRef.current,
+        'frames.length:', frames.length
+      );
+      return;
+    }
 
     const scroller = scrollerRef.current;
     const frameElement = scroller.querySelector('.spin-item-frame');
-    if (!frameElement) return;
+    if (!frameElement) {
+      console.log('❌ Не найден элемент фрейма');
+      return;
+    }
+    
     const frameWidth = frameElement.offsetWidth;
     const gap = 10;
     const totalFrameWidth = frameWidth + gap;
@@ -277,8 +440,17 @@ export default function Spin2Screen({ onNavigate, winData }) {
     const visibleWidth = scroller.offsetWidth;
     const targetScroll = targetFrameIndex * totalFrameWidth - (visibleWidth / 2) + (frameWidth / 2);
 
-    const duration = 9000;
-    const glowStartTime = duration - 400;
+    console.log('📐 Параметры анимации:', {
+      frameWidth,
+      gap,
+      totalFrameWidth,
+      targetFrameIndex,
+      visibleWidth,
+      targetScroll
+    });
+
+    const duration = 8000; // Длительность анимации 8000 мс
+    const glowStartTime = duration - 1500;
     const startTime = performance.now();
     const startScroll = scroller.scrollLeft;
 
@@ -292,29 +464,37 @@ export default function Spin2Screen({ onNavigate, winData }) {
       scroller.scrollLeft = startScroll + (targetScroll - startScroll) * easedProgress;
 
       if (elapsed >= glowStartTime) {
-        const glowProgress = Math.min((elapsed - glowStartTime) / 400, 1);
+        const glowProgress = Math.min((elapsed - glowStartTime) / 1500, 1);
         setGlowOpacity(glowProgress);
       }
 
       if (progress < 1) {
         animationRef.current = requestAnimationFrame(animate);
       } else {
+        console.log('✅ Анимация завершена');
         scroller.scrollLeft = targetScroll;
         setGlowOpacity(1);
         setIsSpinning(false);
-        setTimeout(() => setShowModal(true), 500);
+        // Показываем модалку с задержкой
+        setTimeout(() => {
+          console.log('📱 Показываем модалку после анимации');
+          setShowModal(true);
+        }, 800);
       }
     };
 
+    console.log('▶️ Запуск анимации спина');
     animationRef.current = requestAnimationFrame(animate);
 
     return () => {
+      console.log('🧹 Очистка анимации');
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
     };
   }, [isSpinning, targetItemIndex, frames.length]);
 
+  // Класс для цены
   const getPriceClass = (priceStr) => {
     const priceValue = parseFloat(priceStr.replace(/[^\d.-]/g, ''));
     if (priceValue >= 501) return 'item-price-gradient-3';
@@ -323,18 +503,26 @@ export default function Spin2Screen({ onNavigate, winData }) {
     return 'item-price';
   };
 
+  // Индекс целевого фрейма
   const getTargetFrameIndex = () => frames.length - 3;
 
-  // Вспомогательная функция для хэширования строк
-  String.prototype.hashCode = function() {
-    let hash = 0;
-    for (let i = 0; i < this.length; i++) {
-      const char = this.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return hash;
+  // Получаем предмет из целевого фрейма
+  const getWinningFrameItem = () => {
+    const targetIndex = getTargetFrameIndex();
+    return frames[targetIndex] || winningItem;
   };
+
+  // Определяем, что показывать в модалке
+  const modalItem = actualWinningFrameItem || getWinningFrameItem() || winningItem;
+
+  if (isLoading) {
+    return (
+      <div className="spin-screen-content loading-spin">
+        <div className="spinner"></div>
+        <p>Loading spin data...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="spin-screen-content">
@@ -370,22 +558,29 @@ export default function Spin2Screen({ onNavigate, winData }) {
               key={index}
               className={`spin-item-frame ${
                 index === getTargetFrameIndex() && glowOpacity > 0 
-                  ? `spin-item-frame-glowing` 
-                  : index === getTargetFrameIndex() 
-                    ? 'spin-item-frame-center' 
-                    : ''
+                  ? 'spin-item-frame-glowing' 
+                  : ''
               }`}
               style={{
                 boxShadow: index === getTargetFrameIndex() 
-                  ? `0 0 15px ${glowOpacity * 7}px rgba(58, 171, 237, ${glowOpacity * 0.7})` 
+                  ? `0 0 20px ${glowOpacity * 10}px rgba(58, 171, 237, ${glowOpacity * 0.8})` 
                   : undefined,
                 border: index === getTargetFrameIndex() 
-                  ? `2px solid rgba(58, 171, 237, ${glowOpacity})` 
+                  ? `3px solid rgba(58, 171, 237, ${glowOpacity})` 
                   : undefined
               }}
             >
               <div className="spin-item-content">
-                <img src={content.img} alt={`Item ${index + 1}`} className="spin-item-image" loading="lazy" />
+                <img 
+                  src={content.img} 
+                  alt={`Item ${index + 1}`} 
+                  className="spin-item-image" 
+                  loading="lazy" 
+                  onError={(e) => {
+                    console.error(`Failed to load image for item:`, content);
+                    e.target.src = cardton2;
+                  }}
+                />
                 <div className={getPriceClass(content.price)}>{content.price}</div>
               </div>
             </div>
@@ -394,31 +589,44 @@ export default function Spin2Screen({ onNavigate, winData }) {
       </div>
 
       <div className="spin-skip-footer">
-        <button className="spin-skip-button" onClick={handleSkip}>
-          Skip
+        <button 
+          className="spin-skip-button" 
+          onClick={handleSkip}
+          disabled={!isSpinning}
+        >
+          SKIP
         </button>
       </div>
 
-      {showModal && winningItem && (
-        <div className="modal-overlay">
+      {showModal && modalItem && (
+        <div className="modal-overlay" onClick={(e) => e.stopPropagation()}>
           <div className="modal-content">
             <div className="winning-frame-large">
               <div className="winning-content-large">
-                <img src={winningItem.img} alt="Winning Item" className="winning-image-large" loading="lazy" />
-                <div className={`${getPriceClass(winningItem.price)} winning-price-large`}>
-                  {winningItem.price}
+                <img 
+                  src={modalItem.img} 
+                  alt="Winning Item" 
+                  className="winning-image-large" 
+                  loading="lazy" 
+                  onError={(e) => {
+                    console.error(`Failed to load winning image:`, modalItem);
+                    e.target.src = cardton2;
+                  }}
+                />
+                <div className={`${getPriceClass(modalItem.price)} winning-price-large`}>
+                  {modalItem.price}
                 </div>
               </div>
               <div className="purple-border-overlay"></div>
             </div>
             
-            {isCardtonItem(winningItem) ? (
+            {isCardtonItem(modalItem) ? (
               <button 
                 className="modal-secondary-button modal-single-button" 
                 onClick={handleSell}
                 disabled={isProcessing}
               >
-                SELL FOR {winningItem.price}
+                {isProcessing ? 'PROCESSING...' : `SELL FOR ${modalItem.price}`}
               </button>
             ) : (
               <>
@@ -427,14 +635,14 @@ export default function Spin2Screen({ onNavigate, winData }) {
                   onClick={handleSell}
                   disabled={isProcessing}
                 >
-                  SELL FOR {winningItem.price}
+                  {isProcessing ? 'PROCESSING...' : `SELL FOR ${modalItem.price}`}
                 </button>
                 <button 
                   className="modal-exit-button" 
                   onClick={handleAddToInventory}
                   disabled={isProcessing}
                 >
-                  ADD TO INVENTORY
+                  {isProcessing ? 'PROCESSING...' : 'ADD TO INVENTORY'}
                 </button>
               </>
             )}

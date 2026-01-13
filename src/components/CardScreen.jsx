@@ -3,7 +3,7 @@ import '../styles/CardScreen.css';
 import Header from './Header';
 import foot from '../assets/MainPage/foot.png';
 import footover from '../assets/MainPage/foot-on.svg';
-import closeIcon from '../assets/MainPage/close.svg';
+import closeIcon from '../assets/MainPage/close.png';
 
 export default function CardScreen({ 
   children, 

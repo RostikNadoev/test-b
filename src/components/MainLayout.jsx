@@ -17,12 +17,18 @@ export default function MainLayout({
   customBackground = null 
 }) {
   const { isDemoMode } = useDemo();
-  const layoutClassName = customBackground ? 
-    "main-screen-no-bg" : 
-    "main-screen";
 
   return (
-    <div className={layoutClassName}>
+    <div 
+      className="main-screen"
+      style={customBackground ? { 
+        backgroundImage: `url(${customBackground})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed'
+      } : {}}
+    >
       <Header onNavigate={onNavigate} />
 
       <main className="main-content">

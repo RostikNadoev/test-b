@@ -8,20 +8,8 @@ import { casesApi, authApi, starsApi } from '../utils/api';
 import cardBack3 from '../assets/MainPage/chest1/back3.png';
 import cardMain3 from '../assets/MainPage/chest3/main.png';
 import cardton3 from '../assets/MainPage/chest3/ton.png';
-import star from '../assets/MainPage/star.svg';
+import star from '../assets/MainPage/star1.png';
 import tonIcon from '../assets/Ton.svg';
-
-import item1 from '../assets/MainPage/chest3/in/3-1.png';
-import item2 from '../assets/MainPage/chest3/in/3-2.png';
-import item3 from '../assets/MainPage/chest3/in/3-3.png';
-import item4 from '../assets/MainPage/chest3/in/3-4.png';
-import item5 from '../assets/MainPage/chest3/in/3-5.png';
-import item6 from '../assets/MainPage/chest3/in/3-6.png';
-import item7 from '../assets/MainPage/chest3/in/3-7.png';
-import item8 from '../assets/MainPage/chest3/in/3-8.png';
-import item9 from '../assets/MainPage/chest3/in/3-9.png';
-import item10 from '../assets/MainPage/chest3/in/3-10.png';
-import item11 from '../assets/MainPage/chest3/in/3-11.png';
 
 export default function Card3Screen({ onNavigate, currentCardIndex = 2 }) {
   const [isSwitched, setIsSwitched] = useState(false);
@@ -37,12 +25,30 @@ export default function Card3Screen({ onNavigate, currentCardIndex = 2 }) {
     const loadCaseData = async () => {
       try {
         setIsLoading(true);
+        console.log('🔄 Загрузка кейса ID: 2 (Purple Case)...');
+        
         const response = await casesApi.getCaseById(2); // ID: 2
+        console.log('✅ Данные кейса 2 (Purple):', response);
+        console.log('📦 Данные кейса:', response.case);
+        console.log('📦 Предметы кейса:', response.items);
+        
         setCaseData(response.case);
         setCaseItems(response.items || []);
-        console.log('✅ Case 2 (Purple) data loaded:', response.case);
+        
+        if (response.items && response.items.length > 0) {
+          response.items.forEach((item, index) => {
+            console.log(`📊 Предмет ${index + 1}:`, {
+              name: item.name,
+              price_ton: item.price_ton,
+              item_type: item.item_type,
+              id: item.id
+            });
+          });
+        }
+        
       } catch (error) {
-        console.error('❌ Error loading case data:', error);
+        console.error('❌ Error loading case 2 data:', error);
+        console.error('💾 Error details:', error.response?.data);
         setCaseData({ price_ton: 4, price_stars: 400 });
         setCaseItems([]);
       } finally {
@@ -53,10 +59,10 @@ export default function Card3Screen({ onNavigate, currentCardIndex = 2 }) {
   }, []);
 
   const handleTonClick = async () => {
-    console.log('Card 3 (Purple) TON clicked! Checking balance...');
+    console.log('🟣 Card 3 (Purple Case) TON clicked!');
     
     if (isDemoMode) {
-      console.log('Demo mode: opening spin page...');
+      console.log('🎮 Demo mode: opening spin page...');
       onNavigate('spin3');
       return;
     }
@@ -67,15 +73,17 @@ export default function Card3Screen({ onNavigate, currentCardIndex = 2 }) {
     }
     
     const requiredAmount = caseData.price_ton || 4;
+    console.log(`💰 Required amount: ${requiredAmount} TON`);
     
     try {
       await loadBalance();
       const userData = authApi.getCurrentUser();
       const currentBalance = userData?.balance_ton || 0;
       
-      console.log(`Checking balance: ${currentBalance} TON, required: ${requiredAmount} TON`);
+      console.log(`💳 Checking balance: ${currentBalance} TON, required: ${requiredAmount} TON`);
       
       if (parseFloat(currentBalance) >= requiredAmount) {
+        console.log('✅ Sufficient balance, opening case...');
         await handleOpenCase('ton');
       } else {
         console.log('❌ Insufficient balance, showing top-up modal');
@@ -90,8 +98,10 @@ export default function Card3Screen({ onNavigate, currentCardIndex = 2 }) {
   };
 
   const handleStarClick = async () => {
+    console.log('🟣 Card 3 (Purple Case) STAR clicked!');
+    
     if (isDemoMode) {
-      console.log('Demo mode: skipping payment, opening spin page...');
+      console.log('🎮 Demo mode: opening spin page...');
       onNavigate('spin3');
       return;
     }
@@ -107,13 +117,14 @@ export default function Card3Screen({ onNavigate, currentCardIndex = 2 }) {
       }
       
       const starsCount = caseData.price_stars || 400;
-      console.log(`Opening invoice for ${starsCount} stars...`);
+      console.log(`⭐ Opening invoice for ${starsCount} stars...`);
       
       const invoiceData = await starsApi.createInvoice(starsCount);
+      console.log('📄 Invoice created:', invoiceData);
       
       if (window.Telegram?.WebApp?.openInvoice) {
         window.Telegram.WebApp.openInvoice(invoiceData.invoice_link, (status) => {
-          console.log('Invoice payment status:', status);
+          console.log('💳 Invoice payment status:', status);
           
           if (status === 'paid') {
             loadBalance().then(() => {
@@ -130,11 +141,11 @@ export default function Card3Screen({ onNavigate, currentCardIndex = 2 }) {
           setIsProcessing(false);
         });
       } else {
-        console.log('Opening invoice in new window (fallback)...');
+        console.log('🌐 Opening invoice in new window (fallback)...');
         window.open(invoiceData.invoice_link, '_blank');
         
         setTimeout(() => {
-          console.log('Opening case after payment simulation...');
+          console.log('🎰 Opening case after payment simulation...');
           handleOpenCase('stars');
           setIsProcessing(false);
         }, 2000);
@@ -146,22 +157,58 @@ export default function Card3Screen({ onNavigate, currentCardIndex = 2 }) {
     }
   };
 
-  const handleOpenCase = async (paymentMethod) => {
+  const handleOpenCase = async (currency) => {
     try {
       setIsProcessing(true);
-      console.log(`Opening case 2 (Purple) with ${paymentMethod}...`);
+      console.log(`🎰 Opening case ID: 2 (Purple) with currency: "${currency}"`);
+      console.log(`🔍 Проверяем валюту:`, {
+        value: currency,
+        type: typeof currency,
+        isTon: currency === 'ton',
+        isStars: currency === 'stars'
+      });
       
-      const result = await casesApi.openCase(2, paymentMethod); // ID: 2
+      const result = await casesApi.openCase(2, currency); // Важно: ID: 2
       console.log('✅ Case opened result:', result);
       
+      if (!result) {
+        console.error('❌ No result from openCase API');
+        alert('Error opening case. Please try again.');
+        setIsProcessing(false);
+        return;
+      }
+      
+      // Проверяем разные варианты ответа от API
+      const winItem = result.win_item || result.item || null;
+      
+      if (!winItem) {
+        console.error('❌ No win item in response:', result);
+        alert('Error: No item received from case opening.');
+        setIsProcessing(false);
+        return;
+      }
+      
+      console.log('🎯 Win item:', winItem);
+      
       onNavigate('spin3', { 
-        winItem: result.win_item,
+        winItem: winItem,
         caseOpeningId: result.case_opening_id,
-        inventoryAdded: result.inventory_added
+        inventoryAdded: result.inventory_added || false
       });
     } catch (error) {
-      console.error('❌ Error opening case:', error);
-      alert('Error opening case. Please try again.');
+      console.error('❌ Error opening case 2:', error);
+      console.error('💾 Error response:', error.response?.data);
+      console.error('💾 Error status:', error.response?.status);
+      
+      let errorMessage = 'Error opening case. Please try again.';
+      
+      if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(errorMessage);
       setIsProcessing(false);
     }
   };
@@ -171,20 +218,31 @@ export default function Card3Screen({ onNavigate, currentCardIndex = 2 }) {
     setIsSwitched(!isSwitched);
   };
 
+  // Функция для получения URL изображения из API
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return '';
+    
+    // Если это статические файлы бэкенда, добавляем базовый URL
+    if (imagePath.startsWith('/static/')) {
+      return `${import.meta.env.VITE_BACKEND_URL || ''}${imagePath}`;
+    }
+    
+    return imagePath;
+  };
+
   const getFrameContents = () => {
     if (caseItems.length > 0) {
+      console.log('📦 Using case items from API:', caseItems);
       return caseItems.map((item, index) => {
         let img;
         let price;
         
         if (item.item_type === 'tg_gift') {
-          const itemImages = [
-            item11, item10, item1, item4, item2, 
-            item3, item8, item9, item5, item7, item6
-          ];
-          img = itemImages[index % itemImages.length] || cardton3;
+          // Для подарков Telegram используем изображения из API
+          img = getImageUrl(item.image_url);
           price = `${item.price_ton} TON`;
         } else if (item.item_type === 'reward_ton') {
+          // Для TON наград используем локальную картинку
           img = cardton3;
           price = `${item.price_ton} TON`;
         } else {
@@ -192,26 +250,23 @@ export default function Card3Screen({ onNavigate, currentCardIndex = 2 }) {
           price = '0 TON';
         }
         
-        return { img, price };
+        console.log(`🎨 Item ${index}:`, { img, price, item_type: item.item_type });
+        return { 
+          img, 
+          price, 
+          apiData: item,
+          itemType: item.item_type,
+          imageUrl: item.image_url 
+        };
       });
     }
     
-    return [
-      { img: item11, price: '1800 TON' },
-      { img: item10, price: '150 TON' },
-      { img: item1, price: '30 TON' },
-      { img: item4, price: '26 TON' },
-      { img: item2, price: '12 TON' },
-      { img: item3, price: '11 TON' },
-      { img: item8, price: '10 TON' },
-      { img: item9, price: '7 TON' },
-      { img: item5, price: '4 TON' },
-      { img: cardton3, price: '2 TON' },
-      { img: item7, price: '1.7 TON' },
-      { img: item6, price: '1.7 TON' },
-      { img: cardton3, price: '1.5 TON' },
-      { img: cardton3, price: '1 TON' }
-    ];
+    console.log('⚠️ No API data, using default items');
+    return Array(14).fill().map((_, index) => ({
+      img: cardton3,
+      price: '0 TON',
+      itemType: 'reward_ton'
+    }));
   };
 
   const frameContents = getFrameContents();
@@ -232,6 +287,10 @@ export default function Card3Screen({ onNavigate, currentCardIndex = 2 }) {
           alt={`Item ${index + 1}`} 
           className="item-image"
           loading="lazy"
+          onError={(e) => {
+            console.error(`Failed to load image: ${content.imageUrl}`);
+            e.target.src = cardton3; // Фолбэк на TON картинку
+          }}
         />
         <div className={getPriceClass(content.price)}>{content.price}</div>
       </div>
@@ -305,7 +364,14 @@ export default function Card3Screen({ onNavigate, currentCardIndex = 2 }) {
         </div>
 
         <div className="items-container">
-          {frames}
+          {isLoading ? (
+            <div className="loading-items">
+              <div className="spinner"></div>
+              <p>Loading items...</p>
+            </div>
+          ) : (
+            frames
+          )}
         </div>
         
         <div className="blur-overlay"></div>

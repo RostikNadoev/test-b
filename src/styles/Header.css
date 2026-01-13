@@ -1,12 +1,12 @@
 .header-outer {
   width: clamp(280px, 91vw, 437px);
-  height: clamp(50px, 14vw, 68px); 
+  height: clamp(50px, 14vw, 68px);
   background: linear-gradient(93deg, rgba(212, 231, 248, 0.50) -5.26%, rgba(255, 255, 255, 0.50) 100%);
   box-shadow: -4px -1px 4px 0 rgba(255, 255, 255, 0.38) inset, 0 4px 14.8px 0 rgba(109, 166, 210, 0.27), 0 4px 7.5px 0 rgba(127, 167, 219, 0.46) inset;
   border-radius: 25px;
   padding: 2px;
   box-sizing: border-box;
-  margin-top: 16px;
+  margin-top: 106px;
 }
 
 .header-inner {
@@ -54,7 +54,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: clamp(80px, 31vw, 150px);
+  max-width: clamp(60px, 21vw, 120px);
 }
 
 .balance-container {
@@ -84,17 +84,7 @@
   z-index: 1;
 }
 
-.balance-icon {
-  width: clamp(24px, 7.7vw, 46px);
-  height: clamp(24px, 7.7vw, 46px);
-  position: absolute;
-  left: clamp(-12px, -3.1vw, -23px);
-  top: 50%;
-  transform: translateY(-50%);
-  border: 0px solid white;
-  border-radius: 50%;
-  z-index: 2;
-}
+
 
 .balance-amount {
   font-family: 'KZ Supercell-Magic', sans-serif;
@@ -155,7 +145,7 @@
   position: relative;
   width: 100vw;
   max-width: 480px;
-  height: 25vh;
+  height: 38vh;
   min-height: 220px;
   max-height: 280px;
   background: linear-gradient(180deg, rgba(231, 241, 253, 1), rgba(255, 255, 255, 1));
@@ -336,6 +326,7 @@
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
   font-size: 16px;
+  line-height: 1.5;
   color: white;
   cursor: pointer;
   display: flex;
@@ -347,6 +338,11 @@
   overflow: hidden;
   margin-top: 5px;
   touch-action: manipulation;
+  text-shadow: 
+    3px 3px 0 rgba(53, 163, 242, 1),    /* 35A3F2 - основной синий */
+    -1px -1px 0 rgba(53, 163, 242, 1),
+    1px -1px 0 rgba(53, 163, 242, 1),
+    -1px 1px 0 rgba(53, 163, 242, 1);
 }
 
 .balance-modal-action-btn:not(.disabled):active {
@@ -392,9 +388,9 @@
   touch-action: manipulation;
 }
 
-.balance-modal-close-icon {
-  width: 38px;
-  height: 38px;
+.balance-modal-close-png {
+  width: 48px;
+  height: 48px;
 }
 
 @keyframes balanceModalSlideIn {
@@ -608,5 +604,296 @@
   .disconnect-wallet-btn {
     font-size: 11px;
     padding: 5px 10px;
+  }
+}
+
+
+/* Контейнер для двух балансов */
+.balances-container {
+  position: absolute;
+  right: -16px;
+  display: flex;
+  align-items: center;
+}
+
+/* Общие стили для балансов */
+.balance-container {
+  width: 90px;
+  height: clamp(21px, 7.8vw, 29px);
+  background: linear-gradient(93deg, rgba(212, 231, 248, 0.50) -5.26%, rgba(255, 255, 255, 0.50) 100%);
+  box-shadow: -4px -1px 4px 0 rgba(255, 255, 255, 0.38) inset, 
+              0 4px 14.8px 0 rgba(109, 166, 210, 0.27), 
+              0 4px 7.5px 0 rgba(127, 167, 219, 0.46) inset;
+  border-radius: 10px;
+  padding: 2px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.balance-container::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  background: linear-gradient(135deg, rgba(212, 231, 248, 1), rgba(255, 255, 255, 1));
+  border-radius: 8px;
+  z-index: 1;
+}
+
+@media (max-width:440px){
+  .balance-container {
+    width: 89px;
+  }
+}
+
+
+/* Иконка TON */
+.ton-balance .balance-icon {
+  width: 30px;
+  height: 30px;
+  position: absolute;
+  left: clamp(-8px, -2.6vw, -12px);
+  top: 50%;
+  transform: translateY(-50%);
+  border: 1px solid white;
+  border-radius: 50%;
+  z-index: 2;
+  background: white;
+}
+
+/* Круг для звезды */
+.star-icon-circle {
+  width: 30px;
+  height: 30px;
+  position: absolute;
+  left: clamp(-8px, -2.6vw, -12px);
+  top: 50%;
+  transform: translateY(-50%);
+  border: 2px solid white;
+  border-radius: 50%;
+  z-index: 2;
+  background: linear-gradient(135deg, rgba(255, 178, 90, 1), rgba(255, 232, 215, 1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Иконка звезды */
+.star-icon-circle .star-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+/* Текст баланса */
+.balance-amount {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: clamp(11px, 2.5vw, 14px);
+  line-height: 1.5;
+  letter-spacing: 0%;
+  background: linear-gradient(90deg, rgba(53, 163, 242, 1), rgba(55, 189, 243, 1));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding-left: 8px;
+}
+
+/* Для stars баланса - другой градиент */
+.stars-balance .balance-amount {
+  background: linear-gradient(90deg, rgba(255, 197, 114, 1), rgba(251, 194, 95, 1));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Кнопка добавления баланса */
+.add_balance-button {
+  position: absolute;
+  right: clamp(8px, 2.1vw, 10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add_balance-icon {
+  width: clamp(32px, 9.6vw, 46px);
+  height: clamp(32px, 9.6vw, 46px);
+}
+
+/* === ПЕРЕКЛЮЧАТЕЛЬ ВАЛЮТ === */
+.currency-switcher {
+  display: flex;
+  background: linear-gradient(135deg, rgba(212, 231, 248, 0.8), rgba(255, 255, 255, 0.8));
+  border-radius: 15px;
+  padding: 3px;
+  margin-bottom: 15px;
+  width: 90%;
+  max-width: 300px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.currency-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 5px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: rgba(53, 163, 242, 0.7);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.currency-tab.active {
+  background: linear-gradient(90deg, rgba(53, 163, 242, 0.2), rgba(55, 189, 243, 0.2));
+  color: rgba(53, 163, 242, 1);
+  box-shadow: 0 2px 6px rgba(53, 163, 242, 0.3);
+}
+
+.currency-tab:not(.active):hover {
+  background: rgba(53, 163, 242, 0.1);
+}
+
+.currency-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+/* Для stars используем другой градиент */
+.currency-tab:nth-child(2) {
+  color: rgba(255, 197, 114, 0.7);
+}
+
+.currency-tab:nth-child(2).active {
+  background: linear-gradient(90deg, rgba(255, 197, 114, 0.2), rgba(251, 194, 95, 0.2));
+  color: rgba(255, 197, 114, 1);
+  box-shadow: 0 2px 6px rgba(255, 197, 114, 0.3);
+}
+
+.currency-tab:nth-child(2):not(.active):hover {
+  background: rgba(255, 197, 114, 0.1);
+}
+
+/* === КНОПКА ДЛЯ STARS === */
+.balance-modal-action-btn.stars-btn {
+  background: linear-gradient(180deg, rgba(255, 213, 153, 1), rgba(255, 232, 200, 1));
+  border: 2px solid rgba(255, 197, 114, 1);
+  color: rgb(255, 255, 255);
+  font-weight: 800;
+  /* Обводка текста с помощью text-shadow */
+  text-shadow: 
+    3px 3px 0 rgba(255, 197, 114, 1),
+    -1px -1px 0 rgba(255, 197, 114, 1),
+    1px -1px 0 rgba(255, 197, 114, 1),
+    -1px 1px 0 rgba(255, 197, 114, 1);
+}
+
+.balance-modal-action-btn.stars-btn:not(.disabled):hover {
+  background: linear-gradient(180deg, rgba(255, 223, 173, 1), rgba(255, 242, 220, 1));
+}
+
+.balance-btn-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* === ИНФОРМАЦИЯ ОБ ИНВОЙСЕ === */
+.invoice-info {
+  margin-top: 15px;
+  padding: 10px;
+  background: linear-gradient(135deg, rgba(255, 242, 225, 0.9), rgba(255, 250, 240, 0.9));
+  border-radius: 10px;
+  text-align: center;
+  border: 1px solid rgba(255, 197, 114, 0.3);
+  width: 90%;
+  max-width: 300px;
+}
+
+.invoice-info p {
+  margin: 0 0 8px 0;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  color: #8a5a00;
+}
+
+.invoice-link {
+  display: inline-block;
+  background: linear-gradient(180deg, rgba(255, 213, 153, 1), rgba(255, 232, 200, 1));
+  border: 2px solid rgba(255, 197, 114, 1);
+  border-radius: 8px;
+  padding: 8px 15px;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  color: #8a5a00;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.invoice-link:hover {
+  background: linear-gradient(180deg, rgba(255, 223, 173, 1), rgba(255, 242, 220, 1));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(255, 197, 114, 0.3);
+}
+
+/* === АДАПТИВНОСТЬ === */
+@media (max-width: 480px) {
+  .currency-switcher {
+    width: 85%;
+    margin-bottom: 12px;
+  }
+  
+  .currency-tab {
+    font-size: 13px;
+    padding: 8px 4px;
+    gap: 6px;
+  }
+  
+  .currency-icon {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .invoice-info {
+    padding: 8px;
+    font-size: 11px;
+  }
+  
+  .invoice-link {
+    padding: 7px 12px;
+    font-size: 12px;
+  }
+}
+
+/* Для очень маленьких экранов */
+@media (max-width: 360px) {
+  .currency-switcher {
+    width: 80%;
+  }
+  
+  .currency-tab {
+    font-size: 12px;
+    padding: 6px 3px;
+    gap: 4px;
   }
 }

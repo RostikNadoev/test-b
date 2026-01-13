@@ -8,21 +8,8 @@ import { casesApi, authApi, starsApi } from '../utils/api';
 import cardBack1 from '../assets/MainPage/chest1/back.png';
 import cardMain1 from '../assets/MainPage/chest1/main.png';
 import cardton1 from '../assets/MainPage/chest1/ton.png';
-import star from '../assets/MainPage/star.svg';
+import star from '../assets/MainPage/star1.png';
 import tonIcon from '../assets/Ton.svg';
-
-import item1 from '../assets/MainPage/chest1/in/1-1.png';
-import item2 from '../assets/MainPage/chest1/in/1-2.png';
-import item3 from '../assets/MainPage/chest1/in/1-3.png';
-import item4 from '../assets/MainPage/chest1/in/1-4.png';
-import item5 from '../assets/MainPage/chest1/in/1-5.png';
-import item6 from '../assets/MainPage/chest1/in/1-6.png';
-import item7 from '../assets/MainPage/chest1/in/1-7.png';
-import item8 from '../assets/MainPage/chest1/in/1-8.png';
-import item9 from '../assets/MainPage/chest1/in/1-9.png';
-import item10 from '../assets/MainPage/chest1/in/1-10.png';
-import item11 from '../assets/MainPage/chest1/in/1-11.png';
-import item12 from '../assets/MainPage/chest1/in/1-12.png';
 
 export default function Card1Screen({ onNavigate, currentCardIndex = 0 }) {
   const [isSwitched, setIsSwitched] = useState(false);
@@ -60,6 +47,7 @@ export default function Card1Screen({ onNavigate, currentCardIndex = 0 }) {
     
     if (isDemoMode) {
       console.log('Demo mode: opening spin page...');
+      // В демо режиме сразу переходим на спин
       onNavigate('spin1');
       return;
     }
@@ -96,6 +84,7 @@ export default function Card1Screen({ onNavigate, currentCardIndex = 0 }) {
   const handleStarClick = async () => {
     if (isDemoMode) {
       console.log('Demo mode: skipping payment, opening spin page...');
+      // В демо режиме сразу переходим на спин
       onNavigate('spin1');
       return;
     }
@@ -151,37 +140,52 @@ export default function Card1Screen({ onNavigate, currentCardIndex = 0 }) {
   };
 
   // Функция для открытия кейса
- // Функция для открытия кейса
-const handleOpenCase = async (payType) => {
-  try {
-    setIsProcessing(true);
-    console.log(`🔄 Opening case 1 with payType: "${payType}"`);
-    console.log(`🔍 PayType проверка:`, {
-      value: payType,
-      type: typeof payType,
-      isTon: payType === 'ton',
-      isStars: payType === 'stars'
-    });
-    
-    const result = await casesApi.openCase(1, payType);
-    console.log('✅ Case opened result:', result);
-    
-    onNavigate('spin1', { 
-      winItem: result.win_item,
-      caseOpeningId: result.case_opening_id,
-      inventoryAdded: result.inventory_added
-    });
-  } catch (error) {
-    console.error('❌ Error opening case:', error);
-    console.error('💾 Error details:', error.response?.data);
-    alert('Error opening case. Please try again.');
-    setIsProcessing(false);
-  }
-};
+  const handleOpenCase = async (currency) => {
+    try {
+      setIsProcessing(true);
+      console.log(`🔄 Opening case 1 with currency: "${currency}"`);
+      console.log(`🔍 Currency проверка:`, {
+        value: currency,
+        type: typeof currency,
+        isTon: currency === 'ton',
+        isStars: currency === 'stars'
+      });
+      
+      const result = await casesApi.openCase(1, currency);
+      console.log('✅ Case opened result:', result);
+      
+      // Добавляем небольшую задержку перед переходом
+      setTimeout(() => {
+        onNavigate('spin1', { 
+          winItem: result.win_item,
+          caseOpeningId: result.case_opening_id,
+          inventoryAdded: result.inventory_added
+        });
+      }, 0); // Задержка 0мс
+      
+    } catch (error) {
+      console.error('❌ Error opening case:', error);
+      console.error('💾 Error details:', error.response?.data);
+      alert('Error opening case. Please try again.');
+      setIsProcessing(false);
+    }
+  };
 
   const handleSwitchClick = () => {
     if (isDemoMode) return;
     setIsSwitched(!isSwitched);
+  };
+
+  // Функция для получения URL изображения из API
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return '';
+    
+    // Если это статические файлы бэкенда, добавляем базовый URL
+    if (imagePath.startsWith('/static/')) {
+      return `${import.meta.env.VITE_BACKEND_URL || ''}${imagePath}`;
+    }
+    
+    return imagePath;
   };
 
   // Определяем содержимое рамок из данных API
@@ -192,13 +196,11 @@ const handleOpenCase = async (payType) => {
         let price;
         
         if (item.item_type === 'tg_gift') {
-          const itemImages = [
-            item1, item2, item3, item4, item5, item6, 
-            item7, item8, item9, item10, item11, item12
-          ];
-          img = itemImages[index % itemImages.length] || cardton1;
+          // Для подарков Telegram используем изображения из API
+          img = getImageUrl(item.image_url);
           price = `${item.price_ton} TON`;
         } else if (item.item_type === 'reward_ton') {
+          // Для TON наград используем локальную картинку
           img = cardton1;
           price = `${item.price_ton} TON`;
         } else {
@@ -206,28 +208,16 @@ const handleOpenCase = async (payType) => {
           price = '0 TON';
         }
         
-        return { img, price };
+        return { img, price, itemType: item.item_type, imageUrl: item.image_url };
       });
     }
     
     // Дефолтное содержимое если API не вернул данные
-    return [
-      { img: item1, price: '150 TON' },
-      { img: item2, price: '80 TON' },
-      { img: item3, price: '65 TON' },
-      { img: item4, price: '7.5 TON' },
-      { img: item5, price: '3 TON' },
-      { img: item6, price: '2.5 TON' },
-      { img: item7, price: '2.5 TON' },
-      { img: item8, price: '1.7 TON' },
-      { img: item9, price: '1.7 TON' },
-      { img: item10, price: '1.7 TON' },
-      { img: item11, price: '1.7 TON' },
-      { img: item12, price: '1.7 TON' },
-      { img: cardton1, price: '1.5 TON' },
-      { img: cardton1, price: '1 TON' },
-      { img: cardton1, price: '0.5 TON' }
-    ];
+    return Array(15).fill().map((_, index) => ({
+      img: cardton1,
+      price: '0 TON',
+      itemType: 'reward_ton'
+    }));
   };
 
   const frameContents = getFrameContents();
@@ -248,6 +238,10 @@ const handleOpenCase = async (payType) => {
           alt={`Item ${index + 1}`} 
           className="item-image"
           loading="lazy"
+          onError={(e) => {
+            console.error(`Failed to load image: ${content.imageUrl}`);
+            e.target.src = cardton1; // Фолбэк на TON картинку
+          }}
         />
         <div className={getPriceClass(content.price)}>{content.price}</div>
       </div>
@@ -321,7 +315,14 @@ const handleOpenCase = async (payType) => {
         </div>
 
         <div className="items-container">
-          {frames}
+          {isLoading ? (
+            <div className="loading-items">
+              <div className="spinner"></div>
+              <p>Loading items...</p>
+            </div>
+          ) : (
+            frames
+          )}
         </div>
         
         <div className="blur-overlay"></div>

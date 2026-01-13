@@ -12,6 +12,7 @@ import cardton2 from '../assets/MainPage/chest2/ton.png';
 import cardton3 from '../assets/MainPage/chest3/ton.png';
 // Импортируем изображения для кнопок
 import gameCard1 from '../assets/MainPage/game-card-1.png';
+import gameCard2 from '../assets/MainPage/ttmb.png';
 import { useState, useEffect, useRef } from 'react';
 import { casesApi } from '../utils/api';
 
@@ -221,11 +222,16 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
     }
   };
 
-  // Обработчик клика по картинкам-кнопкам
   const handleImageButtonClick = (buttonNumber) => {
     console.log(`🎯 Image button ${buttonNumber} clicked`);
-    // Пока что просто логируем, можно добавить функционал позже
-    alert(`Image button ${buttonNumber} clicked - functionality coming soon!`);
+    
+    if (buttonNumber === 1) {
+      // Первая кнопка - переход на страницу Lucky Balls
+      console.log('🎱 Navigating to Lucky Balls');
+      onNavigate('luckyballs', currentIndex);
+    } else {
+      onNavigate('rocket', currentIndex);
+    }
   };
 
   const getCards = () => {
@@ -303,7 +309,7 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
           style={{ cursor: 'pointer' }}
         >
           <img 
-            src={gameCard1} 
+            src={gameCard2} 
             alt="Game Card 2 (temporary)" 
             className="banner-image"
             loading="lazy"

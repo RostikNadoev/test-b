@@ -1,0 +1,405 @@
+.rocket-screen {
+  background-image: url('../assets/Rocket/rocketback.png');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 100%;
+  height: var(--app-height, 100vh);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.rocket-content {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 15px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.rocket-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.multiplier-container {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  padding: 0 15px;
+  height: 45px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: fit-content;
+  z-index: 10;
+}
+
+.multiplier-text {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 16px;
+  line-height: 100%;
+  letter-spacing: 0%;
+  color: white;
+  white-space: nowrap;
+}
+
+.rocket-game-area {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  margin-top: -30px;
+}
+
+.video-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  margin-bottom: -20px;
+}
+
+.timer-container {
+  position: relative;
+  width: 250px;
+  height: 250px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.timer-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.timer-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 36px;
+  line-height: 1.5;
+  letter-spacing: 0%;
+  color: white;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.animation-container,
+.explosion-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.raketa-animation {
+  width: 250px;
+  height: 250px;
+  min-width: 250px;
+  min-height: 250px;
+  transform: scale(1);
+  transform-origin: center;
+}
+
+.explosion-animation {
+  width: 195px;
+  height: 195px;
+  min-width: 195px;
+  min-height: 195px;
+  transform: scale(1);
+  transform-origin: center;
+  margin-bottom: 40px;
+  margin-top: 16px;
+}
+
+.loading-animation,
+.error-message {
+  width: 250px;
+  height: 250px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  color: white;
+  font-size: 20px;
+}
+
+/* === Блок последних множителей === */
+.last-multipliers-container {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  overflow: hidden;
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.last-multipliers-scroll {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.last-multipliers-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.last-multiplier-item {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 13px;
+  line-height: 100%;
+  letter-spacing: 0%;
+  color: white;
+  white-space: nowrap;
+  padding: 0 15px;
+  height: 45px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: fit-content;
+  flex-shrink: 0;
+}
+
+/* Футер */
+.rocket-footer {
+  width: 100%;
+  height: auto;
+  padding: 0px 0 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform: translateZ(0);
+  position: relative;
+  z-index: 10;
+  margin-top: -20px;
+}
+
+/* Таблица участников */
+.participants-table-container {
+  width: 100%;
+  margin-top: 0;
+}
+
+.participants-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.participants-thead {
+  width: 100%;
+  height: 45px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  position: relative;
+  margin-bottom: 10px;
+}
+
+/* Создаем псевдоэлемент для границы вокруг всего thead */
+.participants-thead::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 3px solid white;
+  pointer-events: none;
+  border-radius: 12px;
+}
+
+.participants-header-cell {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 16px;
+  line-height: 100%;
+  letter-spacing: 0%;
+  text-transform: uppercase;
+  color: white;
+  height: 45px;
+  vertical-align: middle;
+  border: none;
+}
+
+.participants-header-cell.bet-column {
+  text-align: left;
+  padding-left: 10px;
+  width: 50%;
+}
+
+.participants-header-cell.winning-column {
+  text-align: right;
+  padding-right: 10px;
+  width: 50%;
+}
+
+/* TBody участников */
+.participants-tbody {
+  display: block;
+  max-height: 130px; /* 2 строки по 60px + 10px отступ = 130px, немного больше для запаса */
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.5) transparent;
+  margin-top: 10px;
+}
+
+.participants-tbody::-webkit-scrollbar {
+  width: 4px;
+}
+
+.participants-tbody::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.participants-tbody::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 2px;
+}
+
+.participants-row {
+  width: 100%;
+  height: 50px;
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.participants-row:last-child {
+  margin-bottom: 0;
+}
+
+.participant-bet-cell {
+  width: 50%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  box-sizing: border-box;
+}
+
+.participant-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid white;
+  background: transparent;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.participant-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.participant-nickname {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 13px;
+  line-height: 100%;
+  color: rgb(94, 178, 238);
+  margin-bottom: 5px;
+}
+
+.participant-bet {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 12px;
+  line-height: 100%;
+  color: rgba(0, 152, 234, 1);
+}
+
+.participant-winning-cell {
+  width: 50%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 10px;
+  box-sizing: border-box;
+}
+
+/* Кнопка MAKE A BET */
+.make-bet-button-container {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.make-bet-button {
+  width: 100%;
+  height: 50px;
+  background: radial-gradient( rgba(105, 113, 255, 1), rgba(184, 210, 249, 1));
+  border: 2px solid white;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.make-bet-button:active {
+  transform: scale(0.99);
+}
+
+.make-bet-text {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 100%;
+  letter-spacing: 0%;
+  text-transform: uppercase;
+  color: white;
+  position: relative;
+  -webkit-text-stroke: 1.5px rgba(101, 149, 255, 1);
+  paint-order: stroke fill;
+}
+
+

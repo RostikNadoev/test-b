@@ -78,14 +78,14 @@
 
 .claim-all-button--disabled,
 .claim-all-button:disabled {
-    opacity: 0.5;
+    opacity: 0.3;
     cursor: not-allowed;
     transform: none;
 }
 
 .claim-all-button--disabled:hover,
 .claim-all-button:disabled:hover {
-    opacity: 0.5;
+    opacity: 0.3;
 }
 
 .claim-all-button--disabled:active,
@@ -181,15 +181,11 @@
     height: 24px;
 }
 
-/* Убран opacity для выполненных заданий */
-.task-progress--completed {
-    /* opacity: 0.6; */
-}
 
 .task-claim-button {
     width: 100%;
     height: 47px;
-    background: linear-gradient(180deg, #82D5FE, #BEEDFE);
+    background: linear-gradient(180deg, rgba(130, 213, 254, 1), rgba(190, 237, 254, 1));
     border: 1.5px solid white;
     border-radius: 10px;
     font-family: 'KZ Supercell-Magic', sans-serif;
@@ -260,14 +256,14 @@
 /* Стили для неактивной кнопки CLAIM */
 .task-claim-button--disabled,
 .task-claim-button:disabled {
-    opacity: 0.5;
+    opacity: 0.3;
     cursor: not-allowed;
     transform: none;
 }
 
 .task-claim-button--disabled:hover,
 .task-claim-button:disabled:hover {
-    opacity: 0.5;
+    opacity: 0.3;
 }
 
 .task-claim-button--disabled:active,
@@ -428,24 +424,6 @@
     animation: rewardClaimed 0.3s ease;
   }
   
-  /* Анимация пульсации для АКТИВНЫХ кнопок (когда награду можно забрать) */
-  @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.02); }
-    100% { transform: scale(1); }
-  }
-  
-  /* Мерцание для кнопок, которые МОЖНО нажать (квест выполнен) */
-  .claim-all-button:not(:disabled),
-  .task-claim-button:not(:disabled) {
-    /* Убрали animation из disabled состояний */
-  }
-  
-  /* Добавляем мерцание только когда есть claimable rewards */
-  .claim-all-button--pulse:not(:disabled),
-  .task-claim-button--pulse:not(:disabled) {
-    animation: pulse 1.5s infinite;
-  }
   
   /* Стили для отключенных кнопок - без анимации */
   .claim-all-button--disabled,
@@ -453,7 +431,7 @@
   .task-claim-button--disabled,
   .task-claim-button:disabled {
     animation: none !important;
-    opacity: 0.5;
+    opacity: 0.3;
     cursor: not-allowed;
   }
   

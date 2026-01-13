@@ -1,13 +1,14 @@
+// PvpScreen.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import MainLayout from './MainLayout';
 import '../styles/PvpScreen.css';
 import arrow from '../assets/SpinPage/arrow.png';
-import emptyPat from '../assets/PVP/empty-pat.png'; // Добавляем импорт картинки
+import emptyPat from '../assets/PVP/empty-pat.png';
+import pvpBackground from '../assets/PVP/main.png'; // ← импортируем фон
 
 export default function PvpScreen({ onNavigate }) {
   const [isWaiting, setIsWaiting] = useState(true);
   const scrollerRef = useRef(null);
-  const [animationFrame, setAnimationFrame] = useState(null);
 
   // Пустые карточки для демонстрации (0 игроков)
   const emptyFrames = Array(12).fill(null);
@@ -19,9 +20,7 @@ export default function PvpScreen({ onNavigate }) {
 
     const animateLetters = () => {
       letters.forEach((letter, index) => {
-        // Пропускаем пробелы в анимации
         if (letter.textContent === ' ') return;
-        
         setTimeout(() => {
           letter.style.transform = 'translateY(-5px)';
           setTimeout(() => {
@@ -44,8 +43,7 @@ export default function PvpScreen({ onNavigate }) {
     let animationId = null;
 
     const animateScroll = () => {
-      // Увеличиваем скорость для мини-аппа
-      position += 3; // Увеличил с 2 до 8 для мини-аппа
+      position += 3;
       if (position > scroller.scrollWidth / 2) {
         position = 0;
       }
@@ -54,7 +52,6 @@ export default function PvpScreen({ onNavigate }) {
     };
 
     animationId = requestAnimationFrame(animateScroll);
-    setAnimationFrame(animationId);
 
     return () => {
       if (animationId) {
@@ -82,7 +79,11 @@ export default function PvpScreen({ onNavigate }) {
   };
 
   return (
-    <MainLayout onNavigate={onNavigate} currentScreen="pvp">
+    <MainLayout 
+      onNavigate={onNavigate} 
+      currentScreen="pvp"
+      customBackground={pvpBackground} // ← передаём фон сюда
+    >
       <div className="pvp-screen-content">
         {/* Контейнер с прокручиваемыми рамками */}
         <div className="pvp-frames-container">
@@ -95,7 +96,7 @@ export default function PvpScreen({ onNavigate }) {
             </div>
           )}
 
-          {/* Стрелка - фиксированная позиция, но внутри blurred контейнера */}
+          {/* Стрелка */}
           <div className={`pvp-arrow-container ${isWaiting ? 'blurred' : ''}`}>
             <img src={arrow} alt="Arrow" className="pvp-arrow" loading="lazy" />
           </div>
@@ -112,7 +113,6 @@ export default function PvpScreen({ onNavigate }) {
                       <div className="question-mark">?</div>
                     </div>
                   ) : (
-                    // Здесь будет контент когда появятся игроки
                     <div className="player-slot">
                       <div className="player-avatar"></div>
                       <div className="player-nickname">Player</div>
@@ -139,7 +139,6 @@ export default function PvpScreen({ onNavigate }) {
               <div className="header-cell">INVESTS</div>
             </div>
             <div className="table-body">
-              {/* Добавляем картинку и текст */}
               <div className="empty-table-content">
                 <img src={emptyPat} alt="No participants" className="empty-pat-image" />
                 <div className="empty-table-message">

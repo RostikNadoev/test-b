@@ -8,19 +8,8 @@ import { casesApi, authApi, starsApi } from '../utils/api';
 import cardBack2 from '../assets/MainPage/chest1/back2.png';
 import cardMain2 from '../assets/MainPage/chest2/main.png';
 import cardton2 from '../assets/MainPage/chest2/ton.png';
-import star from '../assets/MainPage/star.svg';
+import star from '../assets/MainPage/star1.png';
 import tonIcon from '../assets/Ton.svg';
-
-import item1 from '../assets/MainPage/chest2/in/2-1.png';
-import item2 from '../assets/MainPage/chest2/in/2-2.png';
-import item3 from '../assets/MainPage/chest2/in/2-3.png';
-import item4 from '../assets/MainPage/chest2/in/2-4.png';
-import item5 from '../assets/MainPage/chest2/in/2-5.png';
-import item6 from '../assets/MainPage/chest2/in/2-6.png';
-import item7 from '../assets/MainPage/chest2/in/2-7.png';
-import item8 from '../assets/MainPage/chest2/in/2-8.png';
-import item9 from '../assets/MainPage/chest2/in/2-9.png';
-import item10 from '../assets/MainPage/chest2/in/2-10.png';
 
 export default function Card2Screen({ onNavigate, currentCardIndex = 1 }) {
   const [isSwitched, setIsSwitched] = useState(false);
@@ -36,10 +25,28 @@ export default function Card2Screen({ onNavigate, currentCardIndex = 1 }) {
     const loadCaseData = async () => {
       try {
         setIsLoading(true);
+        console.log('🔄 Загрузка кейса 3 (Blue)...');
+        
         const response = await casesApi.getCaseById(3); // ID: 3
+        console.log('📦 Ответ от API:', response);
+        console.log('📦 Данные кейса:', response.case);
+        console.log('📦 Предметы кейса:', response.items);
+        
         setCaseData(response.case);
         setCaseItems(response.items || []);
-        console.log('✅ Case 3 (Blue) data loaded:', response.case);
+        
+        // Выводим информацию о ценах
+        if (response.items && response.items.length > 0) {
+          response.items.forEach((item, index) => {
+            console.log(`📊 Предмет ${index + 1}:`, {
+              name: item.name,
+              price_ton: item.price_ton,
+              item_type: item.item_type,
+              id: item.id
+            });
+          });
+        }
+        
       } catch (error) {
         console.error('❌ Error loading case data:', error);
         setCaseData({ price_ton: 5, price_stars: 500 });
@@ -148,21 +155,23 @@ export default function Card2Screen({ onNavigate, currentCardIndex = 1 }) {
   };
 
   // Функция для открытия кейса
-  const handleOpenCase = async (paymentMethod) => {
+  const handleOpenCase = async (currency) => {
     try {
       setIsProcessing(true);
-      console.log(`Opening case 3 (Blue) with ${paymentMethod}...`);
+      console.log(`🔄 Opening case 3 (Blue) with currency: "${currency}"`);
       
-      const result = await casesApi.openCase(3, paymentMethod); // ID: 3
+      const result = await casesApi.openCase(3, currency);
       console.log('✅ Case opened result:', result);
       
+      // API возвращает поле item, а не win_item
       onNavigate('spin2', { 
-        winItem: result.win_item,
+        winItem: result.item || result.win_item, // Используем item или win_item
         caseOpeningId: result.case_opening_id,
         inventoryAdded: result.inventory_added
       });
     } catch (error) {
       console.error('❌ Error opening case:', error);
+      console.error('💾 Error details:', error.response?.data);
       alert('Error opening case. Please try again.');
       setIsProcessing(false);
     }
@@ -173,20 +182,32 @@ export default function Card2Screen({ onNavigate, currentCardIndex = 1 }) {
     setIsSwitched(!isSwitched);
   };
 
+  // Функция для получения URL изображения из API
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return '';
+    
+    // Если это статические файлы бэкенда, добавляем базовый URL
+    if (imagePath.startsWith('/static/')) {
+      return `${import.meta.env.VITE_BACKEND_URL || ''}${imagePath}`;
+    }
+    
+    return imagePath;
+  };
+
+  // Определяем содержимое рамок из данных API
   const getFrameContents = () => {
     if (caseItems.length > 0) {
+      console.log('📦 Используем предметы из API:', caseItems);
       return caseItems.map((item, index) => {
         let img;
         let price;
         
         if (item.item_type === 'tg_gift') {
-          const itemImages = [
-            item1, item2, item3, item4, item5, 
-            item6, item7, item8, item9, item10
-          ];
-          img = itemImages[index % itemImages.length] || cardton2;
+          // Для подарков Telegram используем изображения из API
+          img = getImageUrl(item.image_url);
           price = `${item.price_ton} TON`;
         } else if (item.item_type === 'reward_ton') {
+          // Для TON наград используем локальную картинку
           img = cardton2;
           price = `${item.price_ton} TON`;
         } else {
@@ -194,25 +215,23 @@ export default function Card2Screen({ onNavigate, currentCardIndex = 1 }) {
           price = '0 TON';
         }
         
-        return { img, price };
+        return { 
+          img, 
+          price, 
+          apiData: item,
+          itemType: item.item_type,
+          imageUrl: item.image_url 
+        };
       });
     }
     
-    return [
-      { img: item1, price: '6500 TON' },
-      { img: item2, price: '1000 TON' },
-      { img: item3, price: '80 TON' },
-      { img: item4, price: '65 TON' },
-      { img: item5, price: '30 TON' },
-      { img: item6, price: '5 TON' },
-      { img: item7, price: '3 TON' },
-      { img: item8, price: '1.7 TON' },
-      { img: item9, price: '1.7 TON' },
-      { img: item10, price: '1.7 TON' },
-      { img: cardton2, price: '1.5 TON' },
-      { img: cardton2, price: '1 TON' },
-      { img: cardton2, price: '0.5 TON' }
-    ];
+    console.log('⚠️ Нет данных из API, используем дефолтные');
+    // Дефолтное содержимое если API не вернул данные
+    return Array(13).fill().map((_, index) => ({
+      img: cardton2,
+      price: '0 TON',
+      itemType: 'reward_ton'
+    }));
   };
 
   const frameContents = getFrameContents();
@@ -233,6 +252,10 @@ export default function Card2Screen({ onNavigate, currentCardIndex = 1 }) {
           alt={`Item ${index + 1}`} 
           className="item-image"
           loading="lazy"
+          onError={(e) => {
+            console.error(`Failed to load image: ${content.imageUrl}`);
+            e.target.src = cardton2; // Фолбэк на TON картинку
+          }}
         />
         <div className={getPriceClass(content.price)}>{content.price}</div>
       </div>
@@ -306,7 +329,14 @@ export default function Card2Screen({ onNavigate, currentCardIndex = 1 }) {
         </div>
 
         <div className="items-container">
-          {frames}
+          {isLoading ? (
+            <div className="loading-items">
+              <div className="spinner"></div>
+              <p>Loading items...</p>
+            </div>
+          ) : (
+            frames
+          )}
         </div>
         
         <div className="blur-overlay"></div>

@@ -68,10 +68,10 @@ api.interceptors.response.use(
 
 // Utility functions
 export const formatBalance = (balance) => {
-  if (balance === undefined || balance === null) return '0.00';
+  if (balance === undefined || balance === null) return '0.0';
   
   const num = parseFloat(balance);
-  return isNaN(num) ? '0.00' : num.toFixed(2);
+  return isNaN(num) ? '0.0' : num.toFixed(2);
 };
 
 export const formatUsername = (username, name) => {
@@ -330,15 +330,26 @@ export const tonApi = {
   }
 };
 
-// utils/api.js - добавляем к существующему коду
 export const casesApi = {
   // Получить список всех активных кейсов
   async getAllCases() {
     try {
       console.log('📦 Requesting all cases...');
       const response = await api.get('/api/v1/cases/');
-      console.log('✅ Cases received:', response.data?.length || 0);
-      return response.data;
+      console.log('✅ Cases response received:', response.data);
+      
+      // Проверяем структуру ответа
+      if (response.data && response.data.cases && Array.isArray(response.data.cases)) {
+        console.log('✅ Cases array found, length:', response.data.cases.length);
+        return response.data.cases;
+      } else if (Array.isArray(response.data)) {
+        console.log('✅ Cases is direct array, length:', response.data.length);
+        return response.data;
+      } else {
+        console.warn('⚠️ Unexpected response structure:', response.data);
+        // Возвращаем пустой массив или дефолтные данные
+        return [];
+      }
     } catch (error) {
       console.error('❌ Error getting cases:', error);
       throw error;
@@ -358,14 +369,13 @@ export const casesApi = {
     }
   },
 
-  async openCase(caseId, payType = 'ton') {
+  async openCase(caseId, currency = 'ton') {
     try {
-      console.log(`🎰 [DEBUG] Отправляем запрос: /api/v1/cases/${caseId}/open`);
-      console.log(`💰 PayType получен: "${payType}" (тип: ${typeof payType})`);
+      console.log(`🎰 Отправляем запрос: /api/v1/cases/${caseId}/open`);
+      console.log(`💰 Currency: "${currency}"`);
       
-      // Создаем тело запроса
       const requestBody = {
-        pay_type: payType
+        currency: currency
       };
       
       console.log('📦 Тело запроса:', JSON.stringify(requestBody));
@@ -377,7 +387,6 @@ export const casesApi = {
     } catch (error) {
       console.error('❌ Ошибка при открытии кейса:', error);
       console.error('📡 Полный ответ сервера:', error.response?.data);
-      console.error('🔧 Конфиг запроса:', JSON.parse(error.config?.data || '{}'));
       throw error;
     }
   }

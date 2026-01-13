@@ -5,6 +5,7 @@
   flex-direction: column;
   overflow: hidden;
   position: relative;
+  margin-top: 106px;
 }
 
 .profile-header {
@@ -43,6 +44,7 @@
   background-clip: text;
   -webkit-text-fill-color: transparent;
   paint-order: stroke fill;
+  -webkit-text-stroke: 0.4px white;
 }
 
 .profile-main-row {
@@ -110,6 +112,7 @@
   background-clip: text;
   -webkit-text-fill-color: transparent;
   paint-order: stroke fill;
+  -webkit-text-stroke: 0.4px white;
 }
 
 .add-button {
@@ -283,7 +286,7 @@
   color: rgba(53, 163, 242, 1);
   -webkit-text-stroke: 0.4px white;
   transition: all 0.3s ease;
-  line-height: 1;
+  line-height: 1.3;
   white-space: nowrap;
 }
 
@@ -294,6 +297,7 @@
   background-clip: text;
   -webkit-text-fill-color: transparent;
   -webkit-text-stroke: 0.4px rgba(255, 255, 255, 0.8);
+  line-height: 1.3;
 }
 
 .demo-toggle {
@@ -463,6 +467,7 @@
   cursor: pointer;
   display: inline-block;
   transition: transform 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .how-to-add-text:active {
@@ -471,7 +476,7 @@
 
 .profile-footer {
   width: 100%;
-  padding-bottom: 12px;
+  padding-bottom: 120px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -810,6 +815,7 @@
   cursor: pointer;
   display: inline-block;
   transition: transform 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .profile-modal-username-link:active {
@@ -1090,8 +1096,8 @@
 }
 
 .sell-modal-close-icon {
-  width: 32px;
-  height: 32px;
+  width: 42px;
+  height: 42px;
 }
 
 /* Адаптив для мобильных */
@@ -1263,4 +1269,202 @@
 .add-button:disabled {
   opacity: 0.8;
   cursor: not-allowed;
+}
+
+
+.inventory-container{
+  max-height: 550px;
+  overflow-y: auto;
+}
+
+/* Контейнер подключения кошелька */
+.wallet-connect-section {
+  margin: 5px 20px 15px;
+  display: flex;
+  justify-content: center;
+}
+
+/* Кнопка подключения кошелька */
+.connect-wallet-btn-profile {
+  width: 240px;
+  height: 40px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #35a3f2, #37bdf3);
+  border: 2px solid rgba(169, 229, 255, 1);
+  border-radius: 10px;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.connect-wallet-btn-profile:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2d92d8, #2fa8e0);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(53, 163, 242, 0.3);
+}
+
+.connect-wallet-btn-profile:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Информация о подключенном кошельке */
+.wallet-info-section {
+  margin: 5px 20px 15px;
+  padding: 12px 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  border: 2px solid rgba(169, 229, 255, 0.3);
+  backdrop-filter: blur(5px);
+}
+
+.connected-wallet-info-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.wallet-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.wallet-status.connected .wallet-name {
+  color: transparent;
+  background: linear-gradient(90deg, rgb(36, 92, 133), rgb(47, 162, 207));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.wallet-status-indicator {
+  font-size: 12px;
+}
+
+.wallet-address {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-size: 12px;
+  color: rgba(55, 189, 243, 1);
+  background: rgba(245, 249, 255, 0.8);
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(53, 163, 242, 0.2);
+  letter-spacing: 0.5px;
+}
+
+.disconnect-wallet-btn-profile {
+  width: 150px;
+  height: 32px;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, #ff6b6b, #ff5252);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.disconnect-wallet-btn-profile:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ff5252, #ff4040);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.disconnect-wallet-btn-profile:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Кнопка обновления данных */
+.refresh-data-button {
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #3d6ea7, #1c4872);
+  border: none;
+  border-radius: 20px;
+  color: white;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.refresh-data-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.refresh-data-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Адаптивность */
+@media (max-width: 480px) {
+  .wallet-connect-section {
+    margin: 5px 15px 10px;
+  }
+  
+  .connect-wallet-btn-profile {
+    width: 200px;
+    height: 36px;
+    font-size: 12px;
+  }
+  
+  .wallet-info-section {
+    margin: 5px 15px 10px;
+    padding: 10px;
+  }
+  
+  .disconnect-wallet-btn-profile {
+    width: 120px;
+    height: 28px;
+    font-size: 11px;
+  }
+  
+  .wallet-status {
+    font-size: 14px;
+  }
+  
+  .wallet-address {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+  
+  .refresh-data-button {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 360px) {
+  .connect-wallet-btn-profile {
+    width: 180px;
+  }
+  
+  .refresh-data-button {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
 }

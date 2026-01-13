@@ -1,15 +1,16 @@
-// components/ProfileScreen.jsx - обновленная версия
+// components/ProfileScreen.jsx - исправленные модалки продаж
 import React, { useState, useEffect } from 'react';
 import '../styles/ProfileScreen.css';
 import { useDemo } from '../contexts/DemoContext';
 import { authApi, usersApi } from '../utils/api';
+import { tonConnect } from '../utils/tonConnect';
 
 import ava from '../assets/MainPage/ava.jpg';
 import tonGift from '../assets/Profile/ton-gift.svg';
 import foot from '../assets/MainPage/foot.png';
 import footover from '../assets/MainPage/foot-on.svg';
-import closeIcon from '../assets/MainPage/close.svg';
-import modalCloseIcon from '../assets/Profile/close.svg'; 
+import closeIcon from '../assets/MainPage/close.png';
+import modalCloseIcon from '../assets/Profile/close.png'; 
 import giftchange from '../assets/Profile/giftchange.png';
 import gift from '../assets/Profile/gift.png';
 
@@ -26,6 +27,8 @@ export default function ProfileScreen({ onNavigate }) {
   const [inventoryCount, setInventoryCount] = useState(0);
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [walletInfo, setWalletInfo] = useState(null);
+  const [isWalletConnecting, setIsWalletConnecting] = useState(false);
   
   const { 
     isDemoMode, 
@@ -35,6 +38,36 @@ export default function ProfileScreen({ onNavigate }) {
     addToDemoBalance,
     clearDemoInventory
   } = useDemo();
+
+  // Проверка статуса кошелька
+  useEffect(() => {
+    const checkWalletStatus = async () => {
+      if (!isDemoMode) {
+        try {
+          const connected = await tonConnect.isConnected();
+          if (connected) {
+            const wallet = await tonConnect.getWallet();
+            setWalletInfo(wallet);
+          } else {
+            setWalletInfo(null);
+          }
+        } catch (error) {
+          console.error('Error checking wallet status:', error);
+        }
+      }
+    };
+
+    checkWalletStatus();
+
+    // Подписываемся на изменения статуса кошелька
+    const unsubscribe = tonConnect.onStatusChange((wallet) => {
+      setWalletInfo(wallet);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [isDemoMode]);
 
   // Загружаем данные пользователя и инвентарь
   useEffect(() => {
@@ -260,6 +293,87 @@ export default function ProfileScreen({ onNavigate }) {
     return 'item-price';
   };
 
+  // Функция для открытия Telegram бота
+  const openTelegramBot = () => {
+    // В Mini App Telegram открываем бота внутри приложения
+    if (window.Telegram?.WebApp) {
+      window.Telegram.WebApp.openTelegramLink('https://t.me/bouncegifts');
+    } else {
+      // В обычном браузере открываем в новой вкладке
+      window.open('https://t.me/bouncegifts', '_blank');
+    }
+  };
+
+  // Функция подключения кошелька
+  const handleConnectWallet = async () => {
+    if (isWalletConnecting || isDemoMode) return;
+    
+    try {
+      setIsWalletConnecting(true);
+      
+      // Закрываем все открытые модалки
+      setIsSellModalOpen(false);
+      setIsSellAllModalOpen(false);
+      
+      // Подключаем кошелек
+      const wallet = await tonConnect.connectWallet();
+      
+      if (wallet) {
+        console.log('Wallet connected:', wallet);
+        setWalletInfo(wallet);
+        alert(`Connected to ${wallet.device?.appName || 'Wallet'}!`);
+      }
+    } catch (error) {
+      console.error('Connection error:', error);
+      if (!error.message.includes('cancelled')) {
+        alert(`Error: ${error.message}`);
+      }
+    } finally {
+      setIsWalletConnecting(false);
+    }
+  };
+
+  // Функция отключения кошелька
+  const handleDisconnectWallet = async () => {
+    if (!window.confirm('Disconnect wallet?')) return;
+    
+    try {
+      await tonConnect.disconnect();
+      setWalletInfo(null);
+      alert('Wallet disconnected');
+    } catch (error) {
+      console.error('Disconnect error:', error);
+      alert(`Error: ${error.message}`);
+    }
+  };
+
+  // Функция для форматирования адреса кошелька
+// Функция для форматирования адреса кошелька
+const formatWalletAddress = (address) => {
+  if (!address) return '';
+  if (address.length <= 9) return address;
+  return `${address.slice(0, 5)}...${address.slice(-4)}`;
+};
+
+  // Функция обновления данных
+  const refreshUserData = async () => {
+    try {
+      setLoading(true);
+      const user = authApi.getCurrentUser();
+      setUserData(user);
+      
+      if (!isDemoMode) {
+        const inventoryData = await usersApi.getInventory();
+        setInventory(inventoryData || []);
+        setInventoryCount(inventoryData?.length || 0);
+      }
+    } catch (error) {
+      console.error('Refresh error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="profile-screen">
       {/* Основной контент профиля */}
@@ -310,6 +424,65 @@ export default function ProfileScreen({ onNavigate }) {
             <div className="demo-toggle-slider"></div>
           </div>
         </div>
+        
+        {/* Кнопка обновления данных */}
+        {!isDemoMode && (
+          <button 
+            className="refresh-data-button"
+            onClick={refreshUserData}
+            disabled={loading}
+          >
+            ↻ Refresh
+          </button>
+        )}
+      </div>
+
+      {/* Секция подключения кошелька */}
+      <div className="wallet-connect-section">
+        {!isDemoMode ? (
+          walletInfo ? (
+            <div className="wallet-info-section">
+              <div className="connected-wallet-info-profile">
+                <div className="wallet-status connected">
+                  <span className="wallet-name">
+                    {walletInfo.device?.appName || walletInfo.name || 'Wallet'}
+                  </span>
+                </div>
+                <div className="wallet-address">
+                  {formatWalletAddress(walletInfo.account?.address || '')}
+                </div>
+                <button 
+                  className="disconnect-wallet-btn-profile"
+                  onClick={handleDisconnectWallet}
+                  disabled={isWalletConnecting}
+                >
+                  Disconnect
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button 
+              className="connect-wallet-btn-profile"
+              onClick={handleConnectWallet}
+              disabled={isWalletConnecting}
+            >
+              {isWalletConnecting ? 'Connecting...' : 'Connect Wallet'}
+            </button>
+          )
+        ) : (
+          <div className="wallet-info-section">
+            <div className="connected-wallet-info-profile">
+              <div className="wallet-status">
+                <span className="wallet-name" style={{ opacity: 0.6 }}>
+                  Demo Mode Active
+                </span>
+              </div>
+              <div className="wallet-address" style={{ opacity: 0.6 }}>
+                Disable Demo to connect wallet
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <main className="profile-content">
@@ -378,12 +551,12 @@ export default function ProfileScreen({ onNavigate }) {
               <img src={closeIcon} alt="CLOSE" className="footer-close-icon" />
               <img src={footover} alt="decoration" className="footer-close-overlay" />
             </div>
-            <span className="footer-close-label">CLOSE</span>
+            <span className="footer-close-label">CLOSE</span> 
           </div>
         </div>
       </footer>
 
-      {/* Модальные окна */}
+      {/* Модальное окно "ADD GIFTS" */}
       {isModalOpen && (
         <div className="profile-modal-overlay" onClick={handleCloseModal}>
           <div className="profile-modal-blur-layer"></div>
@@ -404,13 +577,19 @@ export default function ProfileScreen({ onNavigate }) {
               <h2 className="profile-modal-title">ADD GIFTS</h2>
               <p className="profile-modal-instruction">
                 Send the gift to the&ensp;
-                <span className="profile-modal-username-link">
+                <span 
+                  className="profile-modal-username-link"
+                  onClick={openTelegramBot}
+                >
                   @bouncegifts
                 </span>
                 &ensp;bot, and the gift balance will be updated
               </p>
             </div>
-            <button className="profile-modal-action-btn">
+            <button 
+              className="profile-modal-action-btn"
+              onClick={openTelegramBot}
+            >
               ADD GIFT
             </button>
             <button className="profile-modal-close-btn" onClick={handleCloseModal}>
@@ -420,7 +599,74 @@ export default function ProfileScreen({ onNavigate }) {
         </div>
       )}
 
-      {/* Остальные модальные окна аналогично */}
+      {/* Модальное окно продажи одного предмета */}
+      {isSellModalOpen && selectedItem && (
+        <div className="sell-modal-overlay" onClick={() => setIsSellModalOpen(false)}>
+          <div className="sell-modal-blur-layer"></div>
+          <div 
+            className="sell-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sell-item-frame">
+              <div className="sell-item-content">
+                <img 
+                  src={getItemImage(selectedItem)} 
+                  alt="Item" 
+                  className="sell-item-image"
+                />
+                <div className={`sell-item-price ${getPriceClass(getItemPrice(selectedItem))}`}>
+                  {getItemPrice(selectedItem)}
+                </div>
+              </div>
+            </div>
+            
+            <button 
+              className="sell-modal-button"
+              onClick={handleSellItem}
+            >
+              SELL
+            </button>
+            
+            <button 
+              className="sell-modal-close-btn"
+              onClick={() => setIsSellModalOpen(false)}
+            >
+              <img src={modalCloseIcon} alt="Close" className="sell-modal-close-icon" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно продажи всех предметов */}
+      {isSellAllModalOpen && (
+        <div className="sell-all-modal-overlay" onClick={() => setIsSellAllModalOpen(false)}>
+          <div className="sell-all-modal-blur-layer"></div>
+          <div 
+            className="sell-all-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="sell-all-modal-title">
+              Sell All Items ({inventoryCount})<br />
+              Total: {calculateTotalValue()} TON
+            </h3>
+            
+            <div className="sell-all-modal-buttons">
+              <button 
+                className="sell-all-cancel-button"
+                onClick={() => setIsSellAllModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="sell-all-confirm-button"
+                onClick={handleSellAll}
+              >
+                Sell All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

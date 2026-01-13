@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DemoProvider } from './contexts/DemoContext';
-import { BalanceProvider } from './contexts/BalanceContext'; // 🔥 Добавляем BalanceProvider
+import { BalanceProvider } from './contexts/BalanceContext';
 import LoadingScreen from './components/LoadingScreen';
 import MainScreen from './components/MainScreen';
 import PvpScreen from './components/PvpScreen';
@@ -13,6 +13,8 @@ import SpinScreen from './components/SpinScreen';
 import Spin2Screen from './components/Spin2Screen';
 import Spin1Screen from './components/Spin1Screen';
 import MainLayout from './components/MainLayout';
+import LuckyBalls from './components/LuckyBalls';
+import Rocket from './components/Rocket.jsx';
 
 // Импортируем AssetLoader
 import { preloadImages } from './utils/AssetLoader';
@@ -23,7 +25,7 @@ import { authApi } from './utils/api';
 import gift from './assets/Profile/gift.png';
 import giftchange from './assets/Profile/giftchange.png';
 import tonGift from './assets/Profile/ton-gift.svg';
-import modalCloseIcon from './assets/Profile/close.svg';
+import modalCloseIcon from './assets/Profile/close.png';
 
 // MainScreen
 import banner from './assets/MainPage/banner.png';
@@ -38,45 +40,6 @@ import cardton1 from './assets/MainPage/chest1/ton.png';
 import cardton2 from './assets/MainPage/chest2/ton.png';
 import cardton3 from './assets/MainPage/chest3/ton.png';
 
-// Spin Items (Card 1)
-import item1_1 from './assets/MainPage/chest1/in/1-1.png';
-import item1_2 from './assets/MainPage/chest1/in/1-2.png';
-import item1_3 from './assets/MainPage/chest1/in/1-3.png';
-import item1_4 from './assets/MainPage/chest1/in/1-4.png';
-import item1_5 from './assets/MainPage/chest1/in/1-5.png';
-import item1_6 from './assets/MainPage/chest1/in/1-6.png';
-import item1_7 from './assets/MainPage/chest1/in/1-7.png';
-import item1_8 from './assets/MainPage/chest1/in/1-8.png';
-import item1_9 from './assets/MainPage/chest1/in/1-9.png';
-import item1_10 from './assets/MainPage/chest1/in/1-10.png';
-import item1_11 from './assets/MainPage/chest1/in/1-11.png';
-import item1_12 from './assets/MainPage/chest1/in/1-12.png';
-
-// Spin Items (Card 2)
-import item2_1 from './assets/MainPage/chest2/in/2-1.png';
-import item2_2 from './assets/MainPage/chest2/in/2-2.png';
-import item2_3 from './assets/MainPage/chest2/in/2-3.png';
-import item2_4 from './assets/MainPage/chest2/in/2-4.png';
-import item2_5 from './assets/MainPage/chest2/in/2-5.png';
-import item2_6 from './assets/MainPage/chest2/in/2-6.png';
-import item2_7 from './assets/MainPage/chest2/in/2-7.png';
-import item2_8 from './assets/MainPage/chest2/in/2-8.png';
-import item2_9 from './assets/MainPage/chest2/in/2-9.png';
-import item2_10 from './assets/MainPage/chest2/in/2-10.png';
-
-// Spin Items (Card 3)
-import item3_1 from './assets/MainPage/chest3/in/3-1.png';
-import item3_2 from './assets/MainPage/chest3/in/3-2.png';
-import item3_3 from './assets/MainPage/chest3/in/3-3.png';
-import item3_4 from './assets/MainPage/chest3/in/3-4.png';
-import item3_5 from './assets/MainPage/chest3/in/3-5.png';
-import item3_6 from './assets/MainPage/chest3/in/3-6.png';
-import item3_7 from './assets/MainPage/chest3/in/3-7.png';
-import item3_8 from './assets/MainPage/chest3/in/3-8.png';
-import item3_9 from './assets/MainPage/chest3/in/3-9.png';
-import item3_10 from './assets/MainPage/chest3/in/3-10.png';
-import item3_11 from './assets/MainPage/chest3/in/3-11.png';
-
 // Common UI
 import ava from './assets/MainPage/ava.jpg';
 import ton from './assets/MainPage/ton.svg';
@@ -86,9 +49,12 @@ import footover from './assets/MainPage/foot-on.svg';
 import pvpicon from './assets/MainPage/pvp-icon.svg';
 import homeicon from './assets/MainPage/home-icon.svg';
 import tasksicon from './assets/MainPage/tasks-icon.svg';
-import closeIcon from './assets/MainPage/close.svg';
-import star from './assets/MainPage/star.svg';
+import closeIcon from './assets/MainPage/close.png';
+import star from './assets/MainPage/star1.png';
 import tonIcon from './assets/Ton.svg';
+
+import ballsq from './assets/Lucky/ballsq.png';
+import timerImg from './assets/Rocket/timer.png';
 
 // Spin Screens
 import arrow from './assets/SpinPage/arrow.png';
@@ -122,12 +88,25 @@ export default function App() {
   const [currentCardIndex, setCurrentCardIndex] = useState(2);
   const [userData, setUserData] = useState(null);
 
+  // Функция для обновления высоты viewport
+  const applyViewport = (tg) => {
+    if (!tg) return;
+    
+    // Используем стабильную высоту viewport или высоту окна
+    const h = tg.viewportStableHeight || window.innerHeight || document.documentElement.clientHeight;
+    
+    // Устанавливаем CSS переменную
+    document.documentElement.style.setProperty('--tg-viewport-height', `${h}px`);
+    document.documentElement.style.setProperty('--app-height', `${h}px`);
+    
+    console.log('📏 Viewport height updated:', h);
+  };
+
   // Функция авторизации пользователя
   const authenticateUser = async () => {
     try {
       console.log('🔐 Начинаем авторизацию пользователя...');
       
-      // Проверяем, есть ли сохраненный токен
       if (authApi.isAuthenticated()) {
         console.log('✅ Найден сохраненный токен, получаем данные пользователя...');
         try {
@@ -136,16 +115,13 @@ export default function App() {
           console.log('✅ Данные пользователя загружены:', data.user.username);
         } catch (error) {
           console.warn('❌ Токен невалиден, пробуем авторизоваться через Telegram');
-          // Если токен невалиден, пробуем авторизоваться через Telegram
           await authenticateWithTelegram();
         }
       } else {
-        // Авторизация через Telegram
         await authenticateWithTelegram();
       }
     } catch (error) {
       console.error('❌ Ошибка авторизации:', error);
-      // В случае ошибки продолжаем без данных пользователя
     } finally {
       setIsAuthenticating(false);
     }
@@ -163,33 +139,97 @@ export default function App() {
         console.log('✅ Авторизация через Telegram успешна:', authData.user.username);
       } catch (error) {
         console.error('❌ Ошибка авторизации через Telegram:', error);
-        // Можно показать сообщение об ошибке пользователю
       }
     } else {
       console.warn('⚠️ Telegram WebApp initData недоступен');
-      // Если нет initData, работаем без авторизации
     }
   };
 
-  // Инициализация Telegram WebApp и авторизация
-  useEffect(() => {
-    const initTelegram = () => {
-      if (window.Telegram?.WebApp) {
-        const webApp = window.Telegram.WebApp;
-        webApp.ready();
-        webApp.expand();
-        console.log('✅ Telegram WebApp запущен в полноэкранном режиме');
-        
-        // Запускаем авторизацию
-        authenticateUser();
-      } else {
-        console.warn('⚠️ Telegram WebApp не обнаружен');
-        setIsAuthenticating(false);
+// Инициализация Telegram WebApp - ОПТИМИЗИРОВАННЫЙ
+useEffect(() => {
+  const initTelegram = () => {
+    const tg = window.Telegram?.WebApp;
+
+    if (!tg) {
+      console.warn('⚠️ Telegram WebApp не обнаружен');
+      setIsAuthenticating(false);
+      return;
+    }
+
+    console.log('🚀 Telegram WebApp init...');
+    
+    // ОДНОВРЕМЕННО делаем всё:
+    // 1. ready + expand + requestFullscreen одновременно
+    tg.ready();
+    
+    // ВСЁ СРАЗУ без таймаутов
+    const executeImmediately = () => {
+      // Fullscreen ПЕРВЫМ делом
+      if (tg.requestFullscreen) {
+        try {
+          tg.requestFullscreen();
+          console.log('📱 Fullscreen immediate');
+        } catch (e) {}
+      }
+      
+      // Expand ВТОРЫМ
+      tg.expand();
+      
+      // Установка высоты
+      const h = Math.max(
+        tg.viewportStableHeight || 0,
+        window.innerHeight || 0,
+        document.documentElement.clientHeight || 0
+      );
+      
+      document.documentElement.style.setProperty('--tg-viewport-height', `${h}px`);
+      document.documentElement.style.setProperty('--app-height', `${h}px`);
+      
+      // Принудительно для body и root
+      document.body.style.height = `${h}px`;
+      document.body.style.minHeight = `${h}px`;
+      const root = document.getElementById('root');
+      if (root) {
+        root.style.height = `${h}px`;
+        root.style.minHeight = `${h}px`;
       }
     };
+    
+    // ВЫПОЛНЯЕМ ПРЯМО СЕЙЧАС
+    executeImmediately();
+    
+    // И ещё раз на следующем кадре анимации
+    requestAnimationFrame(() => {
+      executeImmediately();
+    });
+    
+    // И ещё через 1 кадр
+    requestAnimationFrame(() => {
+      requestAnimationFrame(executeImmediately);
+    });
+    
+    // Обработчик для изменений
+    const handleViewportChange = () => {
+      if (tg.requestFullscreen) tg.requestFullscreen();
+      tg.expand();
+      
+      const h = tg.viewportStableHeight || window.innerHeight;
+      document.documentElement.style.setProperty('--tg-viewport-height', `${h}px`);
+      document.documentElement.style.setProperty('--app-height', `${h}px`);
+    };
+    
+    tg.onEvent('viewportChanged', handleViewportChange);
+    
+    // Запускаем авторизацию
+    authenticateUser();
 
-    initTelegram();
-  }, []);
+    return () => {
+      tg.offEvent('viewportChanged', handleViewportChange);
+    };
+  };
+
+  initTelegram();
+}, []);
 
   // === 🔥 Список всех URL-адресов изображений для предзагрузки ===
   const allImageUrls = [
@@ -208,12 +248,6 @@ export default function App() {
     cardton1,
     cardton2,
     cardton3,
-    item1_1, item1_2, item1_3, item1_4, item1_5, item1_6,
-    item1_7, item1_8, item1_9, item1_10, item1_11, item1_12,
-    item2_1, item2_2, item2_3, item2_4, item2_5, item2_6,
-    item2_7, item2_8, item2_9, item2_10,
-    item3_1, item3_2, item3_3, item3_4, item3_5, item3_6,
-    item3_7, item3_8, item3_9, item3_10, item3_11,
     ava,
     ton,
     add_balance,
@@ -231,7 +265,9 @@ export default function App() {
     coinIcon,
     logoImage,
     l1, l2, l3, l4, l5, l6,
-    l1a, l2a, l3a, l4a, l5a, l6a
+    l1a, l2a, l3a, l4a, l5a, l6a,
+    ballsq,
+    timerImg
   ];
 
   // Функция загрузки и анимации
@@ -283,6 +319,10 @@ export default function App() {
         return <Card2Screen onNavigate={navigateTo} currentCardIndex={currentCardIndex} />;
       case 'card3':
         return <Card3Screen onNavigate={navigateTo} currentCardIndex={currentCardIndex} />;
+      case 'luckyballs': 
+        return <LuckyBalls onNavigate={navigateTo} currentCardIndex={currentCardIndex} />;
+      case 'rocket':
+        return <Rocket onNavigate={navigateTo} currentCardIndex={currentCardIndex}/>;
       case 'spin':
         return (
           <MainLayout
@@ -324,7 +364,7 @@ export default function App() {
 
   return (
     <DemoProvider>
-      <BalanceProvider> {/* 🔥 Обертываем в BalanceProvider */}
+      <BalanceProvider>
         <div>
           {renderScreen()}
         </div>
