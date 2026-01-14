@@ -346,15 +346,15 @@ export default function LuckyBalls({
                   </div>
 
                   {/* Кнопки быстрого ввода */}
-                  <div className="quick-bet-buttons">
+                  <div className="quick-bet-buttonsl">
                     <div 
-                      className="quick-bet-button"
+                      className="quick-bet-buttonl"
                       onClick={() => handleQuickBet(quickBetValues.first)}
                     >
                       <span className="quick-bet-value">{quickBetValues.first}</span>
                     </div>
                     <div 
-                      className="quick-bet-button"
+                      className="quick-bet-buttonl"
                       onClick={() => handleQuickBet(quickBetValues.second)}
                     >
                       <span className="quick-bet-value">{quickBetValues.second}</span>
@@ -362,7 +362,7 @@ export default function LuckyBalls({
                   </div>
                 </div>
                 
-                <button className='play-button-balls' onClick={handlePlay}>
+                <button className='play-button-ballsl' onClick={handlePlay}>
                   PLAY
                 </button>
               </>

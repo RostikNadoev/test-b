@@ -320,12 +320,12 @@
 }
 
 /* Кнопки быстрого ввода */
-.quick-bet-buttons {
+.quick-bet-buttonsl {
   display: flex;
   gap: 10px;
 }
 
-.quick-bet-button {
+.quick-bet-buttonl {
   width: 50px;
   height: 50px;
   background: linear-gradient(135deg, rgba(216, 237, 255, 1) 0%, rgba(255, 255, 255, 1) 100%);
@@ -341,11 +341,11 @@
   user-select: none;
 }
 
-.quick-bet-button:active {
+.quick-bet-buttonl:active {
   transform: scale(0.95);
 }
 
-.quick-bet-button:hover {
+.quick-bet-buttonl:hover {
   background: linear-gradient(135deg, rgba(226, 238, 255, 1) 0%, rgba(196, 235, 249, 1) 100%);
 }
 
@@ -442,7 +442,7 @@
 }
 
 /* Кнопки */
-.play-button-balls,
+.play-button-ballsl,
 .take-winnings-button,
 .quit-button {
   width: 100%;
@@ -465,7 +465,7 @@
   transition: all 0.2s ease;
 }
 
-.play-button-balls:active,
+.play-button-ballsl:active,
 .take-winnings-button:active,
 .quit-button:active {
   transform: scale(0.98);
