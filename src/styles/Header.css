@@ -146,9 +146,9 @@
   position: relative;
   width: 100vw;
   max-width: 480px;
-  height: 38vh;
+  height: 42vh;
   min-height: 220px;
-  max-height: 280px;
+  max-height: 380px;
   background: linear-gradient(180deg, rgba(231, 241, 253, 1), rgba(255, 255, 255, 1));
   border-top: 2px solid white;
   border-top-left-radius: 20px;
@@ -191,6 +191,21 @@
   text-align: center;
   -webkit-text-stroke: 0.4px white;
   paint-order: stroke fill;
+}
+
+.balance-modal-titlec {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 17px;
+  margin: 0 0 5px 0;
+  color: transparent;
+  background: linear-gradient(90deg, rgba(53, 163, 242, 1), rgba(55, 189, 243, 1));
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-align: center;
+  -webkit-text-stroke: 0.4px white;
+  paint-order: stroke fill;
+  margin-top: 30px;
 }
 
 /* Инструкция */
@@ -438,10 +453,6 @@
 }
 
 @media (max-width: 360px) {
-  .balance-modal-content {
-    height: 28vh;
-    min-height: 200px;
-  }
   
   .balance-modal-body {
     padding: 12px;
@@ -671,7 +682,7 @@
 .star-icon-circle {
   width: 30px;
   height: 30px;
-  position: absolute;
+  position: absolute; 
   left: clamp(-8px, -2.6vw, -12px);
   top: 50%;
   transform: translateY(-50%);
@@ -898,3 +909,38 @@
     gap: 4px;
   }
 }
+
+.stars-actions-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 400px;
+  margin-top: 8px;
+  align-items: center;
+}
+
+@media (min-width: 481px) {
+  .stars-actions-row {
+    flex-direction: row;
+    gap: 12px;
+  }
+  .stars-actions-row .balance-modal-action-btn {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+/* === КНОПКА WITHDRAW ДЛЯ STARS === */
+.balance-modal-action-btn.stars-withdraw-btn {
+  background: linear-gradient(180deg, rgba(255, 178, 90, 1), rgba(255, 200, 130, 1));
+  border: 2px solid rgba(255, 165, 0, 1);
+  color: white;
+  font-weight: 800;
+  text-shadow:
+    3px 3px 0 rgba(255, 165, 0, 1),
+    -1px -1px 0 rgba(255, 165, 0, 1),
+    1px -1px 0 rgba(255, 165, 0, 1),
+    -1px 1px 0 rgba(255, 165, 0, 1);
+}
+

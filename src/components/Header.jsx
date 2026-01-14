@@ -590,183 +590,175 @@ const formatUsername = (username) => {
       </header>
 
       {isBalanceModalOpen && !isDemoMode && (
-        <div className="balance-modal-overlay" onClick={handleCloseBalanceModal}>
-          <div className="balance-modal-blur-layer" />
-          
-          <div
-            ref={modalRef}
-            className={`balance-modal-content ${isClosing ? 'closing' : ''}`}
-            onClick={(e) => e.stopPropagation()}
-            onAnimationEnd={handleAnimationEnd}
+  <div className="balance-modal-overlay" onClick={handleCloseBalanceModal}>
+    <div className="balance-modal-blur-layer" />
+    <div
+      ref={modalRef}
+      className={`balance-modal-content ${isClosing ? 'closing' : ''}`}
+      onClick={(e) => e.stopPropagation()}
+      onAnimationEnd={handleAnimationEnd}
+    >
+      <div className="balance-modal-body">
+        {/* === КРАСИВЫЙ ПЕРЕКЛЮЧАТЕЛЬ ВАЛЮТ === */}
+        <div className="currency-switcher">
+          <button
+            className={`currency-tab ${activeCurrency === 'ton' ? 'active' : ''}`}
+            onClick={() => setActiveCurrency('ton')}
           >
-            <div className="balance-modal-body">
-              
-              {/* 🔥 КРАСИВЫЙ ПЕРЕКЛЮЧАТЕЛЬ ВАЛЮТ */}
-              <div className="currency-switcher">
-                <button 
-                  className={`currency-tab ${activeCurrency === 'ton' ? 'active' : ''}`}
-                  onClick={() => setActiveCurrency('ton')}
-                >
-                  <img src={ton} alt="TON" className="currency-icon" />
-                  <span>TON</span>
-                </button>
-                <button 
-                  className={`currency-tab ${activeCurrency === 'stars' ? 'active' : ''}`}
-                  onClick={() => setActiveCurrency('stars')}
-                >
-                  <img src={star} alt="Stars" className="currency-icon" />
-                  <span>STARS</span>
-                </button>
-              </div>
-              
-              {activeCurrency === 'ton' ? (
-                // ====== КОНТЕНТ ДЛЯ TON ======
-                !isWalletConnected ? (
-                  <>
-                    <h2 className="balance-modal-title">Connect TON Wallet</h2>
-                    <p className="balance-modal-instruction">
-                      Connect your wallet to top up balance
-                    </p>
-                    
-                    <button 
-                      className="balance-modal-action-btn"
-                      onClick={handleConnectWallet}
-                      disabled={isProcessing}
-                    >
-                      {isProcessing ? 'Opening TonConnect...' : 'Connect Wallet'}
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <h2 className="balance-modal-title">Top Up TON Balance</h2>
-                    <p className="balance-modal-instruction">Enter TON amount</p>
-                    
-                    <div className="balance-input-container">
-                      <input
-                        ref={inputRef}
-                        type="text"
-                        className="balance-input"
-                        value={topUpAmount}
-                        onChange={(e) => {
-                          let val = e.target.value;
-                          
-                          // Заменяем запятые на точки
-                          val = val.replace(/,/g, '.');
-                          
-                          // Удаляем все символы кроме цифр и точек
-                          val = val.replace(/[^\d.]/g, '');
-                          
-                          // Проверяем чтобы было не больше одной точки
-                          if (val.split('.').length <= 2) setTopUpAmount(val);
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && topUpAmount && !isNaN(parseFloat(topUpAmount))) {
-                            handleTopUp();
-                          }
-                          // Также обрабатываем запятую
-                          if (e.key === ',') {
-                            e.preventDefault();
-                            // Вставляем точку вместо запятой
-                            const cursorPos = e.target.selectionStart;
-                            const currentValue = e.target.value;
-                            const newValue = currentValue.substring(0, cursorPos) + '.' + currentValue.substring(cursorPos);
-                            setTopUpAmount(newValue);
-                            
-                            // Устанавливаем курсор после точки
-                            setTimeout(() => {
-                              e.target.selectionStart = e.target.selectionEnd = cursorPos + 1;
-                            }, 0);
-                          }
-                        }}
-                        placeholder="0.00"
-                        inputMode="decimal"
-                      />
-                      <span className="balance-input-suffix">TON</span>
-                    </div>
-                    
-                    <button 
-                      className="balance-modal-action-btn"
-                      onClick={handleTopUp}
-                      disabled={!topUpAmount || isNaN(parseFloat(topUpAmount)) || isProcessing}
-                    >
-                      {isProcessing ? 'Processing...' : `Top Up ${topUpAmount || '0'} TON`}
-                    </button>
-                  </>
-                )
-              ) : (
-                // ====== КОНТЕНТ ДЛЯ STARS ======
-                <>
-                  <h2 className="balance-modal-title">Top Up STARS Balance</h2>
-                  <p className="balance-modal-instruction">Enter STARS amount</p>
-                  
-                  <div className="balance-input-container">
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      className="balance-input"
-                      value={topUpAmount}
-                      onChange={(e) => {
-                        let val = e.target.value;
-                        
-                        // Разрешаем только целые числа для stars
-                        val = val.replace(/[^\d]/g, '');
-                        
-                        // Удаляем ведущие нули
-                        if (val.length > 1 && val.startsWith('0')) {
-                          val = val.replace(/^0+/, '');
-                        }
-                        
-                        setTopUpAmount(val);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && topUpAmount && !isNaN(parseInt(topUpAmount))) {
-                          handleTopUp();
-                        }
-                      }}
-                      placeholder="0"
-                      inputMode="numeric"
-                    />
-                    <span className="balance-input-suffix">STARS</span>
-                  </div>
-                  
-                  <button 
-                    className="balance-modal-action-btn stars-btn"
-                    onClick={handleTopUp}
-                    disabled={!topUpAmount || isNaN(parseInt(topUpAmount)) || parseInt(topUpAmount) <= 0 || isProcessing}
-                  >
-                    {isProcessing ? 'Creating invoice...' : `Top Up ${topUpAmount || '0'} STARS`}
-                  </button>
-                  
-                  {/* 🔥 ССЫЛКА НА ИНВОЙС ЕСЛИ ОНА ЕСТЬ */}
-                  {invoiceLink && (
-                    <div className="invoice-info">
-                      <p>Payment link generated. Click below to pay:</p>
-                      <a 
-                        href={invoiceLink} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="invoice-link"
-                      >
-                        Open Payment Page
-                      </a>
-                    </div>
-                  )}
-                </>
-              )}
-              
-            </div>
-            
-            <button 
-              className="balance-modal-close-btn" 
-              onClick={handleCloseBalanceModal}
-              disabled={isProcessing}
-              title="Close"
-            >
-              <img src={modalCloseIcon} alt="Close" className='balance-modal-close-png' />
-            </button>
-          </div>
+            <img src={ton} alt="TON" className="currency-icon" />
+            <span>TON</span>
+          </button>
+          <button
+            className={`currency-tab ${activeCurrency === 'stars' ? 'active' : ''}`}
+            onClick={() => setActiveCurrency('stars')}
+          >
+            <img src={star} alt="Stars" className="currency-icon" />
+            <span>STARS</span>
+          </button>
         </div>
-      )}
+
+        {activeCurrency === 'ton' ? (
+          // ====== КОНТЕНТ ДЛЯ TON ======
+          !isWalletConnected ? (
+            <>
+              <h2 className="balance-modal-titlec">Connect TON Wallet</h2>
+              <p className="balance-modal-instruction">
+                Connect your wallet to top up balance
+              </p>
+              <button
+                className="balance-modal-action-btn"
+                onClick={handleConnectWallet}
+                disabled={isProcessing}
+              >
+                {isProcessing ? 'Opening TonConnect...' : 'Connect Wallet'}
+              </button>
+            </>
+          ) : (
+            <>
+              <h2 className="balance-modal-title">Top Up TON Balance</h2>
+              <p className="balance-modal-instruction">Enter amount</p>
+              <div className="balance-input-container">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  className="balance-input"
+                  value={topUpAmount}
+                  onChange={(e) => {
+                    let val = e.target.value;
+                    val = val.replace(/,/g, '.');
+                    val = val.replace(/[^\d.]/g, '');
+                    if (val.split('.').length <= 2) setTopUpAmount(val);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && topUpAmount && !isNaN(parseFloat(topUpAmount))) {
+                      handleTopUp();
+                    }
+                    if (e.key === ',') {
+                      e.preventDefault();
+                      const cursorPos = e.target.selectionStart;
+                      const currentValue = e.target.value;
+                      const newValue = currentValue.substring(0, cursorPos) + '.' + currentValue.substring(cursorPos);
+                      setTopUpAmount(newValue);
+                      setTimeout(() => {
+                        e.target.selectionStart = e.target.selectionEnd = cursorPos + 1;
+                      }, 0);
+                    }
+                  }}
+                  placeholder="0.00"
+                  inputMode="decimal"
+                />
+                <span className="balance-input-suffix">TON</span>
+              </div>
+              <button
+                className="balance-modal-action-btn"
+                onClick={handleTopUp}
+                disabled={!topUpAmount || isNaN(parseFloat(topUpAmount)) || isProcessing}
+              >
+                {isProcessing ? 'Processing...' : `Top Up ${topUpAmount || '0'} TON`}
+              </button>
+            </>
+          )
+        ) : (
+          // ====== КОНТЕНТ ДЛЯ STARS (TOP UP + WITHDRAW) ======
+          <>
+            <h2 className="balance-modal-title">Manage STARS Balance</h2>
+            <p className="balance-modal-instruction">Enter amount</p>
+            <div className="balance-input-container">
+              <input
+                ref={inputRef}
+                type="text"
+                className="balance-input"
+                value={topUpAmount}
+                onChange={(e) => {
+                  let val = e.target.value;
+                  val = val.replace(/[^\d]/g, '');
+                  if (val.length > 1 && val.startsWith('0')) {
+                    val = val.replace(/^0+/, '');
+                  }
+                  setTopUpAmount(val);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && topUpAmount && !isNaN(parseInt(topUpAmount))) {
+                    // Можно позже разделить действия: например, Enter → Top Up
+                    handleTopUp();
+                  }
+                }}
+                placeholder="0"
+                inputMode="numeric"
+              />
+              <span className="balance-input-suffix">STARS</span>
+            </div>
+
+            {/* === ДВЕ КНОПКИ: TOP UP И WITHDRAW === */}
+            <div className="stars-actions-row">
+              <button
+                className="balance-modal-action-btn stars-btn"
+                onClick={handleTopUp}
+                disabled={!topUpAmount || isNaN(parseInt(topUpAmount)) || parseInt(topUpAmount) <= 0 || isProcessing}
+              >
+                {isProcessing ? 'Creating invoice...' : `Top Up ${topUpAmount || '0'} STARS`}
+              </button>
+
+              <button
+                className="balance-modal-action-btn stars-withdraw-btn"
+                onClick={() => {
+                  alert('Withdraw feature coming soon!');
+                }}
+                disabled={!topUpAmount || isNaN(parseInt(topUpAmount)) || parseInt(topUpAmount) <= 0 || isProcessing}
+              >
+                Withdraw {topUpAmount || '0'} STARS
+              </button>
+            </div>
+
+            {/* Ссылка на инвойс (если есть) */}
+            {invoiceLink && (
+              <div className="invoice-info">
+                <p>Payment link generated. Click below to pay:</p>
+                <a
+                  href={invoiceLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="invoice-link"
+                >
+                  Open Payment Page
+                </a>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      <button
+        className="balance-modal-close-btn"
+        onClick={handleCloseBalanceModal}
+        disabled={isProcessing}
+        title="Close"
+      >
+        <img src={modalCloseIcon} alt="Close" className="balance-modal-close-png" />
+      </button>
+    </div>
+  </div>
+)}
     </>
   );
 }
