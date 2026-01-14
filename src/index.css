@@ -33,3 +33,18 @@ body {
   font-style: normal;
 }
 
+/* Для кнопки "Назад" */
+.tg-back-button {
+  color: white !important;
+  fill: white !important;
+}
+
+/* Для текста в верхней панели */
+.tg-header {
+  color: white !important;
+}
+
+/* Альтернативный способ */
+.tg-nav-button {
+  color: #FFFFFF !important;
+}

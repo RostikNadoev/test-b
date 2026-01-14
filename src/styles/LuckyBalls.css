@@ -492,6 +492,12 @@
   border: 2px solid rgb(102, 113, 185);
 }
 
+.quit-button {
+  background: radial-gradient( rgb(153, 147, 204), rgb(89, 80, 172));
+  border: 2px solid rgb(79, 69, 165);
+  -webkit-text-stroke: 1px rgb(89, 80, 172);
+}
+
 .info-row {
   display: flex;
   justify-content: space-between;

@@ -1,13 +1,10 @@
 import '../styles/Rocket.css';
 import Header from './Header';
-import foot from '../assets/MainPage/foot.png';
-import footover from '../assets/MainPage/foot-on.svg';
-import closeIcon from '../assets/MainPage/close.png';
 import Lottie from 'lottie-react';
 import React, { useState, useEffect, useRef } from 'react';
 import timerImg from '../assets/Rocket/timer.png';
 
-export default function LuckyBalls({ 
+export default function Rocket({ 
   onNavigate, 
   currentCardIndex = 2 
 }) {
@@ -22,6 +19,8 @@ export default function LuckyBalls({
   const [lastMultipliers, setLastMultipliers] = useState([]);
   const [participants, setParticipants] = useState([]);
   const [loadingParticipants, setLoadingParticipants] = useState(true);
+  const [isBetModalOpen, setIsBetModalOpen] = useState(false);
+  const [isModalClosing, setIsModalClosing] = useState(false);
 
   const timerRef = useRef(null);
   const multiplierIntervalRef = useRef(null);
@@ -85,6 +84,19 @@ export default function LuckyBalls({
     loadParticipants();
   }, []);
 
+  // Эффект для управления скроллом при открытии/закрытии модалки
+  useEffect(() => {
+    if (isBetModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isBetModalOpen]);
+
   const vibrate = (pattern = 50) => {
     if (!isVibrationSupported.current) return;
     try {
@@ -120,6 +132,8 @@ export default function LuckyBalls({
   const generateRandomMultiplier = () => {
     return (Math.random() * 8.99 + 1.01).toFixed(2);
   };
+
+  
 
   useEffect(() => {
     async function loadAnimations() {
@@ -235,17 +249,20 @@ export default function LuckyBalls({
     return () => clearTimeout(explosionTimeoutRef.current);
   }, [stage]);
 
-  const handleClose = () => {
-    clearInterval(timerRef.current);
-    clearInterval(multiplierIntervalRef.current);
-    clearTimeout(explosionTimeoutRef.current);
-    onNavigate('main', currentCardIndex);
-  };
+
 
   const handleMakeBet = () => {
     vibrate(100);
-    // Здесь будет логика для размещения ставки
-    console.log('Make bet clicked');
+    setIsBetModalOpen(true);
+    setIsModalClosing(false);
+  };
+  
+  const closeBetModal = () => {
+    setIsModalClosing(true);
+    setTimeout(() => {
+      setIsBetModalOpen(false);
+      setIsModalClosing(false);
+    }, 300);
   };
 
   const formatTime = (seconds) => {
@@ -257,7 +274,7 @@ export default function LuckyBalls({
   return (
     <div className="rocket-screen">
       <Header onNavigate={onNavigate} />
-
+  
       <main className="rocket-content">
         <div className="rocket-container">
           <div className="multiplier-container">
@@ -265,7 +282,7 @@ export default function LuckyBalls({
               {typeof multiplier === 'string' ? multiplier : `x${multiplier}`}
             </span>
           </div>
-
+  
           <div className="rocket-game-area">
             <div className="video-container">
               {loading ? (
@@ -278,7 +295,6 @@ export default function LuckyBalls({
                       <div className="timer-text">{formatTime(timeLeft)}</div>
                     </div>
                   )}
-
                   {stage === 'rocket' && animationData && (
                     <div className="animation-container">
                       <Lottie
@@ -290,7 +306,6 @@ export default function LuckyBalls({
                       />
                     </div>
                   )}
-
                   {stage === 'explosion' && exAnimationData && (
                     <div className="explosion-container">
                       <Lottie
@@ -302,14 +317,13 @@ export default function LuckyBalls({
                       />
                     </div>
                   )}
-
                   {!animationData && !exAnimationData && !loading && (
                     <div className="error-message">Failed to load animation</div>
                   )}
                 </>
               )}
             </div>
-
+  
             {/* Последние множители */}
             <div className="last-multipliers-container">
               <div className="last-multipliers-scroll">
@@ -320,22 +334,16 @@ export default function LuckyBalls({
                 ))}
               </div>
             </div>
-
+  
             {/* Таблица участников */}
             <div className="participants-table-container">
               <table className="participants-table">
                 <thead className="participants-thead">
                   <tr>
-                    <th className="participants-header-cell bet-column">
-                      BET
-                    </th>
-                    <th className="participants-header-cell winning-column">
-                      WINNING
-                    </th>
+                    <th className="participants-header-cell bet-column">BET</th>
+                    <th className="participants-header-cell winning-column">WINNING</th>
                   </tr>
                 </thead>
-              
-                {/* TBody участников */}
                 <tbody className="participants-tbody">
                   {loadingParticipants ? (
                     <tr className="participants-row loading-row">
@@ -347,7 +355,7 @@ export default function LuckyBalls({
                     participants.map((participant) => (
                       <tr key={participant.id} className="participants-row">
                         <td className="participant-bet-cell">
-                          <div 
+                          <div
                             className="participant-avatar"
                             style={{ backgroundColor: participant.avatarColor }}
                           ></div>
@@ -356,9 +364,7 @@ export default function LuckyBalls({
                             <div className="participant-bet">{participant.bet}</div>
                           </div>
                         </td>
-                        <td className="participant-winning-cell">
-                          {/* Пока пусто - будет заполняться после раунда */}
-                        </td>
+                        <td className="participant-winning-cell"></td>
                       </tr>
                     ))
                   ) : (
@@ -371,36 +377,33 @@ export default function LuckyBalls({
                 </tbody>
               </table>
             </div>
-
+  
             {/* Кнопка MAKE A BET */}
             <div className="make-bet-button-container">
-              <button 
-                className="make-bet-button"
-                onClick={handleMakeBet}
-              >
+              <button className="make-bet-button" onClick={handleMakeBet}>
                 <span className="make-bet-text">MAKE A BET</span>
               </button>
             </div>
           </div>
         </div>
       </main>
-
-      <footer className="rocket-footer">
-        <div className="footer-close-container">
-          <div className="footer-close-item" onClick={() => {
-            vibrate(50);
-            handleClose();
-          }}>
-            <div className="footer-close-indicator"></div>
-            <div className="footer-close-wrapper">
-              <img src={foot} alt="block" className="footer-close-block"/>
-              <img src={closeIcon} alt="CLOSE" className="footer-close-icon"/>
-              <img src={footover} alt="decoration" className="footer-close-overlay"/>
-            </div>
-            <span className="footer-close-label">CLOSE</span>
+  
+      {/* Полупрозрачная модалка на весь экран */}
+      {isBetModalOpen && (
+        <div 
+          className={`bet-modal-overlay ${isModalClosing ? 'closing' : ''}`}
+          onClick={closeBetModal}
+        >
+          <div 
+            className={`bet-modal-content ${isModalClosing ? 'closing' : ''}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button className='close-modal-rocket-button' onClick={closeBetModal}>
+              CLOSE
+            </button>
           </div>
         </div>
-      </footer>
+      )}
     </div>
   );
 }

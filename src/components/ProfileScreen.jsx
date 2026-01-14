@@ -1,4 +1,3 @@
-// components/ProfileScreen.jsx - исправленные модалки продаж
 import React, { useState, useEffect } from 'react';
 import '../styles/ProfileScreen.css';
 import { useDemo } from '../contexts/DemoContext';
@@ -7,9 +6,6 @@ import { tonConnect } from '../utils/tonConnect';
 
 import ava from '../assets/MainPage/ava.jpg';
 import tonGift from '../assets/Profile/ton-gift.svg';
-import foot from '../assets/MainPage/foot.png';
-import footover from '../assets/MainPage/foot-on.svg';
-import closeIcon from '../assets/MainPage/close.png';
 import modalCloseIcon from '../assets/Profile/close.png'; 
 import giftchange from '../assets/Profile/giftchange.png';
 import gift from '../assets/Profile/gift.png';
@@ -348,12 +344,11 @@ export default function ProfileScreen({ onNavigate }) {
   };
 
   // Функция для форматирования адреса кошелька
-// Функция для форматирования адреса кошелька
-const formatWalletAddress = (address) => {
-  if (!address) return '';
-  if (address.length <= 9) return address;
-  return `${address.slice(0, 5)}...${address.slice(-4)}`;
-};
+  const formatWalletAddress = (address) => {
+    if (!address) return '';
+    if (address.length <= 9) return address;
+    return `${address.slice(0, 5)}...${address.slice(-4)}`;
+  };
 
   // Функция обновления данных
   const refreshUserData = async () => {
@@ -541,20 +536,7 @@ const formatWalletAddress = (address) => {
         )}
       </main>
 
-      {/* Футер */}
-      <footer className="profile-footer">
-        <div className="footer-close-container">
-          <div className="footer-close-item" onClick={handleClose}>
-            <div className="footer-close-indicator"></div>
-            <div className="footer-close-wrapper">
-              <img src={foot} alt="block" className="footer-close-block" />
-              <img src={closeIcon} alt="CLOSE" className="footer-close-icon" />
-              <img src={footover} alt="decoration" className="footer-close-overlay" />
-            </div>
-            <span className="footer-close-label">CLOSE</span> 
-          </div>
-        </div>
-      </footer>
+      {/* Футер УБРАН - вместо него используется Telegram BackButton */}
 
       {/* Модальное окно "ADD GIFTS" */}
       {isModalOpen && (

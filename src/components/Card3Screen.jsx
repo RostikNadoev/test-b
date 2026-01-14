@@ -1,4 +1,3 @@
-// components/Card3Screen.jsx
 import React, { useState, useEffect } from 'react';
 import CardScreen from './CardScreen';
 import { useDemo } from '../contexts/DemoContext';

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DemoProvider } from './contexts/DemoContext';
 import { BalanceProvider } from './contexts/BalanceContext';
 import LoadingScreen from './components/LoadingScreen';
@@ -87,15 +87,14 @@ export default function App() {
   const [currentScreen, setCurrentScreen] = useState('main');
   const [currentCardIndex, setCurrentCardIndex] = useState(2);
   const [userData, setUserData] = useState(null);
+  const [tg, setTg] = useState(null); // Состояние для Telegram WebApp
 
   // Функция для обновления высоты viewport
-  const applyViewport = (tg) => {
-    if (!tg) return;
+  const applyViewport = (telegramApp) => {
+    if (!telegramApp) return;
     
-    // Используем стабильную высоту viewport или высоту окна
-    const h = tg.viewportStableHeight || window.innerHeight || document.documentElement.clientHeight;
+    const h = telegramApp.viewportStableHeight || window.innerHeight || document.documentElement.clientHeight;
     
-    // Устанавливаем CSS переменную
     document.documentElement.style.setProperty('--tg-viewport-height', `${h}px`);
     document.documentElement.style.setProperty('--app-height', `${h}px`);
     
@@ -145,91 +144,158 @@ export default function App() {
     }
   };
 
-// Инициализация Telegram WebApp - ОПТИМИЗИРОВАННЫЙ
-useEffect(() => {
-  const initTelegram = () => {
-    const tg = window.Telegram?.WebApp;
+  // Инициализация Telegram WebApp
+  useEffect(() => {
+    const initTelegram = () => {
+      const telegramApp = window.Telegram?.WebApp;
 
-    if (!tg) {
-      console.warn('⚠️ Telegram WebApp не обнаружен');
-      setIsAuthenticating(false);
+      if (!telegramApp) {
+        console.warn('⚠️ Telegram WebApp не обнаружен');
+        setIsAuthenticating(false);
+        return;
+      }
+
+      setTg(telegramApp);
+      
+      console.log('🚀 Telegram WebApp init...');
+      
+      telegramApp.ready();
+      
+      
+      // ВСЁ СРАЗУ без таймаутов
+      const executeImmediately = () => {
+        // Fullscreen ПЕРВЫМ делом
+        if (telegramApp.requestFullscreen) {
+          try {
+            telegramApp.requestFullscreen();
+            console.log('📱 Fullscreen immediate');
+          } catch (e) {}
+        }
+        
+        // Expand ВТОРЫМ
+        telegramApp.expand();
+        
+        // Установка высоты
+        const h = Math.max(
+          telegramApp.viewportStableHeight || 0,
+          window.innerHeight || 0,
+          document.documentElement.clientHeight || 0
+        );
+        
+        document.documentElement.style.setProperty('--tg-viewport-height', `${h}px`);
+        document.documentElement.style.setProperty('--app-height', `${h}px`);
+        
+        // Принудительно для body и root
+        document.body.style.height = `${h}px`;
+        document.body.style.minHeight = `${h}px`;
+        const root = document.getElementById('root');
+        if (root) {
+          root.style.height = `${h}px`;
+          root.style.minHeight = `${h}px`;
+        }
+      };
+      
+      // ВЫПОЛНЯЕМ ПРЯМО СЕЙЧАС
+      executeImmediately();
+      
+      // И ещё раз на следующем кадре анимации
+      requestAnimationFrame(() => {
+        executeImmediately();
+      });
+      
+      // И ещё через 1 кадр
+      requestAnimationFrame(() => {
+        requestAnimationFrame(executeImmediately);
+      });
+      
+      // Обработчик для изменений
+      const handleViewportChange = () => {
+        if (telegramApp.requestFullscreen) telegramApp.requestFullscreen();
+        telegramApp.expand();
+        
+        const h = telegramApp.viewportStableHeight || window.innerHeight;
+        document.documentElement.style.setProperty('--tg-viewport-height', `${h}px`);
+        document.documentElement.style.setProperty('--app-height', `${h}px`);
+      };
+      
+      telegramApp.onEvent('viewportChanged', handleViewportChange);
+      
+      // Обработчик закрытия приложения
+      telegramApp.onEvent('close', () => {
+        console.log('🚪 App closed by user');
+      });
+      
+      // Запускаем авторизацию
+      authenticateUser();
+
+      return () => {
+        telegramApp.offEvent('viewportChanged', handleViewportChange);
+        telegramApp.offEvent('close', () => {});
+      };
+    };
+
+    initTelegram();
+  }, []);
+
+  // Функция навигации
+  const navigateTo = useCallback((screen, cardIndex = 2) => {
+    console.log(`🔄 Navigating to: ${screen}`);
+    setCurrentScreen(screen);
+    if (['card1', 'card2', 'card3'].includes(screen)) {
+      setCurrentCardIndex(cardIndex);
+    }
+  }, []);
+
+  // Функция для управления BackButton
+  const setupBackButtonLogic = useCallback((screen) => {
+    if (!tg || !tg.BackButton) {
+      console.warn('⚠️ BackButton not available');
       return;
     }
 
-    console.log('🚀 Telegram WebApp init...');
+    // Страницы, где нужна кнопка "Назад"
+    const backButtonScreens = ['profile', 'card1', 'card2', 'card3', 'luckyballs', 'rocket'];
     
-    // ОДНОВРЕМЕННО делаем всё:
-    // 1. ready + expand + requestFullscreen одновременно
-    tg.ready();
-    
-    // ВСЁ СРАЗУ без таймаутов
-    const executeImmediately = () => {
-      // Fullscreen ПЕРВЫМ делом
-      if (tg.requestFullscreen) {
-        try {
-          tg.requestFullscreen();
-          console.log('📱 Fullscreen immediate');
-        } catch (e) {}
+    if (backButtonScreens.includes(screen)) {
+      try {
+        // Показываем BackButton
+        tg.BackButton.show();
+        
+        // Создаем обработчик для нажатия на BackButton
+        const handleBackClick = () => {
+          console.log(`🔙 Back button clicked from ${screen}`);
+          navigateTo('main');
+        };
+        
+        // Удаляем старые обработчики если есть
+        if (tg.BackButton.onClick) {
+          // Создаем новую функцию чтобы избежать дублирования
+          tg.BackButton.offClick(handleBackClick);
+        }
+        
+        // Устанавливаем обработчик
+        tg.BackButton.onClick(handleBackClick);
+        
+        console.log(`✅ BackButton установлен для экрана: ${screen}`);
+      } catch (error) {
+        console.error('❌ Error setting up BackButton:', error);
       }
-      
-      // Expand ВТОРЫМ
-      tg.expand();
-      
-      // Установка высоты
-      const h = Math.max(
-        tg.viewportStableHeight || 0,
-        window.innerHeight || 0,
-        document.documentElement.clientHeight || 0
-      );
-      
-      document.documentElement.style.setProperty('--tg-viewport-height', `${h}px`);
-      document.documentElement.style.setProperty('--app-height', `${h}px`);
-      
-      // Принудительно для body и root
-      document.body.style.height = `${h}px`;
-      document.body.style.minHeight = `${h}px`;
-      const root = document.getElementById('root');
-      if (root) {
-        root.style.height = `${h}px`;
-        root.style.minHeight = `${h}px`;
+    } else {
+      // Скрываем BackButton на других страницах
+      try {
+        if (tg.BackButton.isVisible) {
+          tg.BackButton.hide();
+        }
+      } catch (error) {
+        console.warn('⚠️ Error hiding BackButton:', error);
       }
-    };
-    
-    // ВЫПОЛНЯЕМ ПРЯМО СЕЙЧАС
-    executeImmediately();
-    
-    // И ещё раз на следующем кадре анимации
-    requestAnimationFrame(() => {
-      executeImmediately();
-    });
-    
-    // И ещё через 1 кадр
-    requestAnimationFrame(() => {
-      requestAnimationFrame(executeImmediately);
-    });
-    
-    // Обработчик для изменений
-    const handleViewportChange = () => {
-      if (tg.requestFullscreen) tg.requestFullscreen();
-      tg.expand();
-      
-      const h = tg.viewportStableHeight || window.innerHeight;
-      document.documentElement.style.setProperty('--tg-viewport-height', `${h}px`);
-      document.documentElement.style.setProperty('--app-height', `${h}px`);
-    };
-    
-    tg.onEvent('viewportChanged', handleViewportChange);
-    
-    // Запускаем авторизацию
-    authenticateUser();
+    }
+  }, [tg, navigateTo]);
 
-    return () => {
-      tg.offEvent('viewportChanged', handleViewportChange);
-    };
-  };
-
-  initTelegram();
-}, []);
+  // Эффект для обновления BackButton при смене экрана
+  useEffect(() => {
+    setupBackButtonLogic(currentScreen);
+  }, [currentScreen, setupBackButtonLogic]);
 
   // === 🔥 Список всех URL-адресов изображений для предзагрузки ===
   const allImageUrls = [
@@ -287,14 +353,7 @@ useEffect(() => {
     if (!isAuthenticating && !isLoading) {
       console.log('🚀 Приложение полностью загружено и готово к работе');
     }
-  }, [isAuthenticating, isLoading]);
-
-  const navigateTo = (screen, cardIndex = 2) => {
-    setCurrentScreen(screen);
-    if (['card1', 'card2', 'card3'].includes(screen)) {
-      setCurrentCardIndex(cardIndex);
-    }
-  };
+  }, [isAuthenticating, isLoading, tg]);
 
   const handleLoadingComplete = () => {
     setIsLoading(false);
