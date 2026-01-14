@@ -3,6 +3,12 @@ import Header from './Header';
 import Lottie from 'lottie-react';
 import React, { useState, useEffect, useRef } from 'react';
 import timerImg from '../assets/Rocket/timer.png';
+import tonSvg from '../assets/MainPage/ton.svg';
+import starSvg from '../assets/MainPage/star1.png';
+import switchSvg from '../assets/MainPage/switch.svg';
+import switchbSvg from '../assets/MainPage/switchd.svg';
+import switchrSvg from '../assets/Rocket/switchr.svg'; // ← стрелка
+import { Switch } from 'antd'; // ← Ant Design Switch
 
 export default function Rocket({ 
   onNavigate, 
@@ -22,12 +28,23 @@ export default function Rocket({
   const [isBetModalOpen, setIsBetModalOpen] = useState(false);
   const [isModalClosing, setIsModalClosing] = useState(false);
 
+  // Состояния для ставок
+  const [selectedCurrency, setSelectedCurrency] = useState('TON');
+  const [betAmount, setBetAmount] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // Новое состояние: Auto-payout и multiplier
+  const [autoPayoutEnabled, setAutoPayoutEnabled] = useState(false);
+  const [payoutMultiplier, setPayoutMultiplier] = useState(1.2); // начальное значение
+
   const timerRef = useRef(null);
   const multiplierIntervalRef = useRef(null);
   const explosionTimeoutRef = useRef(null);
   const isVibrationSupported = useRef(false);
+  const currencyDropdownRef = useRef(null);
+  const betInputRef = useRef(null);
 
-  // Мок-данные участников (имитация API)
+  // Мок-данные участников
   const mockParticipants = [
     {
       id: 1,
@@ -70,18 +87,18 @@ export default function Rocket({
     }
   }, []);
 
-  // Имитация загрузки данных участников от API
+  // Закрытие dropdown при клике вне его
   useEffect(() => {
-    const loadParticipants = () => {
-      setLoadingParticipants(true);
-      // Имитация задержки API
-      setTimeout(() => {
-        setParticipants(mockParticipants);
-        setLoadingParticipants(false);
-      }, 500);
+    const handleClickOutside = (event) => {
+      if (currencyDropdownRef.current && !currencyDropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
     };
-
-    loadParticipants();
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   // Эффект для управления скроллом при открытии/закрытии модалки
@@ -96,6 +113,19 @@ export default function Rocket({
       document.body.style.overflow = '';
     };
   }, [isBetModalOpen]);
+
+  // Имитация загрузки данных участников от API
+  useEffect(() => {
+    const loadParticipants = () => {
+      setLoadingParticipants(true);
+      setTimeout(() => {
+        setParticipants(mockParticipants);
+        setLoadingParticipants(false);
+      }, 500);
+    };
+
+    loadParticipants();
+  }, []);
 
   const vibrate = (pattern = 50) => {
     if (!isVibrationSupported.current) return;
@@ -133,8 +163,6 @@ export default function Rocket({
     return (Math.random() * 8.99 + 1.01).toFixed(2);
   };
 
-  
-
   useEffect(() => {
     async function loadAnimations() {
       try {
@@ -171,10 +199,8 @@ export default function Rocket({
     };
   }, []);
 
-  // Исправление: добавление множителя в историю после полета ракеты
   useEffect(() => {
     if (stage === 'rocket' && !isAnimating) {
-      // Ракета долетела - добавляем множитель в историю
       setLastMultipliers(prev => [parseFloat(targetMultiplier.toFixed(2)), ...prev.slice(0, 9)]);
     }
   }, [stage, isAnimating, targetMultiplier]);
@@ -249,12 +275,11 @@ export default function Rocket({
     return () => clearTimeout(explosionTimeoutRef.current);
   }, [stage]);
 
-
-
   const handleMakeBet = () => {
     vibrate(100);
     setIsBetModalOpen(true);
     setIsModalClosing(false);
+    setIsDropdownOpen(false);
   };
   
   const closeBetModal = () => {
@@ -262,13 +287,56 @@ export default function Rocket({
     setTimeout(() => {
       setIsBetModalOpen(false);
       setIsModalClosing(false);
+      setBetAmount('');
+      setIsDropdownOpen(false);
     }, 300);
+  };
+
+  const handleCurrencySelect = (currency) => {
+    setSelectedCurrency(currency);
+    setIsDropdownOpen(false);
+  };
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
+  const handleBetChange = (e) => {
+    const value = e.target.value;
+    if (value === '' || /^\d*\.?\d*$/.test(value)) {
+      setBetAmount(value);
+    }
+  };
+
+  const handleQuickBet = (amount) => {
+    setBetAmount(amount.toString());
+  };
+
+  const getQuickBetValues = () => {
+    if (selectedCurrency === 'TON') {
+      return ['1', '5', '10', '25'];
+    } else {
+      return ['50', '100', '250', '500'];
+    }
   };
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Управление множителем авто-выплаты
+  const increaseMultiplier = () => {
+    if (payoutMultiplier < 10.0) {
+      setPayoutMultiplier((prev) => parseFloat((prev + 0.1).toFixed(1)));
+    }
+  };
+
+  const decreaseMultiplier = () => {
+    if (payoutMultiplier > 1.2) {
+      setPayoutMultiplier((prev) => parseFloat((prev - 0.1).toFixed(1)));
+    }
   };
 
   return (
@@ -398,9 +466,111 @@ export default function Rocket({
             className={`bet-modal-content ${isModalClosing ? 'closing' : ''}`}
             onClick={(e) => e.stopPropagation()}
           >
-            <button className='close-modal-rocket-button' onClick={closeBetModal}>
-              CLOSE
-            </button>
+            {/* Верхняя часть модалки - секция ставки */}
+            <div className="bet-modal-top-section">
+              <div className="bet-label">Your bet</div>
+              
+              <div className="bet-input-container">
+                <div className="bet-input-wrapper">
+                  <span className={`bet-input-placeholder ${betAmount ? 'hidden' : ''}`}>Enter</span>
+                  <input 
+                    ref={betInputRef}
+                    type="text" 
+                    className="bet-input"
+                    value={betAmount}
+                    onChange={handleBetChange}
+                    placeholder=""
+                    inputMode="decimal"
+                  />
+                  
+                  <div 
+                    className="currency-selector"
+                    onClick={toggleDropdown}
+                    ref={currencyDropdownRef}
+                  >
+                    <img 
+                      src={selectedCurrency === 'TON' ? tonSvg : starSvg} 
+                      alt={selectedCurrency} 
+                      className="currency-icon"
+                    />
+                    <img 
+                      src={isDropdownOpen ? switchSvg : switchbSvg} 
+                      alt="switch" 
+                      className="currency-switch"
+                    />
+                    
+                    {isDropdownOpen && (
+                      <div className="currency-dropdown">
+                        <div 
+                          className={`dropdown-item ${selectedCurrency === 'TON' ? 'selected' : ''}`}
+                          onClick={() => handleCurrencySelect('TON')}
+                        >
+                          TON
+                        </div>
+                        <div 
+                          className={`dropdown-item ${selectedCurrency === 'STARS' ? 'selected' : ''}`}
+                          onClick={() => handleCurrencySelect('STARS')}
+                        >
+                          STARS
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Кнопки быстрого ввода */}
+              <div className="quick-bet-buttons">
+                {getQuickBetValues().map((value) => (
+                  <div 
+                    key={value}
+                    className="quick-bet-button"
+                    onClick={() => handleQuickBet(value)}
+                  >
+                    <span className="quick-bet-value">{value}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Auto-payout блок */}
+<div className="auto-payout-section">
+  <div className="auto-payout-row">
+    <span className="auto-payout-label">Auto-payout</span>
+    <Switch
+      size="small"
+      checked={autoPayoutEnabled}
+      onChange={setAutoPayoutEnabled}
+    />
+  </div>
+
+  {/* Поле множителя */}
+  <div className={`multiplier-input-wrapper ${!autoPayoutEnabled ? 'disabled' : ''}`}>
+    <div 
+      className={`multiplier-arrow left ${payoutMultiplier <= 1.2 ? 'disabled' : ''}`}
+      onClick={payoutMultiplier > 1.2 ? decreaseMultiplier : undefined}
+    >
+      <img src={switchrSvg} alt="left" />
+    </div>
+    <span className="multiplier-value">x{payoutMultiplier.toFixed(1)}</span>
+    <div 
+      className="multiplier-arrow right"
+      onClick={increaseMultiplier}
+    >
+      <img src={switchrSvg} alt="right" />
+    </div>
+  </div>
+</div>
+            </div>
+
+            {/* === Кнопки PLAY и CLOSE внизу модалки === */}
+            <div className="modal-buttons-container">
+              <button className="play-button-balls" onClick={() => console.log('PLAY clicked')}>
+                PLAY
+              </button>
+              <button className="close-modal-rocket-button" onClick={closeBetModal}>
+                CLOSE
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -42,6 +42,7 @@ export default function Header({ onNavigate }) {
     return user.username || user.name || 'User';
   }, [user, isDemoMode]);
 
+
   const getBalance = useCallback(() => {
     if (isDemoMode) return formatBalance(demoBalance);
     if (tonBalanceData?.balance !== undefined) return formatBalance(tonBalanceData.balance);
@@ -447,6 +448,18 @@ const handleCreateStarsInvoice = async () => {
     }
   }, [isDemoMode]);
 
+
+  // Функция для форматирования никнейма
+const formatUsername = (username) => {
+  if (!username) return '...';
+  
+  // Если никнейм короче или равен 3 символам, показываем полностью
+  if (username.length <= 3) return username;
+  
+  // Берем первые 3 символа и добавляем многоточие
+  return username.substring(0, 3) + '...';
+};
+
   // 🔥 ФУНКЦИЯ ПОДКЛЮЧЕНИЯ КОШЕЛЬКА
   const handleConnectWallet = async () => {
     if (isProcessing) return;
@@ -543,9 +556,8 @@ const handleCreateStarsInvoice = async () => {
             <span 
               className="user-username" 
               onClick={() => onNavigate('profile')}
-              style={{ cursor: 'pointer' }}
             >
-              {getUsername()}
+              {formatUsername(getUsername())}
             </span>
 
             {/* Контейнер для двух балансов */}
