@@ -421,7 +421,7 @@
   height: 100vh;
   background-color: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(12px);
   z-index: 999;
   display: flex;
   justify-content: center;
@@ -870,7 +870,7 @@
   font-weight: 800;
   font-style: normal;
   font-size: 17px;
-  line-height: 1.2;
+  line-height: 1.5;
   letter-spacing: 0%;
   background: linear-gradient(90deg, rgba(53, 163, 242, 1), rgba(55, 189, 243, 1));
   -webkit-background-clip: text;
