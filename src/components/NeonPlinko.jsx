@@ -8,7 +8,7 @@ import '../styles/NeonPlinko.css'
 const LAUNCH_CONFIG = {
   current: {
     x: 0.001,    // Смещай на микрон (0.001), чтобы не бить ровно в центр гвоздя
-    vx: -0.048,      
+    vx: -0.033,      
     vy: -0.000000001     // Стабильная скорость вниз
   },
   // Сюда впишешь значения, когда подберешь их для всех 13 лунок
@@ -148,9 +148,9 @@ function SlotGeometry({ config }) {
         return (
           <group key={i}>
             <Text 
-              fontSize={ballRadius * 1.8} 
+              fontSize={ballRadius * 1.4} 
               fontWeight="bold" 
-              position={[x, bottomY - 0.15, 0]} 
+              position={[x, bottomY - 0.1, 0]} 
               color="#ffffff"
             >
               x{val}
@@ -205,7 +205,7 @@ const NeonPlinko = forwardRef((props, ref) => {
           <PerspectiveCamera 
             makeDefault 
             position={[0, lastRowY + 0.35, 3.2]} // Камеру немного отодвинули и подняли
-            fov={window.innerWidth < 380 ? 65 : 55} // Уменьшили FOV для лучшего обзора
+            
           />
           <Stars count={80} factor={3} fade depth={50} />
           <ambientLight intensity={1.8} />

@@ -3,7 +3,7 @@ import NeonPlinko from './NeonPlinko';
 import Header from './Header';
 import '../styles/PlinkoScreen.css';
 // Импортируем тот же фон что и в Rocket (потом можно заменить)
-import rocketBack from '../assets/Plinko/Обои.jpeg';
+import rocketBack from '../assets/Plinko/BackPinko.jpg';
 
 export default function PlinkoScreen({ onNavigate }) {
   const plinkoRef = useRef();
