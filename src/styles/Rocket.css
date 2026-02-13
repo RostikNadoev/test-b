@@ -1,0 +1,1193 @@
+.rocket-screen {
+  background-image: url('../assets/Rocket/rocketback.png');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 100%;
+  height: var(--app-height, 100vh);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.rocket-content {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 15px 0; /* Убрал нижний padding */
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden; /* Убираем скролл всего контента */
+}
+
+.rocket-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.multiplier-container {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  padding: 0 15px;
+  height: 45px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: fit-content;
+  z-index: 10;
+}
+
+.multiplier-text {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 16px;
+  line-height: 100%;
+  letter-spacing: 0%;
+  color: white;
+  white-space: nowrap;
+}
+
+.rocket-game-area {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  margin-top: -30px;
+  height: calc(100% - 50px); /* Высота минус кнопка */
+}
+
+.video-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  margin-bottom: -20px;
+  flex-shrink: 0;
+}
+
+.timer-container {
+  position: relative;
+  width: 250px;
+  height: 250px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.timer-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.timer-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 36px;
+  line-height: 1.5;
+  letter-spacing: 0%;
+  color: white;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.animation-container,
+.explosion-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.raketa-animation {
+  width: 250px;
+  height: 250px;
+  min-width: 250px;
+  min-height: 250px;
+  transform: scale(1);
+  transform-origin: center;
+}
+
+.explosion-animation {
+  width: 195px;
+  height: 195px;
+  min-width: 195px;
+  min-height: 195px;
+  transform: scale(1);
+  transform-origin: center;
+  margin-bottom: 40px;
+  margin-top: 16px;
+}
+
+.loading-animation,
+.error-message {
+  width: 250px;
+  height: 250px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  color: white;
+  font-size: 20px;
+}
+
+/* === Блок последних множителей === */
+.last-multipliers-container {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  overflow: hidden;
+  margin-top: 0;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.last-multipliers-scroll {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.last-multipliers-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.last-multiplier-item {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 13px;
+  line-height: 100%;
+  letter-spacing: 0%;
+  color: white;
+  white-space: nowrap;
+  padding: 0 15px;
+  height: 45px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: fit-content;
+  flex-shrink: 0;
+}
+
+/* Таблица участников */
+.participants-table-container {
+  width: 100%;
+  margin-top: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* Важно для flex-скролла */
+  height: 100%; /* Занимает всю доступную высоту */
+}
+
+.participants-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.participants-thead {
+  width: 100%;
+  height: 45px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  position: relative;
+  margin-bottom: 10px;
+  flex-shrink: 0; /* Фиксируем высоту thead */
+}
+
+/* Создаем псевдоэлемент для границы вокруг всего thead */
+.participants-thead::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 3px solid white;
+  pointer-events: none;
+  border-radius: 12px;
+}
+
+.participants-header-cell {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 16px;
+  line-height: 100%;
+  letter-spacing: 0%;
+  text-transform: uppercase;
+  color: white;
+  height: 45px;
+  vertical-align: middle;
+  border: none;
+}
+
+.participants-header-cell.bet-column {
+  text-align: left;
+  padding-left: 10px;
+  width: 80%;
+}
+
+.participants-header-cell.winning-column {
+  text-align: right;
+  padding-right: 10px;
+  width: 20%;
+}
+
+/* TBody участников - СКРОЛЛИТСЯ ТОЛЬКО ОН */
+.participants-tbody {
+  display: block;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.5) transparent;
+  flex: 1; /* Занимает все оставшееся пространство */
+  min-height: 0; /* Важно для flex-скролла */
+  max-height: calc(100% - 65px); /* Высота tbody (общая высота - thead - margin) */
+}
+
+.participants-tbody::-webkit-scrollbar {
+  width: 4px;
+}
+
+.participants-tbody::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.participants-tbody::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 2px;
+}
+
+.participants-row {
+  width: 100%;
+  height: 50px;
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.participants-row:last-child {
+  margin-bottom: 0;
+}
+
+.participant-bet-cell {
+  width: 80%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  box-sizing: border-box;
+}
+
+.participant-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid white;
+  background: transparent;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.participant-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Если аватарка не загрузилась, показываем цветной круг */
+.participant-avatar:has(img[style*="display: none"]) {
+  background-color: var(--avatar-color, #6971FF);
+}
+
+.participant-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.participant-nickname {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 13px;
+  line-height: 100%;
+  color: rgb(94, 178, 238);
+  margin-bottom: 5px;
+}
+
+.participant-bet {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 12px;
+  line-height: 100%;
+  color: rgba(0, 152, 234, 1);
+}
+
+.participant-winning-cell {
+  width: 20%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 10px;
+  box-sizing: border-box;
+}
+
+/* Кнопка MAKE A BET - ФИКСИРОВАННАЯ */
+.make-bet-button-container {
+  width: 100%;
+  padding: 0 15px;
+  box-sizing: border-box;
+  position: fixed;
+  bottom: 25px;
+  left: 0;
+  z-index: 100;
+}
+
+.make-bet-button {
+  width: 100%;
+  height: 50px;
+  background: radial-gradient(rgba(105, 113, 255, 1), rgba(184, 210, 249, 1));
+  border: 2px solid white;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.make-bet-button:active {
+  transform: scale(0.99);
+}
+
+.make-bet-text {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 100%;
+  letter-spacing: 0%;
+  text-transform: uppercase;
+  color: white;
+  position: relative;
+  -webkit-text-stroke: 1.5px rgba(101, 149, 255, 1);
+  paint-order: stroke fill;
+}
+
+/* ===== СТИЛИ ДЛЯ МОДАЛКИ СТАВОК ===== */
+
+/* ===== СТИЛИ ДЛЯ МОДАЛКИ СТАВОК ===== */
+
+.bet-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(231, 241, 253, 0.82);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: fadeInOverlay 0.3s ease-out;
+  opacity: 1;
+}
+
+.bet-modal-overlay.closing {
+  animation: fadeOutOverlay 0.3s ease-out;
+  opacity: 0;
+}
+
+@keyframes fadeInOverlay {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOutOverlay {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.bet-modal-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  animation: slideUpModal 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(0);
+  box-sizing: border-box;
+  padding-top: 280px;
+  padding-bottom: 25px; /* отступ снизу для кнопок */
+}
+
+.bet-modal-content.closing {
+  animation: slideDownModal 0.3s cubic-bezier(0.7, 0, 0.84, 0);
+  transform: translateY(100%);
+}
+
+@keyframes slideUpModal {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDownModal {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+/* Верхняя секция модалки */
+.bet-modal-top-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 15px;
+  padding: 0 15px;
+  box-sizing: border-box;
+}
+
+.bet-label {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 17px;
+  line-height: 1.5;
+  letter-spacing: 0%;
+  background: linear-gradient(90deg, rgba(128, 202, 244, 1), rgba(123, 207, 255, 1));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.bet-input-container {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bet-input-wrapper {
+  flex: 1;
+  min-width: 223px;
+  height: 55px;
+  background: linear-gradient(135deg, rgba(216, 237, 255, 1) 0%, rgba(255, 255, 255, 1) 100%);
+  border: 2px solid white;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  line-height: 1.7;
+}
+
+.bet-input-placeholder {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 16px;
+  line-height: 1.7;
+  letter-spacing: 0%;
+  background: linear-gradient(90deg, rgba(53, 163, 242, 1), rgba(55, 189, 243, 1));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1px white;
+  paint-order: stroke fill;
+  margin-left: 16px;
+  position: absolute;
+  left: 0;
+  pointer-events: none;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.bet-input {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  color: transparent;
+  background: linear-gradient(90deg, rgba(53, 163, 242, 1), rgba(55, 189, 243, 1));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-stroke: 1px white;
+  paint-order: stroke fill;
+  padding: 0 16px;
+  box-sizing: border-box;
+  caret-color: rgba(53, 163, 242, 1);
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border-radius: 15px;
+  line-height: 1.5;
+  padding-right: 90px;
+}
+
+.bet-input-placeholder.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Кнопки быстрого ввода */
+.quick-bet-buttons {
+  width: 80%;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  padding-left: 16%;
+}
+
+.quick-bet-button {
+  flex: 1;
+  height: 50px;
+  width: 70px;
+  background: linear-gradient(135deg, rgba(216, 237, 255, 1) 0%, rgba(255, 255, 255, 1) 100%);
+  border: 2px solid white;
+  border-radius: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.quick-bet-button:active {
+  transform: scale(0.95);
+}
+
+.quick-bet-button:hover {
+  background: linear-gradient(135deg, rgba(226, 238, 255, 1) 0%, rgba(196, 235, 249, 1) 100%);
+}
+
+.quick-bet-value {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 16px;
+  line-height: 1.5;
+  letter-spacing: 0%;
+  background: linear-gradient(90deg, rgba(53, 163, 242, 1), rgba(55, 189, 243, 1));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1px white;
+  paint-order: stroke fill;
+}
+
+/* Селектор валюты */
+.currency-selector {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  z-index: 10;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.currency-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.currency-switch {
+  width: 13px;
+  height: 13px;
+  object-fit: contain;
+  transition: transform 0.2s ease;
+}
+
+.currency-dropdown {
+  position: absolute;
+  top: 100%;
+  right: -15px;
+  margin-top: 10px;
+  width: 110px;
+  height: 80px;
+  background: linear-gradient(135deg, rgba(216, 237, 255, 1) 0%, rgba(255, 255, 255, 1) 100%);
+  border: 2px solid white;
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 100;
+}
+
+.dropdown-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 15px;
+  line-height: 100%;
+  letter-spacing: 0%;
+  background: linear-gradient(90deg, rgba(53, 163, 242, 1), rgba(55, 189, 243, 1));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1px white;
+  paint-order: stroke fill;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dropdown-item:hover {
+  background: linear-gradient(135deg, rgba(226, 238, 255, 1) 0%, rgba(196, 235, 249, 1) 100%);
+}
+
+.dropdown-item.selected {
+  opacity: 0.55;
+}
+
+.dropdown-item:not(:last-child) {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+/* Кнопка PLAY */
+.play-button-balls {
+  width: 100%;
+  height: 49px;
+  border: 1px solid white;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 1.5;
+  letter-spacing: 0%;
+  text-transform: uppercase;
+  color: white;
+  background: radial-gradient(rgba(105, 113, 255, 1), rgb(195, 214, 243));
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-stroke: 1.5px rgba(101, 149, 255, 1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  margin: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.play-button-balls:active {
+  transform: scale(0.98);
+}
+
+
+.close-modal-rocket-button {
+  position: static;
+  width: 100%;
+  height: 54px;
+  background: radial-gradient(rgba(179, 235, 251, 1), rgba(184, 210, 249, 1));
+  border: 2px solid white;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 100%;
+  letter-spacing: 0%;
+  text-transform: uppercase;
+  color: white;
+  -webkit-text-stroke: 1.5px rgba(101, 149, 255, 1);
+  paint-order: stroke fill;
+  padding: 0;
+  margin: 0;
+  z-index: 1000;
+  box-sizing: border-box;
+  transform: none;
+}
+
+
+
+/* Контейнер для кнопок PLAY и CLOSE */
+.modal-buttons-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 0 15px;
+  box-sizing: border-box;
+  gap: 12px;
+  margin-top: auto;
+}
+
+
+/* === Auto-payout Section === */
+.auto-payout-section {
+  width: 100%;
+  margin-top: 35px;
+  padding: 0 15px;
+  box-sizing: border-box;
+}
+
+.auto-payout-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 12px; /* ← отступ между надписью и свитчем */
+}
+
+/* Увеличиваем свитч Ant Design */
+.auto-payout-row .ant-switch {
+  transform: scale(1.25);
+  transform-origin: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.auto-payout-label {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 17px;
+  line-height: 1.2;
+  letter-spacing: 0%;
+  background: linear-gradient(90deg, rgba(128, 202, 244, 1), rgba(123, 207, 255, 1));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  flex-shrink: 0;
+}
+
+/* Поле множителя */
+.multiplier-input-wrapper {
+  width: 100%;
+  height: 55px;
+  background: linear-gradient(135deg, rgba(216, 237, 255, 1) 0%, rgba(255, 255, 255, 1) 100%);
+  border: 2px solid white;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 13px;
+  box-sizing: border-box;
+  margin-top: 12px;
+  position: relative;
+}
+
+/* Disabled-стиль для всего поля */
+.multiplier-input-wrapper.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.multiplier-value {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 17px;
+  line-height: 1.5;
+  letter-spacing: 0%;
+  background: linear-gradient(90deg, rgba(53, 163, 242, 1), rgba(55, 189, 243, 1));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  white-space: nowrap;
+}
+
+.multiplier-arrow {
+  width: 24px;
+  height: 20px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.multiplier-arrow.left img {
+  transform: rotate(180deg);
+}
+
+.multiplier-arrow.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.multiplier-arrow.disabled img {
+  pointer-events: none;
+}
+
+
+/* Статус соединения */
+.connection-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 15px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-dot.connected {
+  background-color: #4CAF50;
+  animation: pulse 2s infinite;
+}
+
+.status-dot.disconnected {
+  background-color: #FF5252;
+}
+
+.status-text {
+  color: #666;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* Баланс в модалке */
+.balance-info {
+  text-align: center;
+  color: #666;
+  font-size: 12px;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+/* Иконки в dropdown */
+.dropdown-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+}
+
+/* Отключенная кнопка */
+.make-bet-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+
+/* Стили для иконок валют в таблице */
+.participant-bet-currency {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.currency-icon-small {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  margin-top: -2px;
+}
+
+/* Стили для множителя в таблице */
+.participant-multiplier {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  color: rgba(0, 152, 234, 1);
+}
+
+.multiplier-green {
+  color: #59E367 !important;
+}
+
+.multiplier-red {
+  color: #EB5C4A !important;
+}
+
+.status-icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.check-icon {
+  color: #59E367;
+  font-size: 16px;
+}
+
+.cross-icon {
+  color: #EB5C4A;
+  font-size: 16px;
+}
+
+/* Стили для последних множителей с автообновлением */
+.last-multipliers-container {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  overflow: hidden;
+  margin-top: 0;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.last-multipliers-scroll {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  
+}
+
+.dropdown-icon {
+  display: none; /* Скрываем иконки в dropdown */
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0; 
+}
+
+
+.participant-winning-cell {
+  width: 20%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 10px;
+  box-sizing: border-box;
+  gap: 5px;
+}
+
+
+@keyframes highlightNew {
+  0% {
+    background-color: rgba(255, 255, 255, 0.3);
+  }
+  100% {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.last-multiplier-item.new {
+  animation: highlightNew 1s ease-out;
+}
+
+@keyframes amountChange {
+  0% {
+    transform: scale(1);
+    color: rgba(0, 152, 234, 1);
+  }
+  50% {
+    transform: scale(1.05);
+    color: #4CAF50;
+  }
+  100% {
+    transform: scale(1);
+    color: rgba(0, 152, 234, 1);
+  }
+}
+
+.participant-bet.changing {
+  animation: amountChange 0.5s ease;
+}
+
+/* Добавьте в Rocket.css */
+
+.my-bet-row {
+  background-color: rgba(105, 113, 255, 0.1);
+  border-left: 3px solid #6971FF;
+}
+
+.my-bet-badge {
+  font-size: 10px;
+  color: #6971FF;
+  font-weight: bold;
+  margin-left: 4px;
+}
+
+.my-multiplier {
+  color: #6971FF;
+  font-weight: bold;
+}
+
+.participants-row.my-bet-row td {
+  padding: 10px 8px;
+}
+
+.live-multiplier.my-multiplier {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+/* Добавьте эти стили в Rocket.css */
+
+.participants-row.no-bets-row {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.no-bets-message {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  line-height: 1.2;
+  text-align: center;
+  padding: 20px 10px;
+  margin-top: 10px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  background: transparent !important;
+}
+
+.no-bets-message span {
+  display: inline-block;
+}
+
+.no-bets-message .char {
+  display: inline-block;
+  animation: floatChar 2s ease-in-out infinite;
+  /* Белая окантовка букв */
+  -webkit-text-stroke: 1px white;
+  paint-order: stroke fill;
+  color: rgb(136, 142, 255);
+  text-shadow: 
+    0 0 3px rgb(161, 165, 255),
+    0 0 6px rgb(161, 166, 255);
+}
+
+/* Автоматическая задержка для каждой буквы */
+.no-bets-message .char:nth-child(1) { animation-delay: 0.0s; }
+.no-bets-message .char:nth-child(2) { animation-delay: 0.1s; }
+.no-bets-message .char:nth-child(3) { animation-delay: 0.2s; }
+.no-bets-message .char:nth-child(4) { animation-delay: 0.3s; }
+.no-bets-message .char:nth-child(5) { animation-delay: 0.4s; }
+.no-bets-message .char:nth-child(6) { animation-delay: 0.5s; }
+.no-bets-message .char:nth-child(7) { animation-delay: 0.6s; }
+.no-bets-message .char:nth-child(8) { animation-delay: 0.7s; }
+.no-bets-message .char:nth-child(9) { animation-delay: 0.8s; }
+.no-bets-message .char:nth-child(10) { animation-delay: 0.9s; }
+.no-bets-message .char:nth-child(11) { animation-delay: 1.0s; }
+
+@keyframes floatChar {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.no-bets-message .space {
+  display: inline-block;
+  width: 0.3em;
+}

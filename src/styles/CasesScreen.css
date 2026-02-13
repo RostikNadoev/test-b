@@ -1,0 +1,56 @@
+/* styles/CasesScreen.css */
+.cases-screen {
+  width: 100%;
+  height: var(--app-height, 100vh);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+}
+
+.cases-content {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.cases-container {
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.cases-title {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 32px;
+  color: white;
+  margin-bottom: 20px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.cases-description {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 400;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.5;
+}
+
+/* Адаптив для маленьких экранов */
+@media (max-width: 450px) {
+  .cases-title {
+    font-size: 28px;
+  }
+  
+  .cases-description {
+    font-size: 16px;
+  }
+}

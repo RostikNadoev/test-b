@@ -1,0 +1,1040 @@
+.header-outer {
+  width: clamp(280px, 91vw, 437px);
+  height: clamp(50px, 14vw, 68px);
+  background: linear-gradient(93deg, rgba(212, 231, 248, 0.50) -5.26%, rgba(255, 255, 255, 0.50) 100%);
+  box-shadow: -4px -1px 4px 0 rgba(255, 255, 255, 0.38) inset, 0 4px 14.8px 0 rgba(109, 166, 210, 0.27), 0 4px 7.5px 0 rgba(127, 167, 219, 0.46) inset;
+  border-radius: 25px;
+  padding: 2px;
+  box-sizing: border-box;
+  margin-top: 106px;
+  z-index: 1000;
+}
+
+.header-inner {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(212, 231, 248, 1), rgba(255, 255, 255, 1));
+  border-radius: 25px;
+  display: flex;
+  align-items: center;
+  padding-left: clamp(8px, 2.3vw, 11px); 
+  box-sizing: border-box;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: clamp(6px, 2.1vw, 10px); 
+  width: 100%;
+  position: relative;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.user-avatar {
+  width: clamp(30px, 9.6vw, 46px);
+  height: clamp(30px, 9.6vw, 46px);
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  flex-shrink: 0;
+}
+
+.user-username {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: clamp(10px, 3.33vw, 16px);
+  line-height: 1.5;
+  letter-spacing: 0%;
+  background: linear-gradient(90deg, rgba(53, 163, 242, 1), rgba(55, 189, 243, 1));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-right: clamp(30px, 10.4vw, 50px); 
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: clamp(60px, 21vw, 120px);
+}
+
+.balance-container {
+  position: absolute;
+  right: clamp(60px, 18.2vw, 70px);
+  width: clamp(80px, 26vw, 123px);
+  height: clamp(28px, 8.8vw, 42px); 
+  background: linear-gradient(93deg, rgba(212, 231, 248, 0.50) -5.26%, rgba(255, 255, 255, 0.50) 100%);
+  box-shadow: -4px -1px 4px 0 rgba(255, 255, 255, 0.38) inset, 0 4px 14.8px 0 rgba(109, 166, 210, 0.27), 0 4px 7.5px 0 rgba(127, 167, 219, 0.46) inset;
+  border-radius: 10px;
+  padding: 2px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.balance-container::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  background: linear-gradient(135deg, rgba(212, 231, 248, 1), rgba(255, 255, 255, 1));
+  border-radius: 19px;
+  z-index: 1;
+}
+
+.balance-amount {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: clamp(12px, 2.8vw, 16px);
+  line-height: 1.5;
+  letter-spacing: 0%;
+  background: linear-gradient(90deg, rgba(53, 163, 242, 1), rgba(55, 189, 243, 1));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding-left: 10px;
+}
+
+.add_balance-button {
+  position: absolute;
+  right: clamp(8px, 2.1vw, 10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add_balance-icon {
+  width: clamp(32px, 9.6vw, 46px);
+  height: clamp(32px, 9.6vw, 46px);
+}
+
+/* === Модальное окно пополнения баланса === */
+.balance-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  z-index: 3000;
+  pointer-events: auto;
+}
+
+.balance-modal-blur-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+
+.balance-modal-content {
+  position: relative;
+  width: 100vw;
+  max-width: 480px;
+  height: 42vh;
+  min-height: 220px;
+  max-height: 380px;
+  background: linear-gradient(180deg, rgba(231, 241, 253, 1), rgba(255, 255, 255, 1));
+  border-top: 2px solid white;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  transform: translateY(0);
+  animation: balanceModalSlideIn 0.4s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+  padding: 0;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  touch-action: pan-y;
+}
+
+.balance-modal-content.closing {
+  animation: balanceModalSlideOut 0.4s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+}
+
+.balance-modal-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  gap: 8px;
+}
+
+/* Заголовок */
+.balance-modal-title {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  margin: 0 0 5px 0;
+  color: transparent;
+  background: linear-gradient(90deg, rgba(53, 163, 242, 1), rgba(55, 189, 243, 1));
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-align: center;
+  -webkit-text-stroke: 0.4px white;
+  paint-order: stroke fill;
+}
+
+.balance-modal-titlec {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 17px;
+  margin: 0 0 5px 0;
+  color: transparent;
+  background: linear-gradient(90deg, rgba(53, 163, 242, 1), rgba(55, 189, 243, 1));
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-align: center;
+  -webkit-text-stroke: 0.4px white;
+  paint-order: stroke fill;
+  margin-top: 30px;
+}
+
+/* Инструкция */
+.balance-modal-instruction {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  line-height: 1.6;
+  text-align: center;
+  margin: 0 0 8px 0;
+  color: transparent;
+  background: linear-gradient(0deg, rgba(128, 202, 244, 1), rgba(123, 207, 255, 1));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* Контейнер для ввода */
+.balance-input-container {
+  position: relative;
+  width: 90%;
+  max-width: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 5px 0 0px 0;
+}
+
+.balance-input {
+  width: 100%;
+  height: 50px;
+  background: linear-gradient(180deg, rgba(216, 237, 255, 1), rgba(255, 255, 255, 1));
+  border: 2px solid rgba(169, 229, 255, 1);
+  border-radius: 12px;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: clamp(18px, 5vw, 22px);
+  text-align: center;
+  color: rgba(53, 163, 242, 1);
+  outline: none;
+  padding: 0 15px;
+  box-sizing: border-box;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.1);
+  line-height: normal !important;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border-radius: 12px;
+  touch-action: manipulation;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  resize: none;
+  -webkit-user-select: text;
+  user-select: text;
+  min-height: 50px;
+  max-height: none;
+  height: auto;
+  display: block;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  line-height: 1 !important;
+  font-size: clamp(18px, 5vw, 22px) !important;
+  min-height: 50px !important;
+  height: auto !important;
+  max-height: none !important;
+  vertical-align: middle !important;
+  box-sizing: border-box !important;
+}
+
+/* Специфичные стили для мобильных устройств */
+@media (max-width: 480px) {
+  .balance-input-container {
+    width: 85%;
+  }
+
+  .balance-input {
+    height: 45px !important;
+    min-height: 45px !important;
+    font-size: 18px !important;
+    line-height: 1 !important;
+    padding: 12px 15px !important;
+    transform: none !important;
+  }
+}
+
+/* Особые стили для iOS */
+@supports (-webkit-touch-callout: none) {
+  .balance-input {
+    line-height: 1 !important;
+    padding: 13px 15px !important;
+    -webkit-line-height: 1 !important;
+  }
+}
+
+/* Особые стили для WebView (мини-аппы) */
+.balance-input::-webkit-input-placeholder {
+  line-height: normal !important;
+}
+
+.balance-input::-moz-placeholder {
+  line-height: normal !important;
+}
+
+.balance-input:-ms-input-placeholder {
+  line-height: normal !important;
+}
+
+.balance-input::placeholder {
+  color: rgba(53, 163, 242, 0.5);
+  line-height: normal !important;
+}
+
+/* Убираем браузерные стрелки у number input */
+.balance-input::-webkit-outer-spin-button,
+.balance-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.balance-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* Кнопка пополнения */
+.balance-modal-action-btn {
+  width: 100%;
+  max-width: 300px;
+  height: 50px;
+  background: linear-gradient(180deg, rgba(130, 213, 254, 1), rgba(190, 237, 254, 1));
+  border: 2px solid rgba(169, 229, 255, 1);
+  border-radius: 12px;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  line-height: 1.5;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  margin-top: 5px;
+  touch-action: manipulation;
+  text-shadow: 
+    3px 3px 0 rgba(53, 163, 242, 1),
+    -1px -1px 0 rgba(53, 163, 242, 1),
+    1px -1px 0 rgba(53, 163, 242, 1),
+    -1px 1px 0 rgba(53, 163, 242, 1);
+}
+
+.balance-modal-action-btn:not(.disabled):active {
+  transform: scale(0.98);
+}
+
+.balance-modal-action-btn.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Кнопка закрытия */
+.balance-modal-close-btn {
+  position: absolute;
+  top: -80px;
+  right: 10px;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(180deg, rgba(231, 241, 253, 1), rgba(255, 255, 255, 1));
+  border: 2px solid white;
+  border-radius: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.balance-modal-close-png {
+  width: 48px;
+  height: 48px;
+}
+
+@keyframes balanceModalSlideIn {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes balanceModalSlideOut {
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
+}
+
+/* Адаптация для клавиатуры */
+@media (max-height: 600px) {
+  .balance-modal-content {
+    height: 35vh;
+    min-height: 200px;
+  }
+}
+
+/* Адаптив для мобильных */
+@media (max-width: 480px) {
+  .balance-modal-body {
+    padding: 15px;
+    gap: 6px;
+  }
+
+  .balance-modal-title {
+    font-size: 16px;
+    margin-bottom: 3px;
+  }
+
+  .balance-modal-instruction {
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+
+  .balance-modal-action-btn {
+    height: 45px;
+    font-size: 15px;
+    margin-top: 3px;
+  }
+}
+
+@media (max-width: 360px) {
+  .balance-modal-body {
+    padding: 12px;
+    gap: 5px;
+  }
+}
+
+/* Дополнительные стили для предотвращения zoom на iOS */
+@media (max-width: 480px) {
+  select, textarea, input[type="text"], input[type="number"] {
+    font-size: 16px;
+  }
+}
+
+/* Суффикс для поля ввода */
+.balance-input-suffix {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(53, 163, 242, 0.7);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Контейнер для двух балансов */
+.balances-container {
+  position: absolute;
+  right: -16px;
+  display: flex;
+  align-items: center;
+}
+
+/* Общие стили для балансов */
+.balance-container {
+  width: 90px;
+  height: clamp(21px, 7.8vw, 29px);
+  background: linear-gradient(93deg, rgba(212, 231, 248, 0.50) -5.26%, rgba(255, 255, 255, 0.50) 100%);
+  box-shadow: -4px -1px 4px 0 rgba(255, 255, 255, 0.38) inset, 
+              0 4px 14.8px 0 rgba(109, 166, 210, 0.27), 
+              0 4px 7.5px 0 rgba(127, 167, 219, 0.46) inset;
+  border-radius: 10px;
+  padding: 2px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.balance-container::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  background: linear-gradient(135deg, rgba(212, 231, 248, 1), rgba(255, 255, 255, 1));
+  border-radius: 8px;
+  z-index: 1;
+}
+
+@media (max-width:440px){
+  .balance-container {
+    width: 89px;
+  }
+}
+
+/* Иконка TON */
+.ton-balance .balance-icon {
+  width: 30px;
+  height: 30px;
+  position: absolute;
+  left: clamp(-8px, -2.6vw, -12px);
+  top: 50%;
+  transform: translateY(-50%);
+  border: 1px solid white;
+  border-radius: 50%;
+  z-index: 2;
+  background: white;
+}
+
+/* Круг для звезды */
+.star-icon-circle {
+  width: 30px;
+  height: 30px;
+  position: absolute; 
+  left: clamp(-8px, -2.6vw, -12px);
+  top: 50%;
+  transform: translateY(-50%);
+  border: 2px solid white;
+  border-radius: 50%;
+  z-index: 2;
+  background: linear-gradient(135deg, rgba(255, 178, 90, 1), rgba(255, 232, 215, 1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Иконка звезды */
+.star-icon-circle .star-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+/* Текст баланса */
+.balance-amount {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: clamp(11px, 2.5vw, 14px);
+  line-height: 1.5;
+  letter-spacing: 0%;
+  background: linear-gradient(90deg, rgba(53, 163, 242, 1), rgba(55, 189, 243, 1));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding-left: 8px;
+}
+
+/* Для stars баланса - другой градиент */
+.stars-balance .balance-amount {
+  background: linear-gradient(90deg, rgba(255, 197, 114, 1), rgba(251, 194, 95, 1));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* === ПЕРЕКЛЮЧАТЕЛЬ ВАЛЮТ === */
+.currency-switcher {
+  display: flex;
+  background: linear-gradient(135deg, rgba(212, 231, 248, 0.8), rgba(255, 255, 255, 0.8));
+  border-radius: 15px;
+  padding: 3px;
+  margin-bottom: 15px;
+  width: 90%;
+  max-width: 300px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.currency-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 5px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: rgba(53, 163, 242, 0.7);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.currency-tab.active {
+  background: linear-gradient(90deg, rgba(53, 163, 242, 0.2), rgba(55, 189, 243, 0.2));
+  color: rgba(53, 163, 242, 1);
+  box-shadow: 0 2px 6px rgba(53, 163, 242, 0.3);
+}
+
+.currency-tab:not(.active):hover {
+  background: rgba(53, 163, 242, 0.1);
+}
+
+.currency-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+/* Для stars используем другой градиент */
+.currency-tab:nth-child(2) {
+  color: rgba(255, 197, 114, 0.7);
+}
+
+.currency-tab:nth-child(2).active {
+  background: linear-gradient(90deg, rgba(255, 197, 114, 0.2), rgba(251, 194, 95, 0.2));
+  color: rgba(255, 197, 114, 1);
+  box-shadow: 0 2px 6px rgba(255, 197, 114, 0.3);
+}
+
+.currency-tab:nth-child(2):not(.active):hover {
+  background: rgba(255, 197, 114, 0.1);
+}
+
+/* === КНОПКА ДЛЯ STARS === */
+.balance-modal-action-btn.stars-btn {
+  background: linear-gradient(180deg, rgba(255, 213, 153, 1), rgba(255, 232, 200, 1));
+  border: 2px solid rgba(255, 197, 114, 1);
+  color: rgb(255, 255, 255);
+  font-weight: 800;
+  text-shadow: 
+    3px 3px 0 rgba(255, 197, 114, 1),
+    -1px -1px 0 rgba(255, 197, 114, 1),
+    1px -1px 0 rgba(255, 197, 114, 1),
+    -1px 1px 0 rgba(255, 197, 114, 1);
+}
+
+.balance-modal-action-btn.stars-btn:not(.disabled):hover {
+  background: linear-gradient(180deg, rgba(255, 223, 173, 1), rgba(255, 242, 220, 1));
+}
+
+/* === ИНФОРМАЦИЯ ОБ ИНВОЙСЕ === */
+.invoice-info {
+  margin-top: 15px;
+  padding: 10px;
+  background: linear-gradient(135deg, rgba(255, 242, 225, 0.9), rgba(255, 250, 240, 0.9));
+  border-radius: 10px;
+  text-align: center;
+  border: 1px solid rgba(255, 197, 114, 0.3);
+  width: 90%;
+  max-width: 300px;
+}
+
+.invoice-info p {
+  margin: 0 0 8px 0;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  color: #8a5a00;
+}
+
+.invoice-link {
+  display: inline-block;
+  background: linear-gradient(180deg, rgba(255, 213, 153, 1), rgba(255, 232, 200, 1));
+  border: 2px solid rgba(255, 197, 114, 1);
+  border-radius: 8px;
+  padding: 8px 15px;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  color: #8a5a00;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.invoice-link:hover {
+  background: linear-gradient(180deg, rgba(255, 223, 173, 1), rgba(255, 242, 220, 1));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(255, 197, 114, 0.3);
+}
+
+/* === КНОПКА WITHDRAW ДЛЯ STARS === */
+.balance-modal-action-btn.stars-withdraw-btn {
+  background: linear-gradient(180deg, rgba(255, 178, 90, 1), rgba(255, 200, 130, 1));
+  border: 2px solid rgba(255, 165, 0, 1);
+  color: white;
+  font-weight: 800;
+  text-shadow:
+    3px 3px 0 rgba(255, 165, 0, 1),
+    -1px -1px 0 rgba(255, 165, 0, 1),
+    1px -1px 0 rgba(255, 165, 0, 1),
+    -1px 1px 0 rgba(255, 165, 0, 1);
+  font-size: 14px;
+  width: calc(100% - 45px);
+  height: 45px;
+  margin-right: 5px;
+}
+
+/* Кнопка информации */
+.info-button {
+  width: 45px;
+  height: 45px;
+  border-radius: 12px;
+   background: linear-gradient(180deg, rgba(255, 178, 90, 1), rgba(255, 200, 130, 1));
+  border: 2px solid rgba(255, 165, 0, 1);
+  color: white;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  text-shadow:
+    2px 2px 0 rgba(255, 165, 0, 1),
+    -1px -1px 0 rgba(255, 165, 0, 1),
+    1px -1px 0 rgba(255, 165, 0, 1),
+    -1px 1px 0 rgba(255, 165, 0, 1);
+}
+
+.info-button:active {
+  transform: scale(0.9);
+}
+
+/* Контейнер для кнопок stars */
+.stars-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 90%;
+  max-width: 300px;
+  margin-top: 8px;
+}
+
+.withdraw-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+/* === МОДАЛЬНОЕ ОКНО ПРОГРЕССА === */
+.progress-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 4000;
+  pointer-events: auto;
+}
+
+.progress-modal-blur-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+}
+
+.progress-modal-content {
+  position: relative;
+  width: 90%;
+  max-width: 350px;
+  background: linear-gradient(180deg, rgba(231, 241, 253, 1), rgba(255, 255, 255, 1));
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 10px 40px rgba(53, 163, 242, 0.2);
+  border: 2px solid white;
+  animation: progressModalFadeIn 0.3s ease-out;
+  z-index: 4001;
+}
+
+@keyframes progressModalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.progress-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.progress-modal-title {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  color: transparent;
+  background: linear-gradient(90deg, rgba(53, 163, 242, 1), rgba(55, 189, 243, 1));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-stroke: 0.4px white;
+  paint-order: stroke fill;
+  margin: 0;
+  text-align: center;
+  flex: 1;
+}
+
+.progress-modal-close-btn {
+  background: linear-gradient(180deg, rgba(231, 241, 253, 1), rgba(255, 255, 255, 1));
+  border: 2px solid rgba(169, 229, 255, 1);
+  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  margin-left: 10px;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.progress-modal-close-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(53, 163, 242, 0.2);
+}
+
+.progress-modal-close-icon {
+  width: 29px;
+  height: 29px;
+  opacity: 0.7;
+}
+
+.progress-tasks-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.progress-task {
+  background: linear-gradient(135deg, rgba(248, 251, 255, 0.9), rgba(255, 255, 255, 0.9));
+  border-radius: 12px;
+  padding: 15px;
+  border: 1px solid rgba(212, 231, 248, 0.8);
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-task::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(53, 163, 242, 1), rgba(55, 189, 243, 1));
+}
+
+.progress-task:nth-child(2)::before {
+  background: linear-gradient(180deg, rgba(255, 197, 114, 1), rgba(255, 220, 160, 1));
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.task-name-container {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.task-name {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: transparent;
+  background: linear-gradient(90deg, rgba(53, 163, 242, 1), rgba(55, 189, 243, 1));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.task-name-place {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: transparent;
+  background: linear-gradient(90deg, rgb(255, 203, 106), rgb(255, 189, 67));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  line-height: 1.3;
+}
+
+.task-icon-stars,
+.task-icon-ton {
+  width: 19px;
+  height: 19px;
+  object-fit: contain;
+  vertical-align: middle;
+  margin: 0 1px 6px 0px;
+}
+
+.task-count {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+  color: rgba(53, 163, 242, 1);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.progress-task:nth-child(2) .task-count {
+  color: rgb(255, 178, 36);
+}
+
+.task-complete {
+  color: #4CAF50;
+  font-weight: bold;
+  font-size: 14px;
+  margin-left: 3px;
+}
+
+.progress-container {
+  height: 6px;
+  background: rgba(212, 231, 248, 0.5);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(53, 163, 242, 0.8), rgba(55, 189, 243, 0.8));
+  border-radius: 3px;
+  position: relative;
+  transition: width 1s ease-out;
+}
+
+.progress-task:nth-child(2) .progress-bar {
+  background: linear-gradient(90deg, rgba(255, 181, 78, 0.8), rgba(253, 208, 129, 0.8));
+}
+
+/* Эффект мерцания */
+.progress-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Адаптивность для модалки прогресса */
+@media (max-width: 480px) {
+  .progress-modal-content {
+    width: 85%;
+    padding: 15px;
+  }
+  
+  .progress-modal-title {
+    font-size: 14px;
+  }
+  
+  .task-name {
+    font-size: 12px;
+  }
+  
+  .task-count {
+    font-size: 11px;
+  }
+  
+  .balance-modal-action-btn.stars-withdraw-btn {
+    font-size: 13px;
+    height: 40px;
+  }
+  
+  .info-button {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  .progress-modal-content {
+    width: 80%;
+    padding: 12px;
+  }
+  
+  .balance-modal-action-btn.stars-withdraw-btn {
+    font-size: 12px;
+  }
+  
+  .task-name {
+    font-size: 11px;
+  }
+}

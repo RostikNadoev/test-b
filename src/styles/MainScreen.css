@@ -1,0 +1,271 @@
+.main-screen {
+  width: 100%;
+  height: var(--app-height, 100vh);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+}
+
+.main-content {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+/* --- Стили для картинок-кнопок --- */
+.banner-images-container {
+  width: calc(100% - 20px);
+  max-width: 430px;
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  margin-bottom: 20px;
+  margin-top: 10px;
+  align-items: center;
+}
+
+.banner-image-button {
+  width: 437px;
+  height: auto;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+  outline: none;
+  background: none;
+  border: none;
+  
+  /* Для мобильных устройств */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.banner-image {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.banner-image-button:hover .banner-image {
+  transform: scale(1.02);
+}
+
+.banner-image-button:active .banner-image {
+  transform: scale(0.98);
+}
+
+.button-2 {
+  margin-top: -14px;
+}
+
+.button-3 {
+  margin-top: -14px;
+}
+
+.button-4 {
+  margin-top: -14px;
+}
+
+/* Адаптив для маленьких экранов */
+@media (max-width: 450px) {
+  .banner-images-container {
+    width: 100%;
+    padding: 0 10px;
+    max-width: 100%;
+  }
+  
+  .banner-image-button {
+    width: 100%;
+    max-width: 380px;
+  }
+}
+
+@media (max-width: 360px) {
+  .banner-image-button {
+    max-width: 340px;
+  }
+}
+
+.content-section {
+  width: clamp(260px, 85vw, 400px);
+  height: 200px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+}
+
+.main-footer {
+  width: 100%;
+  height: 60px;
+}
+
+/* --- Футер с блоками --- */
+.main-footer {
+  width: 100%;
+  height: auto;
+  padding-bottom: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform: translateZ(0);
+  position: relative;
+  z-index: 10;
+}
+
+.footer-blocks-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 25px;
+}
+
+.footer-block-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  cursor: pointer;
+  
+  /* Убираем выделение при нажатии на телефоне */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  
+  /* Область нажатия - увеличиваем */
+  padding: 15px 10px;
+  margin: -15px -10px;
+}
+
+.footer-block-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.footer-block {
+  width: 125px;
+  height: 54px;
+  display: block;
+}
+
+.footer-block-icon {
+  position: absolute;
+  top: -10%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 57px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.footer-block-item:nth-child(2) .footer-block-icon {
+  top: -20%;
+}
+
+.footer-block-overlay {
+  position: absolute;
+  top: 2px;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Индикатор активной страницы */
+.footer-active-indicator {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 121px;
+  height: 50px;
+  background: linear-gradient(0deg, rgb(157, 203, 238), rgba(255, 255, 255, 0));
+  border-radius: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.footer-label {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: 0%;
+  background: linear-gradient(90deg, rgba(53, 163, 242, 1), rgba(55, 189, 243, 1));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 0.4px white;
+  paint-order: stroke fill;
+}
+
+/* Адаптив для маленьких экранов */
+@media (max-width: 430px) {
+  .footer-blocks-container {
+    gap: 25px;
+  }
+  
+  .footer-block {
+    width: 105px;
+    height: 47px;
+  }
+  
+  .footer-block-icon {
+    width: 54px;
+  }
+  
+  .footer-label {
+    font-size: 16px;
+  }
+  
+  .footer-active-indicator {
+    width: 102px;
+    top: -10px;
+    height: 35px;
+  }
+  
+  .footer-block-item {
+    padding: 12px 8px;
+    margin: -12px -8px;
+  }
+}
+
+/* Класс для лайоута без фона */
+.main-screen-no-bg {
+  width: 100%;
+  height: var(--app-height, 100vh);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-image: none; /* Убираем стандартный фон */
+  overflow: hidden;
+}
+
+/* styles/MainScreen.css - добавляем disabled состояния */
+.footer-block-item--disabled {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+}
+
+.footer-block-item--disabled .footer-block-wrapper {
+  pointer-events: none;
+}
+
+.footer-block-item--disabled .footer-label {
+  opacity: 0.7;
+}
