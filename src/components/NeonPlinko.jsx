@@ -275,10 +275,13 @@ const NeonPlinko = forwardRef((props, ref) => {
         <Canvas dpr={[1, 2]}>
           <PerspectiveCamera 
   makeDefault 
-  position={[0, lastRowY + 0.35, 
-    window.innerWidth <= 360 ? 3.4 :    // маленькие экраны - отдаляем (3.3)
-    window.innerWidth > 400 ? 2.7 :      // большие экраны - приближаем (3.7)
-    3                                 // средние экраны (371-400) - дефолт 3.52
+  position={[
+    0,
+    // Центрируем камеру по середине игрового поля, а не по нижнему ряду
+    (GAME_CONFIG.startY + bottomY) / 2.6, // Середина между верхом и низом
+    window.innerWidth <= 360 ? 3.7 :    // маленькие экраны - отдаляем больше
+    window.innerWidth > 400 ? 3.1 :      // большие экраны - приближаем
+    3.4                                  // средние экраны
   ]}
 />
           <Stars count={80} factor={3} fade depth={50} />

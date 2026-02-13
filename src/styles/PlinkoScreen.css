@@ -15,7 +15,7 @@
   align-items: center;
   overflow: hidden;
   position: relative;
-  margin-top: 30px;
+  padding-top: -30px;
   margin-left: -10px;
 }
 
