@@ -38,7 +38,7 @@ export default function PlinkoScreen({ onNavigate }) {
               className="plinko-drop-btn"
               onClick={handleDropBall}
             >
-              DROP bALL1
+              DROP bALL1111
             </button>
           </div>
         </div>
