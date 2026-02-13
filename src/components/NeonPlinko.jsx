@@ -280,8 +280,8 @@ const NeonPlinko = forwardRef((props, ref) => {
             position={[
               0,
               (GAME_CONFIG.startY + bottomY) / 2.6,
-              window.innerWidth <= 360 ? 3.7 :
-              window.innerWidth > 400 ? 3.1 :
+              window.innerWidth <= 380 ? 3.7 :
+              window.innerWidth > 410 ? 3.1 :
               3.4
             ]}
           />
