@@ -8,7 +8,7 @@ import '../styles/NeonPlinko.css'
 const LAUNCH_CONFIG = {
   current: {
     x: 0.001,    // Смещай на микрон (0.001), чтобы не бить ровно в центр гвоздя
-    vx: -0.033,      
+    vx: -0.029,      
     vy: -0.000000001     // Стабильная скорость вниз
   },
   // Сюда впишешь значения, когда подберешь их для всех 13 лунок
@@ -31,8 +31,21 @@ const GAME_CONFIG = {
   gapToBottomPixels: 140,
   multipliers: [30, 15, 8, 3, 1.5, 0.6, 0.2, 0.6, 1.5, 3, 8, 15, 30],
   GROUP_BALL: 1,
-  GROUP_STATIC: 2
+  GROUP_STATIC: 2,
+  // Добавляем коэффициент замедления в воде
+  waterSlowdown: 0.15 // Сильное замедление (15% от скорости)
 }
+
+// ========== ЦВЕТА ДЛЯ ВОДЫ (усиленная градация) ==========
+const WATER_COLORS = [
+  { main: '#FFFFFF', emissive: '#FFFFFF' },     // Центр (индекс 6) - белый
+  { main: '#CCCCFF', emissive: '#AAAAFF' },     // 5 и 7 - светло-голубой
+  { main: '#9999FF', emissive: '#7777FF' },     // 4 и 8 - голубой
+  { main: '#6666FF', emissive: '#4444FF' },     // 3 и 9 - синий
+  { main: '#3333FF', emissive: '#2222FF' },     // 2 и 10 - темно-синий
+  { main: '#1111CC', emissive: '#0000AA' },     // 1 и 11 - очень темно-синий
+  { main: '#000099', emissive: '#000066' }      // 0 и 12 - почти черный синий
+]
 
 // --- ПРЕПЯТСТВИЕ С ПУЛЬСАЦИЕЙ ---
 function Peg({ position, config }) {
@@ -74,15 +87,42 @@ function Peg({ position, config }) {
   )
 }
 
-// --- ВОДА ---
-function WaterSurface({ width, height, position }) {
+// --- ВОДА С ЗАМЕДЛЕНИЕМ ШАРИКА И ГРАДИЕНТОМ ---
+function WaterSurface({ width, height, position, colorIndex }) {
   const meshRef = useRef()
   const [wobble, setWobble] = useState(0)
-  useBox(() => ({
-    type: 'Static', isSensor: true, args: [width, 0.1, 0.15],
+  
+  // Получаем цвет в зависимости от индекса (зеркально от центра)
+  const getWaterColor = (index) => {
+    // Центр (индекс 6) - белый
+    if (index === 6) return WATER_COLORS[0]
+    // Зеркальное отображение от центра
+    const distanceFromCenter = Math.abs(index - 6)
+    return WATER_COLORS[distanceFromCenter]
+  }
+
+  const waterColor = getWaterColor(colorIndex)
+  
+  // Создаем коллизию для воды
+  const [ref] = useBox(() => ({
+    type: 'Static', 
+    isSensor: true, 
+    args: [width, 0.1, 0.15],
     position: [position[0], position[1] + height / 2, position[2]],
-    onCollide: () => setWobble(1)
+    onCollide: (e) => {
+      setWobble(1)
+      // Если столкнулись с шариком
+      if (e.body.mass > 0) {
+        // Сильно замедляем шарик (вода)
+        e.body.velocity.set(
+          e.body.velocity.x * GAME_CONFIG.waterSlowdown,
+          Math.abs(e.body.velocity.y) * GAME_CONFIG.waterSlowdown * 0.5, // Вверх тормашками
+          e.body.velocity.z * GAME_CONFIG.waterSlowdown
+        )
+      }
+    }
   }))
+  
   useFrame((state) => {
     if (meshRef.current) {
       if (wobble > 0) {
@@ -92,11 +132,33 @@ function WaterSurface({ width, height, position }) {
       } else { meshRef.current.scale.y = 1 }
     }
   })
+  
   return (
-    <mesh ref={meshRef} position={position}>
-      <boxGeometry args={[width, height, 0.14]} />
-      <meshStandardMaterial color="#00ccff" transparent opacity={0.5} emissive="#00f2ff" emissiveIntensity={0.4} />
-    </mesh>
+    <group>
+      {/* Основная вода */}
+      <mesh ref={meshRef} position={position}>
+        <boxGeometry args={[width, height, 0.14]} />
+        <meshStandardMaterial 
+          color={waterColor.main}
+          transparent 
+          opacity={0.7} 
+          emissive={waterColor.emissive} 
+          emissiveIntensity={0.4}
+        />
+      </mesh>
+      
+      {/* Блики на воде (дополнительный слой для эффекта) */}
+      <mesh position={[position[0], position[1] + height * 0.4, position[2] + 0.02]}>
+        <boxGeometry args={[width * 0.8, height * 0.1, 0.01]} />
+        <meshStandardMaterial 
+          color="#FFFFFF" 
+          transparent 
+          opacity={0.2}
+          emissive="#FFFFFF"
+          emissiveIntensity={0.1}
+        />
+      </mesh>
+    </group>
   )
 }
 
@@ -151,14 +213,23 @@ function SlotGeometry({ config }) {
               fontSize={ballRadius * 1.4} 
               fontWeight="bold" 
               position={[x, bottomY - 0.1, 0]} 
-              color="#ffffff"
+              color="#FFFFFF" // Белый текст для всех стаканов
+              emissive="#FFFFFF"
+              emissiveIntensity={0.3}
             >
               x{val}
             </Text>
             <Divider position={[x + slotWidth / 2, bottomY + wallHeight / 2, 0]} args={[0.03, wallHeight, 0.15]} />
             {i === 0 && <Divider position={[x - slotWidth / 2, bottomY + wallHeight / 2, 0]} args={[0.03, wallHeight, 0.15]} />}
             <Divider position={[x, bottomY, 0]} args={[slotWidth, 0.05, 0.15]} />
-            <WaterSurface width={slotWidth - 0.02} height={waterHeight} position={[x, bottomY + waterHeight / 2 + 0.03, 0]} />
+            
+            {/* Вода с градиентом цвета */}
+            <WaterSurface 
+              width={slotWidth - 0.02} 
+              height={waterHeight} 
+              position={[x, bottomY + waterHeight / 2 + 0.03, 0]} 
+              colorIndex={i}
+            />
           </group>
         )
       })}
@@ -203,10 +274,13 @@ const NeonPlinko = forwardRef((props, ref) => {
       <div className="plinko-canvas-container">
         <Canvas dpr={[1, 2]}>
           <PerspectiveCamera 
-            makeDefault 
-            position={[0, lastRowY + 0.35, 3.2]} // Камеру немного отодвинули и подняли
-            
-          />
+  makeDefault 
+  position={[0, lastRowY + 0.35, 
+    window.innerWidth <= 387 ? 3.3 :    // маленькие экраны - отдаляем (3.3)
+    window.innerWidth > 400 ? 3 :      // большие экраны - приближаем (3.7)
+    3                                 // средние экраны (371-400) - дефолт 3.52
+  ]}
+/>
           <Stars count={80} factor={3} fade depth={50} />
           <ambientLight intensity={1.8} />
           <pointLight position={[0, 3, 3]} intensity={0.8} />
