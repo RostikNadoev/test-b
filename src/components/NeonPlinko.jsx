@@ -276,7 +276,7 @@ const NeonPlinko = forwardRef((props, ref) => {
           <PerspectiveCamera 
   makeDefault 
   position={[0, lastRowY + 0.35, 
-    window.innerWidth <= 387 ? 3.3 :    // маленькие экраны - отдаляем (3.3)
+    window.innerWidth <= 360 ? 3.7 :    // маленькие экраны - отдаляем (3.3)
     window.innerWidth > 400 ? 3 :      // большие экраны - приближаем (3.7)
     3                                 // средние экраны (371-400) - дефолт 3.52
   ]}
