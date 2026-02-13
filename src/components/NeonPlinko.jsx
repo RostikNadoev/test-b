@@ -7,8 +7,8 @@ import '../styles/NeonPlinko.css'
 // ========== НАСТРОЙКИ ДЛЯ ПОДБОРА ПОЛЕТА ==========
 const LAUNCH_CONFIG = {
   current: {
-    x: 0.001,    // Смещай на микрон (0.001), чтобы не бить ровно в центр гвоздя
-    vx: -0.029,      
+    x: -0.0022,    // Смещай на микрон (0.001), чтобы не бить ровно в центр гвоздя
+    vx: -0.0122,      
     vy: -0.000000001     // Стабильная скорость вниз
   },
   // Сюда впишешь значения, когда подберешь их для всех 13 лунок
@@ -36,8 +36,8 @@ const GAME_CONFIG = {
   waterSlowdown: 0.15 // Сильное замедление (15% от скорости)
 }
 
-// ========== ЦВЕТА ДЛЯ ВОДЫ (усиленная градация) ==========
-const WATER_COLORS = [
+// ========== ЦВЕТА ДЛЯ ВОДЫ И ТЕКСТА (усиленная градация) ==========
+const COLOR_GRADIENT = [
   { main: '#FFFFFF', emissive: '#FFFFFF' },     // Центр (индекс 6) - белый
   { main: '#CCCCFF', emissive: '#AAAAFF' },     // 5 и 7 - светло-голубой
   { main: '#9999FF', emissive: '#7777FF' },     // 4 и 8 - голубой
@@ -46,6 +46,15 @@ const WATER_COLORS = [
   { main: '#1111CC', emissive: '#0000AA' },     // 1 и 11 - очень темно-синий
   { main: '#000099', emissive: '#000066' }      // 0 и 12 - почти черный синий
 ]
+
+// Функция для получения цвета по индексу лунки (зеркально от центра)
+const getColorBySlotIndex = (index) => {
+  // Центр (индекс 6) - белый
+  if (index === 6) return COLOR_GRADIENT[0]
+  // Зеркальное отображение от центра
+  const distanceFromCenter = Math.abs(index - 6)
+  return COLOR_GRADIENT[distanceFromCenter]
+}
 
 // --- ПРЕПЯТСТВИЕ С ПУЛЬСАЦИЕЙ ---
 function Peg({ position, config }) {
@@ -92,16 +101,7 @@ function WaterSurface({ width, height, position, colorIndex }) {
   const meshRef = useRef()
   const [wobble, setWobble] = useState(0)
   
-  // Получаем цвет в зависимости от индекса (зеркально от центра)
-  const getWaterColor = (index) => {
-    // Центр (индекс 6) - белый
-    if (index === 6) return WATER_COLORS[0]
-    // Зеркальное отображение от центра
-    const distanceFromCenter = Math.abs(index - 6)
-    return WATER_COLORS[distanceFromCenter]
-  }
-
-  const waterColor = getWaterColor(colorIndex)
+  const waterColor = getColorBySlotIndex(colorIndex)
   
   // Создаем коллизию для воды
   const [ref] = useBox(() => ({
@@ -207,15 +207,17 @@ function SlotGeometry({ config }) {
       {multipliers.map((val, i) => {
         const x = lastRowStartX + (i + 0.5) * slotWidth
         const waterHeight = wallHeight * 0.7
+        const textColor = getColorBySlotIndex(i)
+        
         return (
           <group key={i}>
             <Text 
               fontSize={ballRadius * 1.4} 
               fontWeight="bold" 
               position={[x, bottomY - 0.1, 0]} 
-              color="#FFFFFF" // Белый текст для всех стаканов
-              emissive="#FFFFFF"
-              emissiveIntensity={0.3}
+              color={textColor.main}
+              emissive={textColor.emissive}
+              emissiveIntensity={0.5}
             >
               x{val}
             </Text>
@@ -274,16 +276,15 @@ const NeonPlinko = forwardRef((props, ref) => {
       <div className="plinko-canvas-container">
         <Canvas dpr={[1, 2]}>
           <PerspectiveCamera 
-  makeDefault 
-  position={[
-    0,
-    // Центрируем камеру по середине игрового поля, а не по нижнему ряду
-    (GAME_CONFIG.startY + bottomY) / 2.6, // Середина между верхом и низом
-    window.innerWidth <= 360 ? 3.7 :    // маленькие экраны - отдаляем больше
-    window.innerWidth > 400 ? 3.1 :      // большие экраны - приближаем
-    3.4                                  // средние экраны
-  ]}
-/>
+            makeDefault 
+            position={[
+              0,
+              (GAME_CONFIG.startY + bottomY) / 2.6,
+              window.innerWidth <= 360 ? 3.7 :
+              window.innerWidth > 400 ? 3.1 :
+              3.4
+            ]}
+          />
           <Stars count={80} factor={3} fade depth={50} />
           <ambientLight intensity={1.8} />
           <pointLight position={[0, 3, 3]} intensity={0.8} />
