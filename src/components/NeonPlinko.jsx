@@ -56,7 +56,7 @@ const getColorBySlotIndex = (index) => {
   return COLOR_GRADIENT[distanceFromCenter]
 }
 
-// --- ПРЕПЯТСТВИЕ С ПУЛЬСАЦИЕЙ ---
+// --- ПРЕПЯТСТВИЕ С ПУЛЬСАЦИЕЙ (менее заметной) ---
 function Peg({ position, config }) {
   const ringRef = useRef()
   const [pulse, setPulse] = useState(0)
@@ -68,17 +68,18 @@ function Peg({ position, config }) {
     args: [pegRadius, pegRadius, 0.1, 16],
     rotation: [Math.PI / 2, 0, 0],
     collisionFilterGroup: GAME_CONFIG.GROUP_STATIC,
-    onCollide: () => setPulse(1)
+    onCollide: () => setPulse(0.6) // Уменьшили начальную интенсивность пульсации с 1 до 0.6
   }))
 
   useFrame(() => {
     if (ringRef.current && pulse > 0) {
       ringRef.current.visible = true
-      const s = 1 + (1 - pulse) * 3.5
+      // Уменьшили масштабирование и сделаем пульсацию более плавной
+      const s = 1 + (1 - pulse) * 1.8 // Было 3.5, стало 1.8
       ringRef.current.scale.set(s, s, s)
-      ringRef.current.material.opacity = pulse
-      ringRef.current.material.emissiveIntensity = pulse * 2
-      setPulse(prev => Math.max(0, prev - 0.05))
+      ringRef.current.material.opacity = pulse * 0.7 // Уменьшили прозрачность
+      ringRef.current.material.emissiveIntensity = pulse * 1.2 // Уменьшили интенсивность свечения
+      setPulse(prev => Math.max(0, prev - 0.03)) // Медленнее затухает (было 0.05, стало 0.03)
     } else if (ringRef.current) {
       ringRef.current.visible = false
     }
@@ -90,7 +91,12 @@ function Peg({ position, config }) {
         <meshStandardMaterial color="white" />
       </Circle>
       <Ring ref={ringRef} args={[pegRadius * 0.8, pegRadius * 1.2, 32]} visible={false}>
-        <meshStandardMaterial color="#00f2ff" transparent emissive="#00f2ff" depthWrite={false} />
+        <meshStandardMaterial 
+          color="#88aaff" // Более мягкий цвет вместо ярко-голубого
+          transparent 
+          emissive="#4466aa" 
+          depthWrite={false} 
+        />
       </Ring>
     </group>
   )
@@ -162,8 +168,10 @@ function WaterSurface({ width, height, position, colorIndex }) {
   )
 }
 
-// --- ШАРИК (ДЕТЕРМИНИРОВАННЫЙ) ---
+// --- ШАРИК С УСИЛЕННЫМ СВЕЧЕНИЕМ (ДЕТЕРМИНИРОВАННЫЙ) ---
 function Ball({ onLand, bottomY, config }) {
+  const meshRef = useRef()
+  const glowRef = useRef()
   const [ref] = useSphere(() => ({
     mass: 1,
     fixedRotation: true,
@@ -175,15 +183,58 @@ function Ball({ onLand, bottomY, config }) {
     collisionFilterMask: config.GROUP_STATIC
   }))
 
-  useFrame(() => {
+  useFrame((state) => {
     if (ref.current && ref.current.position.y < bottomY - 0.3) onLand()
+    
+    // Анимация свечения шарика
+    if (glowRef.current && meshRef.current) {
+      const time = state.clock.getElapsedTime()
+      // Пульсация свечения
+      const glowIntensity = 1.2 + Math.sin(time * 8) * 0.3
+      meshRef.current.material.emissiveIntensity = glowIntensity
+      
+      // Вращение внешнего свечения
+      glowRef.current.rotation.y += 0.01
+      glowRef.current.rotation.x += 0.005
+    }
   })
 
   return (
-    <mesh ref={ref}>
-      <sphereGeometry args={[config.ballRadius, 32, 32]} />
-      <meshStandardMaterial color="#ffffff" emissive="#00f2ff" emissiveIntensity={1.2} />
-    </mesh>
+    <group ref={ref}>
+      {/* Основной шар с усиленным свечением */}
+      <mesh ref={meshRef}>
+        <sphereGeometry args={[config.ballRadius, 32, 32]} />
+        <meshStandardMaterial 
+          color="#ffffff" 
+          emissive="#44aaff" 
+          emissiveIntensity={1.5} // Увеличили интенсивность свечения
+        />
+      </mesh>
+      
+      {/* Внешнее свечение (ореол) */}
+      <mesh ref={glowRef} scale={[1.4, 1.4, 1.4]}>
+        <sphereGeometry args={[config.ballRadius, 16, 16]} />
+        <meshBasicMaterial 
+          color="#88ccff" 
+          transparent 
+          opacity={0.15} 
+          depthWrite={false}
+          blending={2} // Additive blending для более яркого эффекта
+        />
+      </mesh>
+      
+      {/* Второй слой свечения (еще более размытый) */}
+      <mesh scale={[1.8, 1.8, 1.8]}>
+        <sphereGeometry args={[config.ballRadius, 8, 8]} />
+        <meshBasicMaterial 
+          color="#3366aa" 
+          transparent 
+          opacity={0.08} 
+          depthWrite={false}
+          blending={2}
+        />
+      </mesh>
+    </group>
   )
 }
 
