@@ -1,3 +1,4 @@
+// components/PlinkoScreen.jsx
 import React, { useRef } from 'react';
 import NeonPlinko from './NeonPlinko';
 import Header from './Header';
@@ -25,7 +26,8 @@ export default function PlinkoScreen({ onNavigate }) {
         backgroundPosition: 'center'
       }}
     >
-      <Header onNavigate={onNavigate} />
+      {/* Добавляем variant="plinko" для специального стиля хедера */}
+      <Header onNavigate={onNavigate} variant="plinko" />
       
       <main className="plinko-content">
         <div className="plinko-container">

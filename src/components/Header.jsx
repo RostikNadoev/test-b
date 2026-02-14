@@ -7,11 +7,13 @@ import { tonConnect } from '../utils/tonConnect';
 
 import ava from '../assets/MainPage/ava.jpg';
 import ton from '../assets/MainPage/ton.svg';
+import tonBack from '../assets/MainPage/tonblack.svg'; // Импортируем новую иконку
 import star from '../assets/MainPage/star1.png';
 import add_balance from '../assets/MainPage/add_balance.svg';
+import add_balance_black from '../assets/MainPage/add_button_black.svg'; // Импортируем черную иконку
 import modalCloseIcon from '../assets/Profile/close.png';
 
-export default function Header({ onNavigate }) {
+export default function Header({ onNavigate, variant = 'default' }) {
   const [isBalanceModalOpen, setIsBalanceModalOpen] = useState(false);
   const [topUpAmount, setTopUpAmount] = useState('');
   const [isClosing, setIsClosing] = useState(false);
@@ -32,6 +34,16 @@ export default function Header({ onNavigate }) {
     stars: { current: 2400, target: 2500 }
   });
   const shouldAutoCloseRef = useRef(false);
+
+  // Определяем класс для варианта header
+  const headerClass = variant === 'cases' || variant === 'plinko' 
+    ? 'header-outer header-special' 
+    : 'header-outer';
+
+  // Определяем какую иконку использовать для кнопки добавления баланса
+  const addBalanceIcon = variant === 'cases' || variant === 'plinko' 
+    ? add_balance_black 
+    : add_balance;
 
   const getUsername = useCallback(() => {
     if (!user) return 'Loading...';
@@ -483,7 +495,7 @@ export default function Header({ onNavigate }) {
 
   return (
     <>
-      <header className="header-outer">
+      <header className={headerClass}>
         <div className="header-inner">
           <div className="user-info">
             <img 
@@ -503,7 +515,11 @@ export default function Header({ onNavigate }) {
 
             <div className="balances-container">
               <div className="balance-container ton-balance">
-                <img src={ton} alt="TON" className="balance-icon" />
+                <img 
+                  src={variant === 'cases' || variant === 'plinko' ? tonBack : ton} 
+                  alt="TON" 
+                  className="balance-icon" 
+                />
                 <span className="balance-amount">{getBalance()}</span>
               </div>
               
@@ -521,7 +537,7 @@ export default function Header({ onNavigate }) {
               title={isDemoMode ? "Demo mode - Connect wallet for real TON" : "Top up balance"}
               style={{ cursor: 'pointer' }}
             >
-              <img src={add_balance} alt="Add balance" className="add_balance-icon" />
+              <img src={addBalanceIcon} alt="Add balance" className="add_balance-icon" />
             </div>
           </div>
         </div>

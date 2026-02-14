@@ -1038,3 +1038,74 @@
     font-size: 11px;
   }
 }
+
+
+/* Специальный вариант header для CasesScreen и PlinkoScreen */
+.header-outer.header-special {
+  background: linear-gradient(93deg, #FFFFFF -5.26%, #CDE2FB 100%);
+  box-shadow: -4px -1px 4px 0 rgba(255, 255, 255, 0.38) inset, 
+              0 4px 14.8px 0 rgba(109, 166, 210, 0.27), 
+              0 4px 7.5px 0 rgba(127, 167, 219, 0.46) inset;
+}
+
+.header-special .header-inner {
+  background: linear-gradient(#445264, #2f4968);
+}
+
+.header-special .user-username {
+  background: linear-gradient(90deg, #1867B7, #0F63D2);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 0.4px white;
+  paint-order: stroke fill;
+}
+
+
+.header-special .balance-container {
+  background: #ffffff ;
+}
+
+.header-special .balance-container::before {
+  background: #828f9c;
+}
+
+.header-special .ton-balance .balance-amount {
+  background: linear-gradient(90deg, #1867B7, #0F63D2);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 0.4px white;
+  paint-order: stroke fill;
+}
+
+.header-special .star-icon-circle {
+  background: linear-gradient(135deg, #FFB25A, #FDD398);
+}
+
+.header-special .stars-balance .balance-amount {
+  background: linear-gradient(90deg, #EE9C28, #E0A449);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 0.4px white;
+  paint-order: stroke fill;
+}
+
+/* Сбрасываем все специальные стили для кнопки - используем те же размеры что и в обычном варианте */
+.header-special .add_balance-button {
+  position: absolute;
+  right: clamp(8px, 2.1vw, 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-special .add_balance-icon {
+  filter: none;
+  max-width: none;
+  min-width: auto;
+  object-fit: contain;
+}
