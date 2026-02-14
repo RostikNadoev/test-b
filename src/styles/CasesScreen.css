@@ -5,7 +5,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .cases-content {
@@ -14,43 +14,190 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 20px;
+  padding: 20px 30px;
   box-sizing: border-box;
   overflow-y: auto;
 }
 
-.cases-container {
+.cases-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px 0px;
   width: 100%;
-  max-width: 400px;
-  text-align: center;
-  padding: 40px 20px;
+  max-width: 480px;
+  justify-items: center;
+  align-items: start;
 }
 
-.cases-title {
+.case-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 180px;
+  cursor: pointer;
+}
+
+.case-title {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
-  font-size: 32px;
+  font-size: 15px;
+  color: #335E8933;
+  -webkit-text-stroke: 1.5px white;
+  text-stroke: 1.5px white;
+  margin: 0 0 -60px 0;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+.case-image {
+  width: 290px;
+  height: 290px;
+  object-fit: contain;
+  margin-bottom: 0px;
+}
+
+.case-prices {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  justify-content: center;
+}
+
+.price-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 80px;
+  height: 37px;
+  border: 2px solid #CDE2FB;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+
+.ton-box {
+  background: linear-gradient(90deg, #2d6697 20%, #414b58 80%);
+}
+
+.stars-box {
+  background: linear-gradient(90deg, #8f8130 10%, #49493e 80%);
+}
+
+.price-icon {
+  width: 22px;
+  height: 25px;
+  object-fit: contain;
+}
+
+.price-value {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  -webkit-text-stroke: 1.5px white;
+  text-stroke: 1.5px white;
+}
+
+.ton-value {
+  background: linear-gradient(180deg, #35A3F2 0%, #37BDF3 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.stars-value {
+  background: linear-gradient(180deg, #EED288 0%, #9F5F1C 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Скрываем скроллбар для WebKit браузеров */
+.cases-content::-webkit-scrollbar {
+  display: none;
+}
+
+.cases-content {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Модальное окно */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.case-modal {
+  width: 90%;
+  max-width: 400px;
+  min-height: 400px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 2px solid #CDE2FB;
+  border-radius: 20px;
+  padding: 20px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: none;
+  border: none;
   color: white;
-  margin-bottom: 20px;
+  font-size: 32px;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  transition: background 0.3s;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.modal-title {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 28px;
+  color: white;
+  margin: 20px 0;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.cases-description {
-  font-family: 'KZ Supercell-Magic', sans-serif;
-  font-weight: 400;
-  font-size: 18px;
-  color: rgba(255, 255, 255, 0.8);
-  line-height: 1.5;
+.modal-image {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  margin: 10px 0;
 }
 
-/* Адаптив для маленьких экранов */
-@media (max-width: 450px) {
-  .cases-title {
-    font-size: 28px;
-  }
-  
-  .cases-description {
-    font-size: 16px;
-  }
+.modal-content {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+  color: white;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-size: 18px;
 }
