@@ -222,10 +222,14 @@ const NeonPlinko = forwardRef((props, ref) => {
     <div className="plinko-game-wrapper" style={{ width: '100%', height: '100%', minHeight: '500px' }}>
       <Canvas dpr={[1, 2]} gl={{ antialias: true, toneMappingExposure: 1.5 }}>
         <PerspectiveCamera 
-          makeDefault 
-          position={[0, centerViewY - 0.3, window.innerWidth <= 383 ? 3.6 : 3.2]} 
-          fov={50}
-        />
+  makeDefault 
+  position={[
+    0, 
+    centerViewY - 0.3, 
+    window.innerWidth <= 350 ? 3.8 : (window.innerWidth <= 383 ? 3.6 : 3.2)
+  ]} 
+  fov={50}
+/>
         <Stars count={100} factor={4} fade depth={50} />
         <ambientLight intensity={1.2} />
         <pointLight position={[0, 5, 5]} intensity={2} />
