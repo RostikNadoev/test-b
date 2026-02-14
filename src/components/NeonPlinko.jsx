@@ -107,7 +107,7 @@ function IndividualSlot({ index, val, x, bottomY, slotWidth, config, onHit }) {
       <Text 
         fontSize={config.ballRadius * 1.2} 
         fontWeight="bold" 
-        position={[x, currentY + 0.08, 0.07]} 
+        position={[x, currentY + 0.082, 0.07]} 
         color="black"
       >
         x{val}
