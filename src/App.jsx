@@ -482,7 +482,7 @@ export default function App() {
     }
 
     // Страницы, где нужна кнопка "Назад"
-    const backButtonScreens = ['profile', 'card1', 'card2', 'card3', 'luckyballs', 'rocket', 'cases'];
+    const backButtonScreens = ['profile', 'card1', 'card2', 'card3', 'luckyballs', 'rocket', 'cases','plinko'];
     
     if (backButtonScreens.includes(screen)) {
       try {
