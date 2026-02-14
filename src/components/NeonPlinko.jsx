@@ -24,13 +24,13 @@ const GAME_CONFIG = {
 }
 
 const COLOR_GRADIENT = [
-  { main: '#FFFF00', emissive: '#FFFF00' },
-  { main: '#FFD700', emissive: '#FFD700' },
-  { main: '#FF8C00', emissive: '#FF8C00' },
-  { main: '#FF4500', emissive: '#FF4500' },
-  { main: '#FF0000', emissive: '#FF0000' },
-  { main: '#B22222', emissive: '#B22222' },
-  { main: '#8B0000', emissive: '#8B0000' }
+  { main: '#FFFFFF', emissive: '#60A5FA' },     // Белый + синее свечение
+  { main: '#BFDBFE', emissive: '#3B82F6' },     // Очень светло-синий
+  { main: '#93C5FD', emissive: '#2563EB' },     // Светло-синий
+  { main: '#60A5FA', emissive: '#1D4ED8' },     // Голубой
+  { main: '#3B82F6', emissive: '#1E40AF' },     // Синий
+  { main: '#2563EB', emissive: '#1E3A8A' },     // Темно-синий
+  { main: '#1D4ED8', emissive: '#23346d' }      // Очень темно-синий
 ]
 
 const getColorBySlotIndex = (index) => {
