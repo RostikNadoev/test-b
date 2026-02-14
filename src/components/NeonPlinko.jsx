@@ -89,25 +89,25 @@ function IndividualSlot({ index, val, x, bottomY, slotWidth, config, onHit }) {
     args: [slotWidth * 0.96, 0.12, 0.4], 
     collisionFilterGroup: GAME_CONFIG.GROUP_STATIC,
     onCollide: () => {
-      setImpact(1.2);
+      setImpact(1.0); // Уменьшил с 1.2 до 1.0
       onHit();
     }
   }))
 
   useFrame((_, delta) => {
     if (impact > 0) {
-      setImpact(prev => Math.max(0, prev - delta * 2.5))
+      setImpact(prev => Math.max(0, prev - delta * 2.0)) // Уменьшил скорость затухания
     }
   })
 
-  const currentY = bottomY - (impact * 0.05);
+  const currentY = bottomY - (impact * 0.03); // Уменьшил амплитуду движения
 
   return (
     <group>
       <Text 
         fontSize={config.ballRadius * 1.1} 
         fontWeight="bold" 
-        position={[x, currentY + 0.079, 0.07]} 
+        position={[x, currentY + 0.079, 0.09]} 
         color="black"
       >
         x{val}
@@ -118,15 +118,15 @@ function IndividualSlot({ index, val, x, bottomY, slotWidth, config, onHit }) {
         <meshStandardMaterial 
           color={slotColor.main} 
           emissive={slotColor.emissive}
-          emissiveIntensity={0.3 + impact * 25}
+          emissiveIntensity={0.2 + impact * 8} // Уменьшил с 0.3 + impact*25 до 0.2 + impact*8
         />
       </mesh>
 
       <pointLight 
-        position={[x, currentY + 0.3, 0.2]} 
+        position={[x, currentY + 0.2, 0.15]} // Опустил свет ниже
         color={slotColor.emissive} 
-        intensity={impact * 20}
-        distance={1.2}
+        intensity={impact * 3} // Уменьшил с 20 до 5
+        distance={0.4} // Уменьшил расстояние свечения
       />
     </group>
   )
