@@ -2,61 +2,44 @@ import React, { useState, useMemo, useRef, useCallback, forwardRef, useImperativ
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Physics, useSphere, useBox, useCylinder } from '@react-three/cannon'
 import { PerspectiveCamera, Stars, Text, Circle, Ring } from '@react-three/drei'
-import '../styles/NeonPlinko.css'
 
-// ========== НАСТРОЙКИ ДЛЯ ПОДБОРА ПОЛЕТА ==========
+// ========== КОНФИГУРАЦИЯ ==========
 const LAUNCH_CONFIG = {
-  current: {
-    x: -0.0022,    // Смещай на микрон (0.001), чтобы не бить ровно в центр гвоздя
-    vx: -0.0122,      
-    vy: -0.000000001     // Стабильная скорость вниз
-  },
-  // Сюда впишешь значения, когда подберешь их для всех 13 лунок
-  presets: {
-    slot0:  { x: -0.25, vx: -0.15 },
-    slot6:  { x: 0.005, vx: 0.0 }, // Центральная
-    slot12: { x: 0.25,  vx: 0.15 },
-  }
+  current: { x: -0.001, vx: -0.0112, vy: -0.000000001 },
 }
 
 const GAME_CONFIG = {
-  ballRadius: 0.045, // Увеличили с 0.028 до 0.045
+  ballRadius: 0.045, 
   rows: 14,
-  startY: 2.2, // Увеличили с 1.5 до 2.2
-  horizontalSpacingMultiplier: 1.65, // Немного увеличили для лучшей видимости
+  startY: 2.2, 
+  horizontalSpacingMultiplier: 1.65, 
   verticalSpacingMultiplier: 1.05,
-  gravity: -3.2, // Немного увеличили гравитацию для более быстрого падения
+  gravity: -3.2, 
   ballRestitution: 0.4,
   pixelTo3D: 0.002,
   gapToBottomPixels: 140,
   multipliers: [30, 15, 8, 3, 1.5, 0.6, 0.2, 0.6, 1.5, 3, 8, 15, 30],
   GROUP_BALL: 1,
-  GROUP_STATIC: 2,
-  // Добавляем коэффициент замедления в воде
-  waterSlowdown: 0.15 // Сильное замедление (15% от скорости)
+  GROUP_STATIC: 2
 }
 
-// ========== ЦВЕТА ДЛЯ ВОДЫ И ТЕКСТА (усиленная градация) ==========
 const COLOR_GRADIENT = [
-  { main: '#FFFFFF', emissive: '#FFFFFF' },     // Центр (индекс 6) - белый
-  { main: '#CCCCFF', emissive: '#AAAAFF' },     // 5 и 7 - светло-голубой
-  { main: '#9999FF', emissive: '#7777FF' },     // 4 и 8 - голубой
-  { main: '#6666FF', emissive: '#4444FF' },     // 3 и 9 - синий
-  { main: '#3333FF', emissive: '#2222FF' },     // 2 и 10 - темно-синий
-  { main: '#1111CC', emissive: '#0000AA' },     // 1 и 11 - очень темно-синий
-  { main: '#000099', emissive: '#000066' }      // 0 и 12 - почти черный синий
+  { main: '#FFFFFF', emissive: '#FFFFFF' },     
+  { main: '#CCCCFF', emissive: '#AAAAFF' },     
+  { main: '#9999FF', emissive: '#7777FF' },     
+  { main: '#6666FF', emissive: '#4444FF' },     
+  { main: '#3333FF', emissive: '#2222FF' },     
+  { main: '#1111CC', emissive: '#0000AA' },     
+  { main: '#000099', emissive: '#000066' }      
 ]
 
-// Функция для получения цвета по индексу лунки (зеркально от центра)
 const getColorBySlotIndex = (index) => {
-  // Центр (индекс 6) - белый
   if (index === 6) return COLOR_GRADIENT[0]
-  // Зеркальное отображение от центра
   const distanceFromCenter = Math.abs(index - 6)
   return COLOR_GRADIENT[distanceFromCenter]
 }
 
-// --- ПРЕПЯТСТВИЕ С ПУЛЬСАЦИЕЙ (менее заметной) ---
+// ========== ПРЕПЯТСТВИЕ ==========
 function Peg({ position, config }) {
   const ringRef = useRef()
   const [pulse, setPulse] = useState(0)
@@ -68,18 +51,17 @@ function Peg({ position, config }) {
     args: [pegRadius, pegRadius, 0.1, 16],
     rotation: [Math.PI / 2, 0, 0],
     collisionFilterGroup: GAME_CONFIG.GROUP_STATIC,
-    onCollide: () => setPulse(0.6) // Уменьшили начальную интенсивность пульсации с 1 до 0.6
+    onCollide: () => setPulse(1)
   }))
 
   useFrame(() => {
     if (ringRef.current && pulse > 0) {
       ringRef.current.visible = true
-      // Уменьшили масштабирование и сделаем пульсацию более плавной
-      const s = 1 + (1 - pulse) * 1.8 // Было 3.5, стало 1.8
+      const s = 1 + (1 - pulse) * 3.5
       ringRef.current.scale.set(s, s, s)
-      ringRef.current.material.opacity = pulse * 0.7 // Уменьшили прозрачность
-      ringRef.current.material.emissiveIntensity = pulse * 1.2 // Уменьшили интенсивность свечения
-      setPulse(prev => Math.max(0, prev - 0.03)) // Медленнее затухает (было 0.05, стало 0.03)
+      ringRef.current.material.opacity = pulse
+      ringRef.current.material.emissiveIntensity = pulse * 10
+      setPulse(prev => Math.max(0, prev - 0.05))
     } else if (ringRef.current) {
       ringRef.current.visible = false
     }
@@ -91,150 +73,138 @@ function Peg({ position, config }) {
         <meshStandardMaterial color="white" />
       </Circle>
       <Ring ref={ringRef} args={[pegRadius * 0.8, pegRadius * 1.2, 32]} visible={false}>
-        <meshStandardMaterial 
-          color="#88aaff" // Более мягкий цвет вместо ярко-голубого
-          transparent 
-          emissive="#4466aa" 
-          depthWrite={false} 
-        />
+        <meshStandardMaterial color="#00f2ff" transparent emissive="#00f2ff" depthWrite={false} />
       </Ring>
     </group>
   )
 }
 
-// --- ВОДА С ЗАМЕДЛЕНИЕМ ШАРИКА И ГРАДИЕНТОМ ---
-function WaterSurface({ width, height, position, colorIndex }) {
+// ========== ВОДА ==========
+function WaterSurface({ width, height, position, colorIndex, impact }) {
   const meshRef = useRef()
-  const [wobble, setWobble] = useState(0)
-  
   const waterColor = getColorBySlotIndex(colorIndex)
   
-  // Создаем коллизию для воды
-  const [ref] = useBox(() => ({
-    type: 'Static', 
-    isSensor: true, 
-    args: [width, 0.1, 0.15],
-    position: [position[0], position[1] + height / 2, position[2]],
-    onCollide: (e) => {
-      setWobble(1)
-      // Если столкнулись с шариком
-      if (e.body.mass > 0) {
-        // Сильно замедляем шарик (вода)
-        e.body.velocity.set(
-          e.body.velocity.x * GAME_CONFIG.waterSlowdown,
-          Math.abs(e.body.velocity.y) * GAME_CONFIG.waterSlowdown * 0.5, // Вверх тормашками
-          e.body.velocity.z * GAME_CONFIG.waterSlowdown
-        )
-      }
-    }
-  }))
-  
-  useFrame((state) => {
+  useFrame(() => {
     if (meshRef.current) {
-      if (wobble > 0) {
-        const time = state.clock.getElapsedTime() * 18
-        meshRef.current.scale.y = 1 + Math.sin(time) * 0.15 * wobble
-        setWobble(prev => Math.max(0, prev - 0.025))
-      } else { meshRef.current.scale.y = 1 }
+      // Сделал свечение воды ярче при попадании
+      meshRef.current.material.emissiveIntensity = 1.0 + impact * 60 
+      meshRef.current.position.y = position[1] + impact * 0.08
     }
   })
   
   return (
+    <mesh ref={meshRef} position={position}>
+      <boxGeometry args={[width, height, 0.14]} />
+      <meshStandardMaterial 
+        color={waterColor.main}
+        transparent 
+        opacity={0.5} 
+        emissive={waterColor.emissive} 
+      />
+    </mesh>
+  )
+}
+
+// ========== ЛУНКА ==========
+function IndividualSlot({ index, val, x, bottomY, wallHeight, slotWidth, config }) {
+  const [impact, setImpact] = useState(0)
+  const textColor = getColorBySlotIndex(index)
+  const textRef = useRef()
+  const lightRef = useRef() // Ссылка для вспышки
+  const lastBallUuid = useRef(null)
+
+  const [floorRef] = useBox(() => ({
+    type: 'Static',
+    position: [x, bottomY, 0],
+    args: [slotWidth, 0.2, 0.4], 
+    collisionFilterGroup: GAME_CONFIG.GROUP_STATIC,
+    onCollide: (e) => {
+      if (e.body.uuid !== lastBallUuid.current) {
+        lastBallUuid.current = e.body.uuid
+        setImpact(1.2) // Увеличил импульс
+      }
+    }
+  }))
+
+  useFrame((_, delta) => {
+    if (impact > 0) {
+      setImpact(prev => Math.max(0, prev - delta * 2.0)) // Сделал затухание чуть быстрее/реще
+    }
+    if (textRef.current) {
+      const scale = 1 + impact * 0.5
+      textRef.current.scale.set(scale, scale, 1)
+    }
+    if (lightRef.current) {
+      // Интенсивность вспышки в цвет воды
+      lightRef.current.intensity = impact * 20
+    }
+  })
+
+  return (
     <group>
-      {/* Основная вода */}
-      <mesh ref={meshRef} position={position}>
-        <boxGeometry args={[width, height, 0.14]} />
-        <meshStandardMaterial 
-          color={waterColor.main}
-          transparent 
-          opacity={0.7} 
-          emissive={waterColor.emissive} 
-          emissiveIntensity={0.4}
-        />
+      <Text 
+        ref={textRef}
+        fontSize={config.ballRadius * 1.5} 
+        fontWeight="bold" 
+        position={[x, bottomY - 0.15, 0.05]} 
+        color={textColor.main}
+        emissive={textColor.emissive}
+        emissiveIntensity={0.5 + impact * 80} // Текст вспыхивает ярче
+      >
+        x{val}
+      </Text>
+
+      {/* Вспышка света того же цвета, что и вода */}
+      <pointLight 
+        ref={lightRef} 
+        position={[x, bottomY + 0.2, 0.1]} 
+        color={textColor.emissive} 
+        distance={1}
+      />
+
+      <Divider position={[x + slotWidth / 2, bottomY + wallHeight / 2, 0]} args={[0.02, wallHeight, 0.15]} />
+      {index === 0 && (
+        <Divider position={[x - slotWidth / 2, bottomY + wallHeight / 2, 0]} args={[0.02, wallHeight, 0.15]} />
+      )}
+      <mesh ref={floorRef}>
+        <boxGeometry args={[slotWidth, 0.05, 0.15]} />
+        <meshStandardMaterial color="white" />
       </mesh>
-      
-      {/* Блики на воде (дополнительный слой для эффекта) */}
-      <mesh position={[position[0], position[1] + height * 0.4, position[2] + 0.02]}>
-        <boxGeometry args={[width * 0.8, height * 0.1, 0.01]} />
-        <meshStandardMaterial 
-          color="#FFFFFF" 
-          transparent 
-          opacity={0.2}
-          emissive="#FFFFFF"
-          emissiveIntensity={0.1}
-        />
-      </mesh>
+      <WaterSurface 
+        width={slotWidth - 0.01} 
+        height={wallHeight * 0.6} 
+        position={[x, bottomY + (wallHeight * 0.6) / 2 + 0.03, 0]} 
+        colorIndex={index}
+        impact={impact}
+      />
     </group>
   )
 }
 
-// --- ШАРИК С УСИЛЕННЫМ СВЕЧЕНИЕМ (ДЕТЕРМИНИРОВАННЫЙ) ---
+// ========== ШАРИК ==========
 function Ball({ onLand, bottomY, config }) {
-  const meshRef = useRef()
-  const glowRef = useRef()
   const [ref] = useSphere(() => ({
     mass: 1,
     fixedRotation: true,
     position: [LAUNCH_CONFIG.current.x, config.startY, 0],
     velocity: [LAUNCH_CONFIG.current.vx, LAUNCH_CONFIG.current.vy, 0],
     args: [config.ballRadius],
-    material: { friction: 0, restitution: config.ballRestitution },
+    material: { friction: 0.1, restitution: config.ballRestitution },
     collisionFilterGroup: config.GROUP_BALL,
     collisionFilterMask: config.GROUP_STATIC
   }))
 
-  useFrame((state) => {
-    if (ref.current && ref.current.position.y < bottomY - 0.3) onLand()
-    
-    // Анимация свечения шарика
-    if (glowRef.current && meshRef.current) {
-      const time = state.clock.getElapsedTime()
-      // Пульсация свечения
-      const glowIntensity = 1.2 + Math.sin(time * 8) * 0.3
-      meshRef.current.material.emissiveIntensity = glowIntensity
-      
-      // Вращение внешнего свечения
-      glowRef.current.rotation.y += 0.01
-      glowRef.current.rotation.x += 0.005
+  useFrame(() => {
+    if (ref.current && ref.current.position.y < bottomY - 0.6) {
+        onLand()
     }
   })
 
   return (
-    <group ref={ref}>
-      {/* Основной шар с усиленным свечением */}
-      <mesh ref={meshRef}>
-        <sphereGeometry args={[config.ballRadius, 32, 32]} />
-        <meshStandardMaterial 
-          color="#ffffff" 
-          emissive="#44aaff" 
-          emissiveIntensity={1.5} // Увеличили интенсивность свечения
-        />
-      </mesh>
-      
-      {/* Внешнее свечение (ореол) */}
-      <mesh ref={glowRef} scale={[1.4, 1.4, 1.4]}>
-        <sphereGeometry args={[config.ballRadius, 16, 16]} />
-        <meshBasicMaterial 
-          color="#88ccff" 
-          transparent 
-          opacity={0.15} 
-          depthWrite={false}
-          blending={2} // Additive blending для более яркого эффекта
-        />
-      </mesh>
-      
-      {/* Второй слой свечения (еще более размытый) */}
-      <mesh scale={[1.8, 1.8, 1.8]}>
-        <sphereGeometry args={[config.ballRadius, 8, 8]} />
-        <meshBasicMaterial 
-          color="#3366aa" 
-          transparent 
-          opacity={0.08} 
-          depthWrite={false}
-          blending={2}
-        />
-      </mesh>
-    </group>
+    <mesh ref={ref}>
+      <sphereGeometry args={[config.ballRadius, 24, 24]} />
+      <meshStandardMaterial color="#ffffff" emissive="#00f2ff" emissiveIntensity={5} />
+    </mesh>
   )
 }
 
@@ -243,49 +213,24 @@ function Divider({ position, args }) {
   return <mesh ref={ref}><boxGeometry args={args} /><meshStandardMaterial color="white" /></mesh>
 }
 
-function SlotGeometry({ config }) {
-  const { multipliers, ballRadius, rows, startY, gapToBottomPixels, pixelTo3D, horizontalSpacingMultiplier, verticalSpacingMultiplier } = config
+function SlotGeometry({ config, bottomY }) {
+  const { multipliers, ballRadius, rows, horizontalSpacingMultiplier } = config
   const spacing = (ballRadius * 2) * horizontalSpacingMultiplier
-  const vs = spacing * verticalSpacingMultiplier
   const lastRowStartX = -((rows - 1) * spacing) / 2
   const lastRowEndX = ((rows - 1) * spacing) / 2
   const slotWidth = (lastRowEndX - lastRowStartX) / multipliers.length
-  const bottomY = (startY - (rows - 1) * vs) - ballRadius * 2 - (gapToBottomPixels * pixelTo3D)
-  const wallHeight = ballRadius * 6
+  const wallHeight = ballRadius * 5
 
   return (
     <group>
-      {multipliers.map((val, i) => {
-        const x = lastRowStartX + (i + 0.5) * slotWidth
-        const waterHeight = wallHeight * 0.7
-        const textColor = getColorBySlotIndex(i)
-        
-        return (
-          <group key={i}>
-            <Text 
-              fontSize={ballRadius * 1.4} 
-              fontWeight="bold" 
-              position={[x, bottomY - 0.1, 0]} 
-              color={textColor.main}
-              emissive={textColor.emissive}
-              emissiveIntensity={0.5}
-            >
-              x{val}
-            </Text>
-            <Divider position={[x + slotWidth / 2, bottomY + wallHeight / 2, 0]} args={[0.03, wallHeight, 0.15]} />
-            {i === 0 && <Divider position={[x - slotWidth / 2, bottomY + wallHeight / 2, 0]} args={[0.03, wallHeight, 0.15]} />}
-            <Divider position={[x, bottomY, 0]} args={[slotWidth, 0.05, 0.15]} />
-            
-            {/* Вода с градиентом цвета */}
-            <WaterSurface 
-              width={slotWidth - 0.02} 
-              height={waterHeight} 
-              position={[x, bottomY + waterHeight / 2 + 0.03, 0]} 
-              colorIndex={i}
-            />
-          </group>
-        )
-      })}
+      {multipliers.map((val, i) => (
+        <IndividualSlot 
+          key={i} index={i} val={val} 
+          x={lastRowStartX + (i + 0.5) * slotWidth}
+          bottomY={bottomY} wallHeight={wallHeight} 
+          slotWidth={slotWidth} config={config} 
+        />
+      ))}
     </group>
   )
 }
@@ -295,23 +240,24 @@ function InvisibleWall({ position, args }) {
   return <mesh ref={ref} visible={false}><boxGeometry args={args} /></mesh>
 }
 
-// --- ГЛАВНЫЙ КОМПОНЕНТ ---
+// ========== ГЛАВНЫЙ КОМПОНЕНТ ==========
 const NeonPlinko = forwardRef((props, ref) => {
   const [balls, setBalls] = useState([])
   const config = GAME_CONFIG
 
-  const dropBall = useCallback(() => setBalls(prev => [...prev, Date.now()]), [])
+  const dropBall = useCallback(() => {
+    setBalls([Date.now()])
+  }, [])
 
-  // Экспортируем функцию наружу
-  useImperativeHandle(ref, () => ({
-    dropBall
-  }))
+  useImperativeHandle(ref, () => ({ dropBall }))
 
-  const { bottomY, lastRowY, pegs } = useMemo(() => {
+  const { bottomY, pegs, centerViewY } = useMemo(() => {
     const { ballRadius, horizontalSpacingMultiplier, verticalSpacingMultiplier, startY, rows, gapToBottomPixels, pixelTo3D } = config
     const spacing = ballRadius * 2 * horizontalSpacingMultiplier
     const vs = spacing * verticalSpacingMultiplier
     const bY = (startY - (rows - 1) * vs) - ballRadius * 2 - (gapToBottomPixels * pixelTo3D)
+    const cY = (startY + bY) / 2
+
     const p = []
     for (let row = 1; row < rows; row++) {
       const cols = row + 1
@@ -319,44 +265,44 @@ const NeonPlinko = forwardRef((props, ref) => {
         p.push([(col - row / 2) * spacing, startY - row * vs, 0])
       }
     }
-    return { bottomY: bY, lastRowY: startY - ((rows - 1) * vs), pegs: p }
+    return { bottomY: bY, pegs: p, centerViewY: cY }
   }, [config])
 
   return (
-    <div className="plinko-game-wrapper">
-      <div className="plinko-canvas-container">
-        <Canvas dpr={[1, 2]}>
+    <div className="plinko-game-wrapper" style={{ width: '100%', height: '100%', minHeight: '500px' }}>
+      <div className="plinko-canvas-container" style={{ width: '100%', height: '100%' }}>
+        <Canvas 
+          dpr={[1, 2]} 
+          gl={{ antialias: true, toneMappingExposure: 1.5 }}
+        >
           <PerspectiveCamera 
             makeDefault 
-            position={[
-              0,
-              (GAME_CONFIG.startY + bottomY) / 2.6,
-              window.innerWidth <= 380 ? 3.7 :
-              window.innerWidth > 410 ? 3.1 :
-              3.4
-            ]}
+            position={[0, centerViewY - 0.3, window.innerWidth <= 383 ? 3.6 : 3.2]} 
+            fov={50}
           />
-          <Stars count={80} factor={3} fade depth={50} />
-          <ambientLight intensity={1.8} />
-          <pointLight position={[0, 3, 3]} intensity={0.8} />
+          
+          <Stars count={100} factor={4} fade depth={50} />
+          <ambientLight intensity={1} />
+          <pointLight position={[0, 5, 5]} intensity={1.5} />
           
           <Physics 
             gravity={[0, config.gravity, 0]}
-            defaultContactMaterial={{
-              friction: 0,
-              restitution: 0.5,
-              contactEquationStiffness: 1e8,
-              contactEquationRelaxation: 3
-            }}
-            iterations={20}
+            defaultContactMaterial={{ friction: 0, restitution: 0.5 }}
           >
             {pegs.map((pos, i) => <Peg key={i} position={pos} config={config} />)}
-            <SlotGeometry config={config} />
+            <SlotGeometry config={config} bottomY={bottomY} />
+            
             {balls.map(id => (
-              <Ball key={id} bottomY={bottomY} config={config} onLand={() => setBalls(prev => prev.filter(b => b !== id))} />
+              <Ball 
+                key={id} 
+                bottomY={bottomY} 
+                config={config} 
+                onLand={() => setBalls([])} 
+              />
             ))}
-            <InvisibleWall position={[0, 0, 0.02]} args={[12, 12, 0.001]} />
-            <InvisibleWall position={[0, 0, -0.02]} args={[12, 12, 0.001]} />
+
+            <InvisibleWall position={[0, 0, 0.05]} args={[10, 10, 0.01]} />
+            <InvisibleWall position={[0, 0, -0.05]} args={[10, 10, 0.01]} />
           </Physics>
         </Canvas>
       </div>
