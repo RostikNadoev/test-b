@@ -5,7 +5,7 @@ import { PerspectiveCamera, Stars, Text, Circle, Ring } from '@react-three/drei'
 
 // ========== КОНФИГУРАЦИЯ ==========
 const LAUNCH_CONFIG = {
-  current: { x: -0.001, vx: -0.0112, vy: -0.000000001 },
+  current: { x: -0.002, vx: -0.0122, vy: -0.000000001 },
 }
 
 const GAME_CONFIG = {
@@ -14,8 +14,8 @@ const GAME_CONFIG = {
   startY: 2.2, 
   horizontalSpacingMultiplier: 1.65, 
   verticalSpacingMultiplier: 1.05,
-  gravity: -3.2, 
-  ballRestitution: 0.4,
+  gravity: -3.8, 
+  ballRestitution: 0.3,
   pixelTo3D: 0.002,
   gapToBottomPixels: 140,
   multipliers: [30, 15, 8, 3, 1.5, 0.6, 0.2, 0.6, 1.5, 3, 8, 15, 30],
@@ -24,19 +24,19 @@ const GAME_CONFIG = {
 }
 
 const COLOR_GRADIENT = [
-  { main: '#FFFFFF', emissive: '#FFFFFF' },     
-  { main: '#CCCCFF', emissive: '#AAAAFF' },     
-  { main: '#9999FF', emissive: '#7777FF' },     
-  { main: '#6666FF', emissive: '#4444FF' },     
-  { main: '#3333FF', emissive: '#2222FF' },     
-  { main: '#1111CC', emissive: '#0000AA' },     
-  { main: '#000099', emissive: '#000066' }      
+  { main: '#FFFF00', emissive: '#FFFF00' },
+  { main: '#FFD700', emissive: '#FFD700' },
+  { main: '#FF8C00', emissive: '#FF8C00' },
+  { main: '#FF4500', emissive: '#FF4500' },
+  { main: '#FF0000', emissive: '#FF0000' },
+  { main: '#B22222', emissive: '#B22222' },
+  { main: '#8B0000', emissive: '#8B0000' }
 ]
 
 const getColorBySlotIndex = (index) => {
-  if (index === 6) return COLOR_GRADIENT[0]
-  const distanceFromCenter = Math.abs(index - 6)
-  return COLOR_GRADIENT[distanceFromCenter]
+  const centerIndex = 6;
+  const dist = Math.abs(index - centerIndex);
+  return COLOR_GRADIENT[dist] || COLOR_GRADIENT[COLOR_GRADIENT.length - 1];
 }
 
 // ========== ПРЕПЯТСТВИЕ ==========
@@ -60,7 +60,6 @@ function Peg({ position, config }) {
       const s = 1 + (1 - pulse) * 3.5
       ringRef.current.scale.set(s, s, s)
       ringRef.current.material.opacity = pulse
-      ringRef.current.material.emissiveIntensity = pulse * 10
       setPulse(prev => Math.max(0, prev - 0.05))
     } else if (ringRef.current) {
       ringRef.current.visible = false
@@ -70,7 +69,7 @@ function Peg({ position, config }) {
   return (
     <group position={position}>
       <Circle args={[pegRadius, 32]}>
-        <meshStandardMaterial color="white" />
+        <meshStandardMaterial color="#555" emissive="white" emissiveIntensity={0.2} />
       </Circle>
       <Ring ref={ringRef} args={[pegRadius * 0.8, pegRadius * 1.2, 32]} visible={false}>
         <meshStandardMaterial color="#00f2ff" transparent emissive="#00f2ff" depthWrite={false} />
@@ -79,110 +78,62 @@ function Peg({ position, config }) {
   )
 }
 
-// ========== ВОДА ==========
-function WaterSurface({ width, height, position, colorIndex, impact }) {
-  const meshRef = useRef()
-  const waterColor = getColorBySlotIndex(colorIndex)
-  
-  useFrame(() => {
-    if (meshRef.current) {
-      // Сделал свечение воды ярче при попадании
-      meshRef.current.material.emissiveIntensity = 1.0 + impact * 60 
-      meshRef.current.position.y = position[1] + impact * 0.08
-    }
-  })
-  
-  return (
-    <mesh ref={meshRef} position={position}>
-      <boxGeometry args={[width, height, 0.14]} />
-      <meshStandardMaterial 
-        color={waterColor.main}
-        transparent 
-        opacity={0.5} 
-        emissive={waterColor.emissive} 
-      />
-    </mesh>
-  )
-}
-
-// ========== ЛУНКА ==========
-function IndividualSlot({ index, val, x, bottomY, wallHeight, slotWidth, config }) {
+// ========== КНОПКА-ЛУНКА (ТЕКСТ НА ПЛАТФОРМЕ) ==========
+function IndividualSlot({ index, val, x, bottomY, slotWidth, config, onHit }) {
   const [impact, setImpact] = useState(0)
-  const textColor = getColorBySlotIndex(index)
-  const textRef = useRef()
-  const lightRef = useRef() // Ссылка для вспышки
-  const lastBallUuid = useRef(null)
+  const slotColor = getColorBySlotIndex(index)
 
-  const [floorRef] = useBox(() => ({
+  const [ref] = useBox(() => ({
     type: 'Static',
     position: [x, bottomY, 0],
-    args: [slotWidth, 0.2, 0.4], 
+    args: [slotWidth * 0.96, 0.12, 0.4], 
     collisionFilterGroup: GAME_CONFIG.GROUP_STATIC,
-    onCollide: (e) => {
-      if (e.body.uuid !== lastBallUuid.current) {
-        lastBallUuid.current = e.body.uuid
-        setImpact(1.2) // Увеличил импульс
-      }
+    onCollide: () => {
+      setImpact(1.2);
+      onHit();
     }
   }))
 
   useFrame((_, delta) => {
     if (impact > 0) {
-      setImpact(prev => Math.max(0, prev - delta * 2.0)) // Сделал затухание чуть быстрее/реще
-    }
-    if (textRef.current) {
-      const scale = 1 + impact * 0.5
-      textRef.current.scale.set(scale, scale, 1)
-    }
-    if (lightRef.current) {
-      // Интенсивность вспышки в цвет воды
-      lightRef.current.intensity = impact * 20
+      setImpact(prev => Math.max(0, prev - delta * 2.5))
     }
   })
+
+  const currentY = bottomY - (impact * 0.05);
 
   return (
     <group>
       <Text 
-        ref={textRef}
-        fontSize={config.ballRadius * 1.5} 
+        fontSize={config.ballRadius * 1.2} 
         fontWeight="bold" 
-        position={[x, bottomY - 0.15, 0.05]} 
-        color={textColor.main}
-        emissive={textColor.emissive}
-        emissiveIntensity={0.5 + impact * 80} // Текст вспыхивает ярче
+        position={[x, currentY + 0.08, 0.07]} 
+        color="black"
       >
         x{val}
       </Text>
 
-      {/* Вспышка света того же цвета, что и вода */}
-      <pointLight 
-        ref={lightRef} 
-        position={[x, bottomY + 0.2, 0.1]} 
-        color={textColor.emissive} 
-        distance={1}
-      />
-
-      <Divider position={[x + slotWidth / 2, bottomY + wallHeight / 2, 0]} args={[0.02, wallHeight, 0.15]} />
-      {index === 0 && (
-        <Divider position={[x - slotWidth / 2, bottomY + wallHeight / 2, 0]} args={[0.02, wallHeight, 0.15]} />
-      )}
-      <mesh ref={floorRef}>
-        <boxGeometry args={[slotWidth, 0.05, 0.15]} />
-        <meshStandardMaterial color="white" />
+      <mesh ref={ref} position={[x, currentY, 0]}>
+        <boxGeometry args={[slotWidth * 0.94, 0.12, 0.25]} />
+        <meshStandardMaterial 
+          color={slotColor.main} 
+          emissive={slotColor.emissive}
+          emissiveIntensity={0.3 + impact * 25}
+        />
       </mesh>
-      <WaterSurface 
-        width={slotWidth - 0.01} 
-        height={wallHeight * 0.6} 
-        position={[x, bottomY + (wallHeight * 0.6) / 2 + 0.03, 0]} 
-        colorIndex={index}
-        impact={impact}
+
+      <pointLight 
+        position={[x, currentY + 0.3, 0.2]} 
+        color={slotColor.emissive} 
+        intensity={impact * 20}
+        distance={1.2}
       />
     </group>
   )
 }
 
 // ========== ШАРИК ==========
-function Ball({ onLand, bottomY, config }) {
+function Ball({ config }) {
   const [ref] = useSphere(() => ({
     mass: 1,
     fixedRotation: true,
@@ -194,32 +145,22 @@ function Ball({ onLand, bottomY, config }) {
     collisionFilterMask: config.GROUP_STATIC
   }))
 
-  useFrame(() => {
-    if (ref.current && ref.current.position.y < bottomY - 0.6) {
-        onLand()
-    }
-  })
-
   return (
     <mesh ref={ref}>
       <sphereGeometry args={[config.ballRadius, 24, 24]} />
-      <meshStandardMaterial color="#ffffff" emissive="#00f2ff" emissiveIntensity={5} />
+      <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={3} />
     </mesh>
   )
 }
 
-function Divider({ position, args }) {
-  const [ref] = useBox(() => ({ type: 'Static', position, args, collisionFilterGroup: GAME_CONFIG.GROUP_STATIC }))
-  return <mesh ref={ref}><boxGeometry args={args} /><meshStandardMaterial color="white" /></mesh>
-}
-
-function SlotGeometry({ config, bottomY }) {
+// ========== СЕТКА СЛОТОВ ==========
+function SlotGeometry({ config, bottomY, onBallLand }) {
   const { multipliers, ballRadius, rows, horizontalSpacingMultiplier } = config
   const spacing = (ballRadius * 2) * horizontalSpacingMultiplier
   const lastRowStartX = -((rows - 1) * spacing) / 2
   const lastRowEndX = ((rows - 1) * spacing) / 2
-  const slotWidth = (lastRowEndX - lastRowStartX) / multipliers.length
-  const wallHeight = ballRadius * 5
+  const totalWidth = lastRowEndX - lastRowStartX
+  const slotWidth = totalWidth / multipliers.length
 
   return (
     <group>
@@ -227,8 +168,10 @@ function SlotGeometry({ config, bottomY }) {
         <IndividualSlot 
           key={i} index={i} val={val} 
           x={lastRowStartX + (i + 0.5) * slotWidth}
-          bottomY={bottomY} wallHeight={wallHeight} 
-          slotWidth={slotWidth} config={config} 
+          bottomY={bottomY} 
+          slotWidth={slotWidth} 
+          config={config}
+          onHit={onBallLand}
         />
       ))}
     </group>
@@ -252,60 +195,52 @@ const NeonPlinko = forwardRef((props, ref) => {
   useImperativeHandle(ref, () => ({ dropBall }))
 
   const { bottomY, pegs, centerViewY } = useMemo(() => {
-    const { ballRadius, horizontalSpacingMultiplier, verticalSpacingMultiplier, startY, rows, gapToBottomPixels, pixelTo3D } = config
-    const spacing = ballRadius * 2 * horizontalSpacingMultiplier
+    const { ballRadius, horizontalSpacingMultiplier, verticalSpacingMultiplier, startY, rows } = config
+    const spacing = (ballRadius * 2) * horizontalSpacingMultiplier
     const vs = spacing * verticalSpacingMultiplier
-    const bY = (startY - (rows - 1) * vs) - ballRadius * 2 - (gapToBottomPixels * pixelTo3D)
-    const cY = (startY + bY) / 2
 
     const p = []
+    let lastY = startY
     for (let row = 1; row < rows; row++) {
+      const rowY = startY - row * vs
+      lastY = rowY
       const cols = row + 1
       for (let col = 0; col < cols; col++) {
-        p.push([(col - row / 2) * spacing, startY - row * vs, 0])
+        p.push([(col - row / 2) * spacing, rowY, 0])
       }
     }
+
+    // ИЗМЕНЕНИЕ: Теперь bY (высота блоков) зависит напрямую от последнего ряда колышков
+    // 0.2 — это минимальное расстояние. Уменьшай до 0.1, если нужно еще ближе
+    const bY = lastY - 0.2 
+    const cY = (startY + bY) / 2
+
     return { bottomY: bY, pegs: p, centerViewY: cY }
   }, [config])
 
   return (
     <div className="plinko-game-wrapper" style={{ width: '100%', height: '100%', minHeight: '500px' }}>
-      <div className="plinko-canvas-container" style={{ width: '100%', height: '100%' }}>
-        <Canvas 
-          dpr={[1, 2]} 
-          gl={{ antialias: true, toneMappingExposure: 1.5 }}
+      <Canvas dpr={[1, 2]} gl={{ antialias: true, toneMappingExposure: 1.5 }}>
+        <PerspectiveCamera 
+          makeDefault 
+          position={[0, centerViewY - 0.3, window.innerWidth <= 383 ? 3.6 : 3.2]} 
+          fov={50}
+        />
+        <Stars count={100} factor={4} fade depth={50} />
+        <ambientLight intensity={1.2} />
+        <pointLight position={[0, 5, 5]} intensity={2} />
+        
+        <Physics 
+          gravity={[0, config.gravity, 0]}
+          defaultContactMaterial={{ friction: 0, restitution: 0.5 }}
         >
-          <PerspectiveCamera 
-            makeDefault 
-            position={[0, centerViewY - 0.3, window.innerWidth <= 383 ? 3.6 : 3.2]} 
-            fov={50}
-          />
-          
-          <Stars count={100} factor={4} fade depth={50} />
-          <ambientLight intensity={1} />
-          <pointLight position={[0, 5, 5]} intensity={1.5} />
-          
-          <Physics 
-            gravity={[0, config.gravity, 0]}
-            defaultContactMaterial={{ friction: 0, restitution: 0.5 }}
-          >
-            {pegs.map((pos, i) => <Peg key={i} position={pos} config={config} />)}
-            <SlotGeometry config={config} bottomY={bottomY} />
-            
-            {balls.map(id => (
-              <Ball 
-                key={id} 
-                bottomY={bottomY} 
-                config={config} 
-                onLand={() => setBalls([])} 
-              />
-            ))}
-
-            <InvisibleWall position={[0, 0, 0.05]} args={[10, 10, 0.01]} />
-            <InvisibleWall position={[0, 0, -0.05]} args={[10, 10, 0.01]} />
-          </Physics>
-        </Canvas>
-      </div>
+          {pegs.map((pos, i) => <Peg key={i} position={pos} config={config} />)}
+          <SlotGeometry config={config} bottomY={bottomY} onBallLand={() => setBalls([])} />
+          {balls.map(id => <Ball key={id} config={config} />)}
+          <InvisibleWall position={[0, 0, 0.05]} args={[10, 10, 0.01]} />
+          <InvisibleWall position={[0, 0, -0.05]} args={[10, 10, 0.01]} />
+        </Physics>
+      </Canvas>
     </div>
   )
 })
