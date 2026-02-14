@@ -226,7 +226,7 @@ const NeonPlinko = forwardRef((props, ref) => {
   position={[
     0, 
     centerViewY - 0.3, 
-    window.innerWidth <= 350 ? 3.8 : (window.innerWidth <= 383 ? 3.6 : 3.2)
+    window.innerWidth <= 350 ? 3.8 : (window.innerWidth <= 393 ? 3.6 : 3.2)
   ]} 
   fov={50}
 />
