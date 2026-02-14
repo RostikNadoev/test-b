@@ -25,8 +25,8 @@
   display: flex;
   flex-direction: column;
   gap: 0px;
-  margin-bottom: 20px;
-  margin-top: 10px;
+  margin-bottom: 0px;
+  margin-top: 0px;
   align-items: center;
 }
 
@@ -42,6 +42,7 @@
   outline: none;
   background: none;
   border: none;
+  margin-top: -10px;
   
   /* Для мобильных устройств */
   -webkit-tap-highlight-color: transparent;
@@ -64,16 +65,29 @@
   transform: scale(0.98);
 }
 
-.button-2 {
-  margin-top: -14px;
+/* Стили для ряда с квадратными кнопками */
+.square-buttons-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  margin-top: 0px; /* Без отрицательного margin, чтобы были под второй кнопкой */
 }
 
-.button-3 {
-  margin-top: -14px;
+.square-button {
+  width: calc(50% - 6px); /* Половина ширины минус половина gap */
+  max-width: 212px; /* Примерно половина от 437px с учетом gap */
+  aspect-ratio: 1 / 1; /* Квадратный формат */
+  border-radius: 12px;
+  overflow: hidden;
 }
 
-.button-4 {
-  margin-top: -14px;
+.square-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Чтобы изображение заполняло квадрат */
+  border-radius: 12px;
 }
 
 /* Адаптив для маленьких экранов */
@@ -88,11 +102,23 @@
     width: 100%;
     max-width: 380px;
   }
+  
+  .square-button {
+    max-width: 184px; /* Примерно половина от 380px */
+  }
 }
 
 @media (max-width: 360px) {
   .banner-image-button {
     max-width: 340px;
+  }
+  
+  .square-button {
+    max-width: 164px; /* Примерно половина от 340px */
+  }
+  
+  .square-buttons-row {
+    gap: 8px;
   }
 }
 
