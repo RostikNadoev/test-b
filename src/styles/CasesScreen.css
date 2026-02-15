@@ -108,13 +108,24 @@ html, body {
 }
 
 .stars-box {
-  background: linear-gradient(90deg, #8f8130 10%, #49493e 80%);
+  background: linear-gradient(90deg, #8b7e31 8%, #44443c 80%);
 }
 
 .price-icon {
-  width: clamp(13px, 4.4vw, 19px); /* Адаптивный размер */
-  height: clamp(14px, 5.4vw, 21px);
   object-fit: contain;
+}
+
+.ton-box .price-icon {
+  width: auto;
+  height: 57%; /* Занимает 80% высоты родителя */
+  max-height: clamp(18px, 5.5vw, 24px);
+  margin-bottom: 2px;
+}
+
+.stars-box .price-icon {
+  width: auto;
+  height: 70%; /* Чуть меньше для stars */
+  max-height: clamp(16px, 5vw, 22px);
 }
 
 .price-value {
@@ -127,7 +138,7 @@ html, body {
 }
 
 .ton-value {
-  background: linear-gradient(180deg, #35A3F2 0%, #37BDF3 100%);
+  background: linear-gradient(180deg, #2383c7 0%, #1a7092 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
