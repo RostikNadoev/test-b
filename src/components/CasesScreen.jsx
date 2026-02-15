@@ -74,47 +74,49 @@ export default function CasesScreen({ onNavigate, currentCardIndex = 2 }) {
   };
 
   return (
-    <div 
-      className="cases-screen"
-      style={{
-        backgroundImage: `url(${rocketBack})`,
-        backgroundSize: '100% 100%',
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'center'
-      }}
-    >
-      <Header onNavigate={onNavigate} variant="cases" />
+    <>
+      <div 
+        className="cases-screen"
+        style={{
+          backgroundImage: `url(${rocketBack})`,
+          backgroundSize: '100% 100%',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center'
+        }}
+      >
+        <Header onNavigate={onNavigate} variant="cases" />
 
-      <main className="cases-content">
-        <div className="cases-grid">
-          {casesData.map((caseItem) => (
-            <div 
-              key={caseItem.id} 
-              className="case-card"
-              onClick={() => handleCaseClick(caseItem)}
-            >
-              <h3 className="case-title">{caseItem.title}</h3>
-              
-              <img 
-                src={caseItem.image} 
-                alt={caseItem.title}
-                className="case-image"
-              />
-              
-              <div className="case-prices">
-                <div className="price-box ton-box">
-                  <img src={tonIcon} alt="TON" className="price-icon" />
-                  <span className="price-value ton-value">{caseItem.tonPrice}</span>
-                </div>
-                <div className="price-box stars-box">
-                  <img src={starsIcon} alt="STARS" className="price-icon" />
-                  <span className="price-value stars-value">{caseItem.starsPrice}</span>
+        <main className="cases-content">
+          <div className="cases-grid">
+            {casesData.map((caseItem) => (
+              <div 
+                key={caseItem.id} 
+                className="case-card"
+                onClick={() => handleCaseClick(caseItem)}
+              >
+                <h3 className="case-title">{caseItem.title}</h3>
+                
+                <img 
+                  src={caseItem.image} 
+                  alt={caseItem.title}
+                  className="case-image"
+                />
+                
+                <div className="case-prices">
+                  <div className="price-box ton-box">
+                    <img src={tonIcon} alt="TON" className="price-icon" />
+                    <span className="price-value ton-value">{caseItem.tonPrice}</span>
+                  </div>
+                  <div className="price-box stars-box">
+                    <img src={starsIcon} alt="STARS" className="price-icon" />
+                    <span className="price-value stars-value">{caseItem.starsPrice}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </main>
+            ))}
+          </div>
+        </main>
+      </div>
 
       {selectedCase && (
         <CaseModal 
@@ -122,6 +124,6 @@ export default function CasesScreen({ onNavigate, currentCardIndex = 2 }) {
           onClose={handleCloseModal}
         />
       )}
-    </div>
+    </>
   );
 }

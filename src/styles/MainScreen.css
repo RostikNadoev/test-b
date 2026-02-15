@@ -70,13 +70,13 @@
   display: flex;
   flex-direction: row;
   justify-content: center;
-  gap: 12px;
+  gap: 20px;
   width: 100%;
   margin-top: 0px; /* Без отрицательного margin, чтобы были под второй кнопкой */
 }
 
 .square-button {
-  width: calc(50% - 6px); /* Половина ширины минус половина gap */
+  width: calc(50% - 10px); /* Половина ширины минус половина gap */
   max-width: 212px; /* Примерно половина от 437px с учетом gap */
   aspect-ratio: 1 / 1; /* Квадратный формат */
   border-radius: 12px;
@@ -104,7 +104,11 @@
   }
   
   .square-button {
-    max-width: 184px; /* Примерно половина от 380px */
+    max-width: 180px; /* Примерно половина от 380px */
+  }
+
+  .square-buttons-row {
+    gap: 8px;
   }
 }
 
@@ -114,7 +118,7 @@
   }
   
   .square-button {
-    max-width: 164px; /* Примерно половина от 340px */
+    max-width: 159px; /* Примерно половина от 340px */
   }
   
   .square-buttons-row {
