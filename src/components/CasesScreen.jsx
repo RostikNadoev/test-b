@@ -10,12 +10,12 @@ import tonIcon from '../assets/MainPage/cases/tonicon.png';
 import starsIcon from '../assets/MainPage/cases/starsicon.png';
 
 // Импортируем изображения кейсов
-import firstCase from '../assets/MainPage/cases/firstcase.png';
-import secondCase from '../assets/MainPage/cases/secondcase.png';
-import thirdCase from '../assets/MainPage/cases/thirdcase.png';
-import fourthCase from '../assets/MainPage/cases/fourthcase.png';
-import fifthCase from '../assets/MainPage/cases/fifthcase.png';
-import sixthCase from '../assets/MainPage/cases/sixthcase.png';
+import firstCase from '../assets/MainPage/cases/firstcasee.png';
+import secondCase from '../assets/MainPage/cases/secondcasee.png';
+import thirdCase from '../assets/MainPage/cases/thirdcasee.png';
+import fourthCase from '../assets/MainPage/cases/fourthcasee.png';
+import fifthCase from '../assets/MainPage/cases/fifthcasee.png';
+import sixthCase from '../assets/MainPage/cases/esixthcase.png';
 
 const casesData = [
   {
