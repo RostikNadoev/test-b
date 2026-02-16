@@ -188,13 +188,13 @@
   }
 }
 
-@media (max-width: 390px) {
+@media (max-width: 395px) {
   .referral-frame {
     height: 160px;
   }
   
   .referral-text {
-    font-size: 14.8px;
+    font-size: 15.5px;
   }
   
   .referral-highlight {
@@ -205,7 +205,7 @@
 }
 
 
-@media (max-width: 360px) {
+@media (max-width: 375px) {
   .banner-image-button {
     max-width: 340px;
   }
@@ -223,7 +223,7 @@
   }
   
   .referral-text {
-    font-size: 14px;
+    font-size: 14.2px;
   }
   
   .referral-highlight {
