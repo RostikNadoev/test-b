@@ -24,7 +24,7 @@
 
 .modal-container {
   position: fixed;
-  top: 60px;
+  top: 0;
   left: 0;
   right: 0;
   bottom: 0;
@@ -33,18 +33,16 @@
   justify-content: center;
   z-index: 1000;
   pointer-events: none;
-  padding: 10px;
+  padding: 20px;
 }
 
 .case-modal {
-  width: 95%;
-  max-width: 420px;
-  height: 85vh;
-  max-height: 700px;
+  width: 320px;
+  height: 520px;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   border: 2px solid #CDE2FB;
-  border-radius: 24px;
-  padding: 16px 12px 12px 12px;
+  border-radius: 20px;
+  padding: 16px 12px 0 12px;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -72,10 +70,10 @@
   background: none;
   border: none;
   color: white;
-  font-size: 32px;
+  font-size: 28px;
   cursor: pointer;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -84,6 +82,7 @@
   transition: background 0.3s;
   z-index: 1002;
   line-height: 1;
+  padding: 0;
 }
 
 .modal-close:hover {
@@ -93,19 +92,12 @@
 .modal-title {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
-  font-size: 24px;
+  font-size: 22px;
   color: white;
-  margin: 4px 0 8px 0;
+  margin: 4px 0 12px 0;
   text-align: center;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.modal-case-image {
-  width: 120px;
-  height: 120px;
-  object-fit: contain;
-  margin: 0 auto 8px auto;
-  display: block;
+  padding-right: 20px;
 }
 
 /* Секция с предметами */
@@ -114,28 +106,28 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  margin: 4px 0 8px 0;
+  margin-bottom: 0;
 }
 
 .modal-items-label {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
   text-align: center;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   letter-spacing: 1px;
-  -webkit-text-stroke: 0.3px rgba(205, 226, 251, 0.5);
+  -webkit-text-stroke: 0.3px rgba(205, 226, 251, 0.3);
 }
 
 .modal-items-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-  padding: 4px 2px;
+  gap: 8px;
+  padding: 4px 4px 20px 4px;
   overflow-y: auto;
   overflow-x: hidden;
-  max-height: 100%;
+  max-height: 340px;
   scrollbar-width: thin;
   scrollbar-color: #CDE2FB #1a1a2e;
 }
@@ -186,8 +178,8 @@
 }
 
 .modal-item-image {
-  max-width: 75%;
-  max-height: 65%;
+  max-width: 70%;
+  max-height: 60%;
   object-fit: contain;
   margin-bottom: 4px;
 }
@@ -273,10 +265,14 @@
 
 /* Футер с кнопками */
 .modal-footer {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(205, 226, 251, 0.3);
+  margin-top: 0;
+  padding: 12px 0 16px 0;
+  border-top: 1px solid rgba(205, 226, 251, 0.2);
   flex-shrink: 0;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 0 0 20px 20px;
+  position: relative;
+  z-index: 5;
 }
 
 .modal-button-container {
@@ -284,11 +280,11 @@
   justify-content: center;
   gap: 12px;
   align-items: center;
-  padding: 4px 0;
+  padding: 0 4px;
 }
 
 .modal-button {
-  height: 44px;
+  height: 42px;
   border: 2px solid rgba(255, 255, 255, 1);
   border-radius: 10px;
   display: flex;
@@ -300,11 +296,11 @@
 }
 
 .modal-left-button {
-  width: 50px;
+  width: 48px;
 }
 
 .modal-right-button {
-  width: 160px;
+  width: 155px;
 }
 
 .modal-button-text {
@@ -318,7 +314,7 @@
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
   font-style: normal;
-  font-size: 18px;
+  font-size: 17px;
   line-height: 100%;
   letter-spacing: 0%;
   color: white;
@@ -328,25 +324,25 @@
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
   font-style: normal;
-  font-size: 13px;
+  font-size: 12px;
   line-height: 100%;
   letter-spacing: 0%;
   color: white;
 }
 
 .modal-star-icon {
-  width: 28px;
+  width: 26px;
 }
 
 .modal-icon-white {
-  width: 30px;
+  width: 28px;
   filter: brightness(0) invert(1);
 }
 
 .modal-processing-text {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
-  font-size: 14px;
+  font-size: 13px;
   color: rgba(255, 255, 255, 0.8);
   animation: modalPulse 1.5s infinite;
 }
@@ -453,13 +449,13 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 30px 0;
-  height: 200px;
+  padding: 40px 0;
+  height: 340px;
 }
 
 .modal-spinner {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border: 3px solid rgba(255, 255, 255, 0.2);
   border-radius: 50%;
   border-top-color: #CDE2FB;
@@ -474,7 +470,7 @@
   margin-top: 12px;
   font-family: 'KZ Supercell-Magic', sans-serif;
   color: rgba(255, 255, 255, 0.7);
-  font-size: 14px;
+  font-size: 13px;
 }
 
 /* Стили для Header чтобы он был над затемнением */

@@ -3,7 +3,6 @@ import '../styles/CaseModal.css';
 import { casesApi } from '../utils/api';
 import { useDemo } from '../contexts/DemoContext';
 import { useBalance } from '../contexts/BalanceContext';
-import { authApi } from '../utils/api';
 
 // Импортируем иконки
 import tonIcon from '../assets/MainPage/cases/tonicon.png';
@@ -31,6 +30,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
         console.log(`✅ Case ${caseItem.id} data loaded:`, response.case);
       } catch (error) {
         console.error('❌ Error loading case data:', error);
+        // Используем данные из props как fallback
         setCaseData({ 
           price_ton: parseFloat(caseItem.tonPrice) || 2, 
           price_stars: parseFloat(caseItem.starsPrice) || 200 
@@ -67,7 +67,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
     if (isDemoMode) {
       console.log('Demo mode: opening spin page...');
       onNavigate('spin1', { isDemo: true });
-      onClose(); // Закрываем модалку
+      onClose();
       return;
     }
     
@@ -79,10 +79,8 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
     const requiredAmount = caseData.price_ton || parseFloat(caseItem.tonPrice) || 2;
     
     try {
-      // Загружаем свежие балансы
       await loadBalances();
       
-      // Проверяем баланс
       if (checkBalance('ton', requiredAmount)) {
         await handleOpenCase('ton');
       } else {
@@ -100,7 +98,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
     if (isDemoMode) {
       console.log('Demo mode: opening spin page...');
       onNavigate('spin1', { isDemo: true });
-      onClose(); // Закрываем модалку
+      onClose();
       return;
     }
 
@@ -117,12 +115,9 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
       const starsCount = caseData.price_stars || parseFloat(caseItem.starsPrice) || 200;
       console.log(`Opening case for ${starsCount} stars...`);
       
-      // Проверяем баланс звезд
       if (checkBalance('stars', starsCount)) {
-        // Если хватает звезд, открываем кейс
         await handleOpenCase('stars');
       } else {
-        // Если не хватает, показываем alert
         alert(`Insufficient stars balance. You need ${starsCount} stars to open this chest. Current balance: ${balances.stars || 0}`);
         setIsProcessing(false);
       }
@@ -139,56 +134,44 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
       setIsProcessing(true);
       console.log(`🔄 Opening case ${caseItem.id} with currency: "${currency}"`);
       
-      // 1. ОТПРАВЛЯЕМ ЗАПРОС НА ОТКРЫТИЕ КЕЙСА
       const result = await casesApi.openCase(caseItem.id, currency);
       console.log('✅ Case opened result:', result);
       
-      // 2. ИЩЕМ ПОЛНЫЕ ДАННЫЕ ПРЕДМЕТА В caseItems ПО index
       const apiItem = result.item;
       console.log('🔍 API item from open:', apiItem);
       console.log('📦 Available case items:', caseItems);
       
       let fullItemData = null;
       
-      // Ищем полный предмет в caseItems по index
       if (caseItems.length > 0 && apiItem.index) {
-        // Ищем предмет по item_index (сопоставляем с apiItem.index)
         fullItemData = caseItems.find(item => 
           item.item_index === apiItem.index || 
           item.index === apiItem.index
         );
-        
         console.log('🔍 Found full item data:', fullItemData);
       }
       
-      // 3. СОЗДАЕМ ВЫИГРЫШНЫЙ ПРЕДМЕТ С ПОЛНЫМИ ДАННЫМИ
       let img = cardton1;
       let price = '0 TON';
       let name = apiItem.name || 'Reward';
       
-      // Если нашли полные данные предмета в caseItems
       if (fullItemData) {
-        // Используем изображение из полных данных
         if (fullItemData.image_url) {
           img = getImageUrl(fullItemData.image_url);
         }
         
-        // Используем цену из полных данных
         if (fullItemData.price_ton !== undefined) {
           price = `${fullItemData.price_ton} TON`;
         }
         
-        // Используем имя из полных данных если есть
         if (fullItemData.name) {
           name = fullItemData.name;
         }
       } else {
-        // Если полных данных нет, используем то что есть в apiItem
         if (apiItem.image_url) {
           img = getImageUrl(apiItem.image_url);
         }
         
-        // Для TON наград используем имя как цену
         if (apiItem.item_type === 'reward_ton' && apiItem.name) {
           const match = apiItem.name.match(/(\d+(\.\d+)?)\s*TON/);
           if (match) {
@@ -199,25 +182,17 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
         }
       }
       
-      // 4. Формируем winData ДЛЯ ПЕРЕДАЧИ В Spin1Screen
       const winData = {
         winningItem: {
-          // Основные поля для отображения
           img: img,
           price: price,
           name: name,
-          
-          // Данные из API
           item_type: apiItem.item_type,
           index: apiItem.index,
           rarity: apiItem.rarity,
-          
-          // Полные данные если есть
           image_url: fullItemData?.image_url || apiItem.image_url,
           price_ton: fullItemData?.price_ton,
           id: fullItemData?.id,
-          
-          // Флаг что это из API
           fromApi: true,
           fullDataFound: !!fullItemData
         },
@@ -227,7 +202,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
       
       console.log('🎯 Formatted winData for Spin1Screen:', winData);
       
-      // 5. Закрываем модалку и переходим на спин-скрин
       onClose();
       onNavigate('spin1', { winData });
       
@@ -247,7 +221,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
       return `${import.meta.env.VITE_BACKEND_URL || ''}${imagePath}`;
     }
     
-    // Если пустая строка, возвращаем cardton1
     if (imagePath.trim() === '') {
       return cardton1;
     }
@@ -314,7 +287,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
     let leftButtonClass = 'modal-left-button ';
     let rightButtonClass = 'modal-right-button ';
     
-    // Базовые градиенты для левой кнопки (переключение валют)
     if (caseId === 1) {
       leftButtonClass += isSwitched ? 'modal-left-switched-case1' : 'modal-left-case1';
       rightButtonClass += isSwitched ? 'modal-right-switched-case1' : 'modal-right-case1';
@@ -334,7 +306,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
       leftButtonClass += isSwitched ? 'modal-left-switched-case6' : 'modal-left-case6';
       rightButtonClass += isSwitched ? 'modal-right-switched-case6' : 'modal-right-case6';
     } else {
-      // По умолчанию
       leftButtonClass += isSwitched ? 'modal-left-switched-case1' : 'modal-left-case1';
       rightButtonClass += isSwitched ? 'modal-right-switched-case1' : 'modal-right-case1';
     }
@@ -352,14 +323,8 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
           
           <h2 className="modal-title">{caseItem.title}</h2>
           
-          <img 
-            src={caseItem.image} 
-            alt={caseItem.title}
-            className="modal-case-image"
-          />
-          
           <div className="modal-items-section">
-            <div className="modal-items-label">INSIDE</div>
+            <div className="modal-items-label">WHAT'S INSIDE?</div>
             
             {isLoading ? (
               <div className="modal-loading-items">
@@ -391,7 +356,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
           
           <div className="modal-footer">
             <div className="modal-button-container">
-              {/* Левая кнопка переключения */}
               <div 
                 className={`modal-button ${leftButtonClass} ${isDemoMode || isProcessing ? 'modal-button-disabled' : ''}`}
                 onClick={handleSwitchClick}
@@ -405,7 +369,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
                 </span>
               </div>
               
-              {/* Правая кнопка открытия */}
               <div 
                 className={`modal-button ${rightButtonClass} ${isProcessing ? 'modal-button-disabled' : ''}`} 
                 onClick={isSwitched ? handleStarClick : handleTonClick}
