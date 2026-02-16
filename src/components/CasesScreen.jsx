@@ -1,4 +1,3 @@
-// components/CasesScreen.jsx
 import { useState } from 'react';
 import '../styles/CasesScreen.css';
 import Header from './Header';
@@ -122,6 +121,7 @@ export default function CasesScreen({ onNavigate, currentCardIndex = 2 }) {
         <CaseModal 
           caseItem={selectedCase} 
           onClose={handleCloseModal}
+          onNavigate={onNavigate} // Добавляем onNavigate
         />
       )}
     </>
