@@ -1,4 +1,4 @@
-// components/MainScreen.jsx - обновленная версия
+// components/MainScreen.jsx - обновленная версия с реферальным блоком
 import MainLayout from './MainLayout';
 // Импортируем изображения для кнопок
 import gameCard1 from '../assets/MainPage/game-card-1.png';
@@ -82,6 +82,20 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
               loading="lazy"
             />
           </div>
+        </div>
+
+        {/* Блок реферальной программы */}
+        <div className="referral-block">
+          <div className="referral-frame">
+            <div className="referral-content">
+              <div className="referral-text">
+                Invite friends and earn
+                <span className="referral-highlight">10%</span> <br />of their top-ups!
+              </div>
+            </div>
+          </div>
+          
+          {/* Здесь будут две кнопки снизу (добавим позже) */}
         </div>
       </div>
     </MainLayout>
