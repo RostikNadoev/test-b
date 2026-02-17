@@ -218,7 +218,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
     if (!imagePath) return cardton1;
     
     if (imagePath.startsWith('/static/')) {
-      return `${import.meta.env.VITE_BACKEND_URL || ''}${imagePath}`;
+      return `https://shamefully-gifted-catbird.cloudpub.ru${imagePath}`;
     }
     
     if (imagePath.trim() === '') {

@@ -406,7 +406,7 @@ useEffect(() => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return cardton1;
     if (imagePath.startsWith('http')) return imagePath;
-    if (imagePath.startsWith('/static/')) return `${(import.meta.env.VITE_BACKEND_URL || 'https://api.bouncegifts.xyz').replace(/\/$/, '')}${imagePath}`;
+    if (imagePath.startsWith('/static/')) return `${(import.meta.env.VITE_BACKEND_URL || 'https://shamefully-gifted-catbird.cloudpub.ru').replace(/\/$/, '')}${imagePath}`;
     return imagePath.startsWith('./') ? imagePath : cardton1;
   };
 

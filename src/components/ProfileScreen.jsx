@@ -126,7 +126,7 @@ export default function ProfileScreen({ onNavigate }) {
     if (!imagePath || imagePath.trim() === '') return cardton1;
     
     if (imagePath.startsWith('/static/')) {
-      const baseUrl = import.meta.env.VITE_BACKEND_URL || 'https://api.bouncegifts.xyz';
+      const baseUrl = 'https://shamefully-gifted-catbird.cloudpub.ru';
       return `${baseUrl}${imagePath}`;
     }
     
