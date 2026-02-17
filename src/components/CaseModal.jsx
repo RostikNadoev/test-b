@@ -7,136 +7,70 @@ import { useBalance } from '../contexts/BalanceContext';
 // Импортируем иконки
 import tonIcon from '../assets/MainPage/cases/tonicon.png';
 import starsIcon from '../assets/MainPage/cases/starsicon.png';
-import cardtonDefault from '../assets/MainPage/chest1/ton.png';
+import star from '../assets/MainPage/star1.png';
+import cardton1 from '../assets/MainPage/chest1/ton.png';
 
 export default function CaseModal({ caseItem, onClose, onNavigate }) {
+  const [caseData, setCaseData] = useState(null);
   const [caseItems, setCaseItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState(null);
-  
   const { isDemoMode } = useDemo();
   const { balances, checkBalance, loadBalances } = useBalance();
 
-  // Базовый URL для изображений
-  const BASE_URL = 'https://shamefully-gifted-catbird.cloudpub.ru';
-
-  // Загружаем содержимое кейса
+  // Загружаем данные кейса по ID
   useEffect(() => {
-    const loadCaseContents = async () => {
+    const loadCaseData = async () => {
       try {
         setIsLoading(true);
-        setError(null);
-        
-        // Пытаемся получить содержимое кейса
-        // Если нет отдельного эндпоинта, используем заглушку
-        console.log(`📦 Загрузка содержимого кейса ${caseItem.id}...`);
-        
-        // Здесь должен быть запрос к API для получения предметов кейса
-        // Пока используем демо-данные на основе цены
-        
-        // Генерируем предметы на основе цены кейса
-        const mockItems = [];
-        const tonPrice = caseItem.price?.ton || 2;
-        
-        // Создаем несколько предметов для отображения
-        for (let i = 0; i < 9; i++) {
-          const isTonReward = Math.random() > 0.3;
-          const priceTon = (Math.random() * tonPrice * 2).toFixed(2);
-          
-          mockItems.push({
-            id: i + 1,
-            case_item_id: i + 1,
-            item_type: isTonReward ? 'reward_ton' : 'tg_gift',
-            name: isTonReward ? `${priceTon} TON` : `Gift ${i + 1}`,
-            title: isTonReward ? 'TON reward' : `Gift ${i + 1}`,
-            description: 'Item description',
-            image_url: isTonReward ? null : null,
-            price_ton: parseFloat(priceTon),
-            price_stars: 0,
-            rarity: 'common',
-            item_index: i + 1,
-            index: i + 1,
-            meta: {
-              telegram_gift_id: isTonReward ? '' : `gift_${i + 1}`,
-              nft: false
-            }
-          });
-        }
-        
-        setCaseItems(mockItems);
+        const response = await casesApi.getCaseById(caseItem.id);
+        setCaseData(response.case);
+        setCaseItems(response.items || []);
+        console.log(`✅ Case ${caseItem.id} data loaded:`, response.case);
       } catch (error) {
-        console.error('❌ Ошибка загрузки содержимого кейса:', error);
-        setError('Failed to load case contents');
+        console.error('❌ Error loading case data:', error);
+        // Используем данные из props как fallback
+        setCaseData({ 
+          price_ton: parseFloat(caseItem.tonPrice) || 2, 
+          price_stars: parseFloat(caseItem.starsPrice) || 200 
+        });
         setCaseItems([]);
       } finally {
         setIsLoading(false);
       }
     };
-
+    
     if (caseItem?.id) {
-      loadCaseContents();
+      loadCaseData();
     }
   }, [caseItem]);
 
-  // Блокируем скролл при открытии
   useEffect(() => {
+    // Блокируем скролл body при открытии модалки
     document.body.style.overflow = 'hidden';
+    
     return () => {
+      // Возвращаем скролл при закрытии
       document.body.style.overflow = 'unset';
     };
   }, []);
 
-  // Получить URL изображения
-  const getImageUrl = (item) => {
-    if (!item) return cardtonDefault;
-    
-    // Если есть изображение
-    if (item.image_url) {
-      if (item.image_url.startsWith('/static/')) {
-        return `${BASE_URL}${item.image_url}`;
-      }
-      return item.image_url;
-    }
-    
-    // Для TON наград используем дефолтную иконку
-    if (item.item_type === 'reward_ton') {
-      return cardtonDefault;
-    }
-    
-    return cardtonDefault;
-  };
-
-  // Получить цену для отображения
-  const getItemPrice = (item) => {
-    if (!item) return '0 TON';
-    
-    if (item.item_type === 'reward_ton') {
-      return `${item.price_ton?.toFixed(2) || '0'} TON`;
-    } else if (item.item_type === 'tg_gift') {
-      return `${item.price_ton?.toFixed(2) || '0'} TON`;
-    }
-    
-    return '0 TON';
-  };
-
-  // Обработчик открытия за TON
   const handleTonClick = async () => {
-    console.log(`💰 Открытие кейса ${caseItem.id} за TON...`);
+    console.log(`Case ${caseItem.id} TON clicked! Checking balance...`);
     
     if (isDemoMode) {
-      console.log('🎮 Демо режим: переход на спин');
-      onNavigate('spin', { 
-        caseId: caseItem.id,
-        isDemo: true 
-      });
+      console.log('Demo mode: opening spin page...');
+      onNavigate('spin1', { isDemo: true });
       onClose();
       return;
     }
     
-    if (isProcessing) return;
+    if (!caseData) {
+      alert('Case data not loaded. Please try again.');
+      return;
+    }
     
-    const requiredAmount = caseItem.price?.ton || 2;
+    const requiredAmount = caseData.price_ton || parseFloat(caseItem.tonPrice) || 2;
     
     try {
       await loadBalances();
@@ -144,103 +78,195 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
       if (checkBalance('ton', requiredAmount)) {
         await handleOpenCase('ton');
       } else {
-        alert(`Insufficient TON balance. Need ${requiredAmount} TON`);
+        console.log('❌ Insufficient balance');
+        const currentBalance = balances.ton || 0;
+        alert(`Insufficient balance. You need ${requiredAmount} TON to open this chest. Current balance: ${currentBalance.toFixed(2)} TON`);
       }
     } catch (error) {
-      console.error('❌ Balance check error:', error);
-      alert('Error checking balance');
+      console.error('❌ Error checking balance:', error);
+      alert('Error checking balance. Please try again.');
     }
   };
 
-  // Обработчик открытия за Stars
   const handleStarClick = async () => {
-    console.log(`⭐ Открытие кейса ${caseItem.id} за Stars...`);
-    
     if (isDemoMode) {
-      onNavigate('spin', { 
-        caseId: caseItem.id,
-        isDemo: true 
-      });
+      console.log('Demo mode: opening spin page...');
+      onNavigate('spin1', { isDemo: true });
       onClose();
       return;
     }
 
     if (isProcessing) return;
 
-    const requiredAmount = caseItem.price?.stars || 0;
-    
-    if (requiredAmount <= 0) {
-      alert('This case cannot be opened with Stars');
-      return;
-    }
-
-    try {
-      await loadBalances();
-      
-      if (checkBalance('stars', requiredAmount)) {
-        await handleOpenCase('stars');
-      } else {
-        alert(`Insufficient Stars balance. Need ${requiredAmount} Stars`);
-      }
-    } catch (error) {
-      console.error('❌ Balance check error:', error);
-      alert('Error checking balance');
-    }
-  };
-
-  // Открытие кейса через API
-  const handleOpenCase = async (currency) => {
     try {
       setIsProcessing(true);
-      console.log(`🎰 Открываем кейс ${caseItem.id} через API...`);
       
-      const result = await casesApi.openCase(caseItem.id, currency);
-      console.log('✅ Кейс открыт, результат:', result);
+      if (!caseData) {
+        alert('Case data not loaded. Please try again.');
+        return;
+      }
       
-      // Формируем данные для экрана спина
-      const winData = {
-        caseId: caseItem.id,
-        caseName: caseItem.name,
-        payment: result.payment,
-        drop: result.drop,
-        result: result.result,
-        netChange: result.net_change,
-        balanceAfter: result.balance_after,
-        
-        // Для совместимости со старым кодом
-        winningItem: {
-          img: getImageUrl(result.drop),
-          price: result.result?.reward 
-            ? `${result.result.reward.amount} ${result.result.reward.currency.toUpperCase()}`
-            : result.drop?.title || 'Item',
-          name: result.drop?.title || 'Reward',
-          item_type: result.drop?.type,
-          index: result.drop?.case_item_id,
-          rarity: 'common',
-          image_url: result.drop?.image_url,
-          price_ton: result.result?.reward?.amount,
-          id: result.drop?.case_item_id
-        },
-        apiResponse: result
-      };
+      const starsCount = caseData.price_stars || parseFloat(caseItem.starsPrice) || 200;
+      console.log(`Opening case for ${starsCount} stars...`);
       
-      console.log('🎯 Данные для спина:', winData);
-      
-      onClose();
-      onNavigate('spin', { winData });
+      if (checkBalance('stars', starsCount)) {
+        await handleOpenCase('stars');
+      } else {
+        alert(`Insufficient stars balance. You need ${starsCount} stars to open this chest. Current balance: ${balances.stars || 0}`);
+        setIsProcessing(false);
+      }
       
     } catch (error) {
-      console.error('❌ Ошибка открытия кейса:', error);
-      alert(`Failed to open case: ${error.response?.data?.message || error.message}`);
-    } finally {
+      console.error('❌ Error with stars:', error);
+      alert('Error checking stars balance. Please try again.');
       setIsProcessing(false);
     }
   };
 
-  // Класс для цены (по редкости)
-  const getPriceClass = (priceStr) => {
-    if (!priceStr) return 'modal-item-price';
+  const handleOpenCase = async (currency) => {
+    try {
+      setIsProcessing(true);
+      console.log(`🔄 Opening case ${caseItem.id} with currency: "${currency}"`);
+      
+      const result = await casesApi.openCase(caseItem.id, currency);
+      console.log('✅ Case opened result:', result);
+      
+      const apiItem = result.item;
+      console.log('🔍 API item from open:', apiItem);
+      console.log('📦 Available case items:', caseItems);
+      
+      let fullItemData = null;
+      
+      if (caseItems.length > 0 && apiItem.index) {
+        fullItemData = caseItems.find(item => 
+          item.item_index === apiItem.index || 
+          item.index === apiItem.index
+        );
+        console.log('🔍 Found full item data:', fullItemData);
+      }
+      
+      let img = cardton1;
+      let price = '0 TON';
+      let name = apiItem.name || 'Reward';
+      
+      if (fullItemData) {
+        if (fullItemData.image_url) {
+          img = getImageUrl(fullItemData.image_url);
+        }
+        
+        if (fullItemData.price_ton !== undefined) {
+          price = `${fullItemData.price_ton} TON`;
+        }
+        
+        if (fullItemData.name) {
+          name = fullItemData.name;
+        }
+      } else {
+        if (apiItem.image_url) {
+          img = getImageUrl(apiItem.image_url);
+        }
+        
+        if (apiItem.item_type === 'reward_ton' && apiItem.name) {
+          const match = apiItem.name.match(/(\d+(\.\d+)?)\s*TON/);
+          if (match) {
+            price = `${match[1]} TON`;
+          } else {
+            price = apiItem.name;
+          }
+        }
+      }
+      
+      const winData = {
+        winningItem: {
+          img: img,
+          price: price,
+          name: name,
+          item_type: apiItem.item_type,
+          index: apiItem.index,
+          rarity: apiItem.rarity,
+          image_url: fullItemData?.image_url || apiItem.image_url,
+          price_ton: fullItemData?.price_ton,
+          id: fullItemData?.id,
+          fromApi: true,
+          fullDataFound: !!fullItemData
+        },
+        apiResponse: result,
+        fullItemData: fullItemData
+      };
+      
+      console.log('🎯 Formatted winData for Spin1Screen:', winData);
+      
+      onClose();
+      onNavigate('spin1', { winData });
+      
+    } catch (error) {
+      console.error('❌ Error opening case:', error);
+      console.error('💾 Error details:', error.response?.data);
+      alert('Error opening case. Please try again.');
+      setIsProcessing(false);
+    }
+  };
+
+  // Функция для получения URL изображения из API
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return cardton1;
     
+    if (imagePath.startsWith('/static/')) {
+      return `https://shamefully-gifted-catbird.cloudpub.ru${imagePath}`;
+    }
+    
+    if (imagePath.trim() === '') {
+      return cardton1;
+    }
+    
+    return imagePath;
+  };
+
+  // Определяем содержимое рамок из данных API
+  const getFrameContents = () => {
+    if (caseItems.length > 0) {
+      return caseItems.map((item, index) => {
+        let img;
+        let price;
+        
+        if (item.item_type === 'tg_gift') {
+          img = getImageUrl(item.image_url);
+          price = `${item.price_ton} TON`;
+        } else if (item.item_type === 'reward_ton') {
+          img = cardton1;
+          price = `${item.price_ton} TON`;
+        } else {
+          img = cardton1;
+          price = '0 TON';
+        }
+        
+        return { 
+          img, 
+          price, 
+          itemType: item.item_type, 
+          imageUrl: item.image_url,
+          id: item.id,
+          index: item.index,
+          name: item.name,
+          originalItem: item
+        };
+      });
+    }
+    
+    // Заглушка на время загрузки
+    return Array(9).fill().map((_, index) => ({
+      img: cardton1,
+      price: '0 TON',
+      itemType: 'reward_ton',
+      id: index,
+      index: `default_${index}`,
+      name: 'Default Item'
+    }));
+  };
+
+  const frameContents = getFrameContents();
+
+  const getPriceClass = (priceStr) => {
     const priceValue = parseFloat(priceStr.replace(/[^\d.-]/g, ''));
     if (priceValue >= 501) return 'modal-item-price-gradient-3';
     if (priceValue >= 51) return 'modal-item-price-gradient-2';
@@ -248,15 +274,29 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
     return 'modal-item-price';
   };
 
-  // Классы для кнопок
+  // Определяем градиенты для кнопок в зависимости от ID кейса
   const getTonButtonClass = () => {
-    const gradients = ['', '-case1', '-case2', '-case3', '-case4', '-case5', '-case6'];
-    return `modal-ton-button${gradients[caseItem.id] || ''}`;
+    const caseId = caseItem.id;
+    
+    if (caseId === 1) return 'modal-ton-button-case1';
+    if (caseId === 2) return 'modal-ton-button-case2';
+    if (caseId === 3) return 'modal-ton-button-case3';
+    if (caseId === 4) return 'modal-ton-button-case4';
+    if (caseId === 5) return 'modal-ton-button-case5';
+    if (caseId === 6) return 'modal-ton-button-case6';
+    return 'modal-ton-button-case1'; // По умолчанию
   };
 
   const getStarsButtonClass = () => {
-    const gradients = ['', '-case1', '-case2', '-case3', '-case4', '-case5', '-case6'];
-    return `modal-stars-button${gradients[caseItem.id] || ''}`;
+    const caseId = caseItem.id;
+    
+    if (caseId === 1) return 'modal-stars-button-case1';
+    if (caseId === 2) return 'modal-stars-button-case2';
+    if (caseId === 3) return 'modal-stars-button-case3';
+    if (caseId === 4) return 'modal-stars-button-case4';
+    if (caseId === 5) return 'modal-stars-button-case5';
+    if (caseId === 6) return 'modal-stars-button-case6';
+    return 'modal-stars-button-case1'; // По умолчанию
   };
 
   const tonButtonClass = getTonButtonClass();
@@ -268,7 +308,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
         <div className="case-modal" onClick={(e) => e.stopPropagation()}>
           <button className="modal-close" onClick={onClose}>×</button>
           
-          <h2 className="modal-title">{caseItem.name}</h2>
+          <h2 className="modal-title">{caseItem.title}</h2>
           
           <div className="modal-items-section">
             <div className="modal-items-label">WHAT'S INSIDE?</div>
@@ -278,31 +318,25 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
                 <div className="modal-spinner"></div>
                 <p>Loading items...</p>
               </div>
-            ) : error ? (
-              <div className="modal-error">
-                <p>{error}</p>
-              </div>
             ) : (
               <div className="modal-items-grid">
-                {caseItems.map((item) => {
-                  const price = getItemPrice(item);
-                  return (
-                    <div key={item.id} className="modal-item-frame">
-                      <div className="modal-item-content">
-                        <img 
-                          src={getImageUrl(item)} 
-                          alt={item.name || 'Item'} 
-                          className="modal-item-image"
-                          loading="lazy"
-                          onError={(e) => {
-                            e.target.src = cardtonDefault;
-                          }}
-                        />
-                        <div className={getPriceClass(price)}>{price}</div>
-                      </div>
+                {frameContents.map((content, index) => (
+                  <div key={index} className="modal-item-frame">
+                    <div className="modal-item-content">
+                      <img 
+                        src={content.img} 
+                        alt={`Item ${index + 1}`} 
+                        className="modal-item-image"
+                        loading="lazy"
+                        onError={(e) => {
+                          console.error(`Failed to load image: ${content.imageUrl}`);
+                          e.target.src = cardton1;
+                        }}
+                      />
+                      <div className={getPriceClass(content.price)}>{content.price}</div>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -312,7 +346,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
               {/* Кнопка TON */}
               <div 
                 className={`modal-button modal-ton-button ${tonButtonClass} ${isProcessing ? 'modal-button-disabled' : ''}`}
-                onClick={!isProcessing ? handleTonClick : null}
+                onClick={handleTonClick}
               >
                 <span className="modal-button-text">
                   {isProcessing ? (
@@ -321,33 +355,31 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
                     <>
                       <img src={tonIcon} alt="TON" className="modal-ton-icon" />
                       <span className="modal-button-number">
-                        {caseItem.price?.ton?.toFixed(2) || '2'}
+                        {caseData?.price_ton || caseItem.tonPrice || '2'}
                       </span>
                     </>
                   )}
                 </span>
               </div>
               
-              {/* Кнопка STARS (только если цена > 0) */}
-              {(caseItem.price?.stars || 0) > 0 && (
-                <div 
-                  className={`modal-button modal-stars-button ${starsButtonClass} ${isProcessing ? 'modal-button-disabled' : ''}`}
-                  onClick={!isProcessing ? handleStarClick : null}
-                >
-                  <span className="modal-button-text">
-                    {isProcessing ? (
-                      <span className="modal-processing-text">Processing...</span>
-                    ) : (
-                      <>
-                        <img src={starsIcon} alt="STARS" className="modal-stars-icon" />
-                        <span className="modal-button-number">
-                          {caseItem.price?.stars || '0'}
-                        </span>
-                      </>
-                    )}
-                  </span>
-                </div>
-              )}
+              {/* Кнопка STARS */}
+              <div 
+                className={`modal-button modal-stars-button ${starsButtonClass} ${isProcessing ? 'modal-button-disabled' : ''}`}
+                onClick={handleStarClick}
+              >
+                <span className="modal-button-text">
+                  {isProcessing ? (
+                    <span className="modal-processing-text">Processing...</span>
+                  ) : (
+                    <>
+                      <img src={starsIcon} alt="STARS" className="modal-stars-icon" />
+                      <span className="modal-button-number">
+                        {caseData?.price_stars || caseItem.starsPrice || '200'}
+                      </span>
+                    </>
+                  )}
+                </span>
+              </div>
             </div>
           </div>
         </div>
