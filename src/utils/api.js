@@ -3,7 +3,6 @@ import axios from 'axios';
 // Base backend URL from environment variables
 const API_BASE_URL = import.meta.env.VITE_BACKEND1_URL;
 
-console.log('🌐 API Base URL:', API_BASE_URL);
 
 // Create axios instance with basic settings
 const api = axios.create({
