@@ -15,7 +15,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
   const [caseItems, setCaseItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isSwitched, setIsSwitched] = useState(false);
   const { isDemoMode } = useDemo();
   const { balances, checkBalance, loadBalances } = useBalance();
 
@@ -55,11 +54,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
       document.body.style.overflow = 'unset';
     };
   }, []);
-
-  const handleSwitchClick = () => {
-    if (isDemoMode) return;
-    setIsSwitched(!isSwitched);
-  };
 
   const handleTonClick = async () => {
     console.log(`Case ${caseItem.id} TON clicked! Checking balance...`);
@@ -281,39 +275,32 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
   };
 
   // Определяем градиенты для кнопок в зависимости от ID кейса
-  const getButtonClasses = () => {
+  const getTonButtonClass = () => {
     const caseId = caseItem.id;
     
-    let leftButtonClass = 'modal-left-button ';
-    let rightButtonClass = 'modal-right-button ';
-    
-    if (caseId === 1) {
-      leftButtonClass += isSwitched ? 'modal-left-switched-case1' : 'modal-left-case1';
-      rightButtonClass += isSwitched ? 'modal-right-switched-case1' : 'modal-right-case1';
-    } else if (caseId === 2) {
-      leftButtonClass += isSwitched ? 'modal-left-switched-case2' : 'modal-left-case2';
-      rightButtonClass += isSwitched ? 'modal-right-switched-case2' : 'modal-right-case2';
-    } else if (caseId === 3) {
-      leftButtonClass += isSwitched ? 'modal-left-switched-case3' : 'modal-left-case3';
-      rightButtonClass += isSwitched ? 'modal-right-switched-case3' : 'modal-right-case3';
-    } else if (caseId === 4) {
-      leftButtonClass += isSwitched ? 'modal-left-switched-case4' : 'modal-left-case4';
-      rightButtonClass += isSwitched ? 'modal-right-switched-case4' : 'modal-right-case4';
-    } else if (caseId === 5) {
-      leftButtonClass += isSwitched ? 'modal-left-switched-case5' : 'modal-left-case5';
-      rightButtonClass += isSwitched ? 'modal-right-switched-case5' : 'modal-right-case5';
-    } else if (caseId === 6) {
-      leftButtonClass += isSwitched ? 'modal-left-switched-case6' : 'modal-left-case6';
-      rightButtonClass += isSwitched ? 'modal-right-switched-case6' : 'modal-right-case6';
-    } else {
-      leftButtonClass += isSwitched ? 'modal-left-switched-case1' : 'modal-left-case1';
-      rightButtonClass += isSwitched ? 'modal-right-switched-case1' : 'modal-right-case1';
-    }
-    
-    return { leftButtonClass, rightButtonClass };
+    if (caseId === 1) return 'modal-ton-button-case1';
+    if (caseId === 2) return 'modal-ton-button-case2';
+    if (caseId === 3) return 'modal-ton-button-case3';
+    if (caseId === 4) return 'modal-ton-button-case4';
+    if (caseId === 5) return 'modal-ton-button-case5';
+    if (caseId === 6) return 'modal-ton-button-case6';
+    return 'modal-ton-button-case1'; // По умолчанию
   };
 
-  const { leftButtonClass, rightButtonClass } = getButtonClasses();
+  const getStarsButtonClass = () => {
+    const caseId = caseItem.id;
+    
+    if (caseId === 1) return 'modal-stars-button-case1';
+    if (caseId === 2) return 'modal-stars-button-case2';
+    if (caseId === 3) return 'modal-stars-button-case3';
+    if (caseId === 4) return 'modal-stars-button-case4';
+    if (caseId === 5) return 'modal-stars-button-case5';
+    if (caseId === 6) return 'modal-stars-button-case6';
+    return 'modal-stars-button-case1'; // По умолчанию
+  };
+
+  const tonButtonClass = getTonButtonClass();
+  const starsButtonClass = getStarsButtonClass();
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -356,40 +343,39 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
           
           <div className="modal-footer">
             <div className="modal-button-container">
+              {/* Кнопка TON */}
               <div 
-                className={`modal-button ${leftButtonClass} ${isDemoMode || isProcessing ? 'modal-button-disabled' : ''}`}
-                onClick={handleSwitchClick}
-              >
-                <span className="modal-button-text">
-                  {isSwitched ? (
-                    <img src={tonIcon} alt='ton' className='modal-icon-white' loading='lazy'/>
-                  ) : (
-                    <img src={star} alt='star' className='modal-star-icon' loading='lazy'/>
-                  )}
-                </span>
-              </div>
-              
-              <div 
-                className={`modal-button ${rightButtonClass} ${isProcessing ? 'modal-button-disabled' : ''}`} 
-                onClick={isSwitched ? handleStarClick : handleTonClick}
+                className={`modal-button modal-ton-button ${tonButtonClass} ${isProcessing ? 'modal-button-disabled' : ''}`}
+                onClick={handleTonClick}
               >
                 <span className="modal-button-text">
                   {isProcessing ? (
                     <span className="modal-processing-text">Processing...</span>
-                  ) : isSwitched ? (
-                    <>
-                      <img src={star} alt='star' className='modal-star-icon' loading='lazy'/>
-                      <span className="modal-button-number">
-                        {caseData?.price_stars || caseItem.starsPrice || '200'}
-                      </span>
-                      <img src={star} alt='star' className='modal-star-icon' loading='lazy'/>
-                    </>
                   ) : (
                     <>
+                      <img src={tonIcon} alt="TON" className="modal-ton-icon" />
                       <span className="modal-button-number">
                         {caseData?.price_ton || caseItem.tonPrice || '2'}
                       </span>
-                      <span className="modal-button-ton">TON</span>
+                    </>
+                  )}
+                </span>
+              </div>
+              
+              {/* Кнопка STARS */}
+              <div 
+                className={`modal-button modal-stars-button ${starsButtonClass} ${isProcessing ? 'modal-button-disabled' : ''}`}
+                onClick={handleStarClick}
+              >
+                <span className="modal-button-text">
+                  {isProcessing ? (
+                    <span className="modal-processing-text">Processing...</span>
+                  ) : (
+                    <>
+                      <img src={starsIcon} alt="STARS" className="modal-stars-icon" />
+                      <span className="modal-button-number">
+                        {caseData?.price_stars || caseItem.starsPrice || '200'}
+                      </span>
                     </>
                   )}
                 </span>

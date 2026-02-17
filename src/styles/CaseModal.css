@@ -1,3 +1,4 @@
+/* styles/CaseModal.css */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -37,7 +38,7 @@
 }
 
 .case-modal {
-  width: 320px;
+  width: 350px;
   height: 520px;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   border: 2px solid #CDE2FB;
@@ -50,6 +51,7 @@
   animation: modalAppear 0.3s ease-out;
   pointer-events: auto;
   z-index: 1001;
+  margin-top: 70px;
 }
 
 @keyframes modalAppear {
@@ -293,14 +295,15 @@
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: opacity 0.2s;
+  padding: 0 12px;
 }
 
-.modal-left-button {
-  width: 48px;
+.modal-ton-button {
+  width: 120px;
 }
 
-.modal-right-button {
-  width: 155px;
+.modal-stars-button {
+  width: 120px;
 }
 
 .modal-button-text {
@@ -330,13 +333,22 @@
   color: white;
 }
 
-.modal-star-icon {
-  width: 26px;
+.modal-ton-icon {
+  width: 20px;
+  height: auto;
+  object-fit: contain;
 }
 
-.modal-icon-white {
-  width: 28px;
-  filter: brightness(0) invert(1);
+.modal-stars-icon {
+  width: 22px;
+  height: auto;
+  object-fit: contain;
+}
+
+.modal-star-icon-small {
+  width: 18px;
+  height: auto;
+  object-fit: contain;
 }
 
 .modal-processing-text {
@@ -359,87 +371,53 @@
   pointer-events: none;
 }
 
-/* Градиенты для кейса 1 */
-.modal-left-case1 {
-  background: linear-gradient(30deg, rgb(255, 223, 199) 30%, rgb(255, 197, 122));
-}
-.modal-right-case1 {
+/* Градиенты для TON кнопок */
+.modal-ton-button-case1 {
   background: linear-gradient(0deg, rgba(130, 213, 254, 1), rgba(190, 237, 254, 1));
 }
-.modal-left-switched-case1 {
-  background: linear-gradient(0deg, rgba(130, 213, 254, 1), rgba(190, 237, 254, 1));
-}
-.modal-right-switched-case1 {
-  background: linear-gradient(30deg, rgb(255, 223, 199) 30%, rgb(255, 197, 122));
-}
 
-/* Градиенты для кейса 2 */
-.modal-left-case2 {
-  background: linear-gradient(30deg, rgb(255, 223, 199) 30%, rgb(255, 197, 122));
-}
-.modal-right-case2 {
+.modal-ton-button-case2 {
   background: linear-gradient(0deg, rgb(80, 171, 245), rgb(22, 101, 185));
 }
-.modal-left-switched-case2 {
-  background: linear-gradient(0deg, rgb(80, 171, 245), rgb(22, 101, 185));
-}
-.modal-right-switched-case2 {
-  background: linear-gradient(30deg, rgb(255, 223, 199) 30%, rgb(255, 197, 122));
-}
 
-/* Градиенты для кейса 3 */
-.modal-left-case3 {
-  background: linear-gradient(30deg, rgb(255, 223, 199) 30%, rgb(255, 197, 122));
-}
-.modal-right-case3 {
+.modal-ton-button-case3 {
   background: linear-gradient(180deg, rgba(237, 123, 255, 1), rgba(106, 50, 188, 1));
 }
-.modal-left-switched-case3 {
-  background: linear-gradient(180deg, rgba(237, 123, 255, 1), rgba(106, 50, 188, 1));
-}
-.modal-right-switched-case3 {
-  background: linear-gradient(30deg, rgb(255, 223, 199) 30%, rgb(255, 197, 122));
-}
 
-/* Градиенты для кейса 4 */
-.modal-left-case4 {
-  background: linear-gradient(30deg, rgb(255, 223, 199) 30%, rgb(255, 197, 122));
-}
-.modal-right-case4 {
+.modal-ton-button-case4 {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
-.modal-left-switched-case4 {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+.modal-ton-button-case5 {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
-.modal-right-switched-case4 {
+
+.modal-ton-button-case6 {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+/* Градиенты для STARS кнопок */
+.modal-stars-button-case1 {
   background: linear-gradient(30deg, rgb(255, 223, 199) 30%, rgb(255, 197, 122));
 }
 
-/* Градиенты для кейса 5 */
-.modal-left-case5 {
-  background: linear-gradient(30deg, rgb(255, 223, 199) 30%, rgb(255, 197, 122));
-}
-.modal-right-case5 {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-.modal-left-switched-case5 {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-.modal-right-switched-case5 {
+.modal-stars-button-case2 {
   background: linear-gradient(30deg, rgb(255, 223, 199) 30%, rgb(255, 197, 122));
 }
 
-/* Градиенты для кейса 6 */
-.modal-left-case6 {
+.modal-stars-button-case3 {
   background: linear-gradient(30deg, rgb(255, 223, 199) 30%, rgb(255, 197, 122));
 }
-.modal-right-case6 {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+
+.modal-stars-button-case4 {
+  background: linear-gradient(30deg, rgb(255, 223, 199) 30%, rgb(255, 197, 122));
 }
-.modal-left-switched-case6 {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+
+.modal-stars-button-case5 {
+  background: linear-gradient(30deg, rgb(255, 223, 199) 30%, rgb(255, 197, 122));
 }
-.modal-right-switched-case6 {
+
+.modal-stars-button-case6 {
   background: linear-gradient(30deg, rgb(255, 223, 199) 30%, rgb(255, 197, 122));
 }
 
