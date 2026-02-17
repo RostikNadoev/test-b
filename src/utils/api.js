@@ -1,7 +1,10 @@
 import axios from 'axios';
 
 // Base backend URL from environment variables
-const API_BASE_URL = 'https://shamefully-gifted-catbird.cloudpub.ru';
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+
+console.log('🌐 API Base URL:', API_BASE_URL);
+console.log('🔍 All env vars:', import.meta.env);
 
 
 // Create axios instance with basic settings
