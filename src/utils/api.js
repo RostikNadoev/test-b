@@ -7,7 +7,6 @@ console.log('🌐 API Base URL:', API_BASE_URL);
 console.log('🔍 All env vars:', import.meta.env);
 
 
-// Create axios instance with basic settings
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
