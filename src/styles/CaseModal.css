@@ -456,3 +456,42 @@
   position: relative;
   z-index: 1002 !important;
 }
+
+/* Стили для загрузки */
+.modal-loading-items {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.modal-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.modal-error {
+  padding: 40px 20px;
+  text-align: center;
+  color: #ff6b6b;
+}
+
+.modal-button-disabled {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+}
+
+.modal-processing-text {
+  font-size: 14px;
+  color: white;
+}
