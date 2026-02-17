@@ -21,7 +21,7 @@ class PvpSocket {
       return;
     }
 
-    const wsUrl = import.meta.env.VITE_WSP_URL;
+     const wsUrl = 'wss://shamefully-gifted-catbird.cloudpub.ru/ws/pvp';
     let url = `${wsUrl}?token=${token}`;
     
     if (gameId) {
