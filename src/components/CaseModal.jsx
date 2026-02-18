@@ -7,7 +7,6 @@ import { useBalance } from '../contexts/BalanceContext';
 // Импортируем иконки
 import tonIcon from '../assets/MainPage/cases/tonicon.png';
 import starsIcon from '../assets/MainPage/cases/starsicon.png';
-import star from '../assets/MainPage/star1.png';
 import cardton1 from '../assets/MainPage/chest1/ton.png';
 
 export default function CaseModal({ caseItem, onClose, onNavigate }) {
@@ -23,16 +22,21 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
     const loadCaseData = async () => {
       try {
         setIsLoading(true);
+        console.log(`📦 Загрузка данных кейса ID: ${caseItem.id}`);
+        
         const response = await casesApi.getCaseById(caseItem.id);
+        console.log('✅ Данные кейса загружены:', response);
+        
         setCaseData(response.case);
         setCaseItems(response.items || []);
-        console.log(`✅ Case ${caseItem.id} data loaded:`, response.case);
       } catch (error) {
-        console.error('❌ Error loading case data:', error);
-        // Используем данные из props как fallback
+        console.error('❌ Ошибка загрузки данных кейса:', error);
+        // Используем данные из caseItem как fallback
         setCaseData({ 
-          price_ton: parseFloat(caseItem.tonPrice) || 2, 
-          price_stars: parseFloat(caseItem.starsPrice) || 200 
+          id: caseItem.id,
+          name: caseItem.name,
+          price_ton: caseItem.price?.ton || caseItem.price_ton || 2, 
+          price_stars: caseItem.price?.stars || caseItem.price_stars || 200 
         });
         setCaseItems([]);
       } finally {
@@ -60,7 +64,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
     
     if (isDemoMode) {
       console.log('Demo mode: opening spin page...');
-      onNavigate('spin1', { isDemo: true });
+      onNavigate('spin', { caseId: caseItem.id, isDemo: true });
       onClose();
       return;
     }
@@ -70,7 +74,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
       return;
     }
     
-    const requiredAmount = caseData.price_ton || parseFloat(caseItem.tonPrice) || 2;
+    const requiredAmount = caseData.price_ton || 2;
     
     try {
       await loadBalances();
@@ -91,7 +95,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
   const handleStarClick = async () => {
     if (isDemoMode) {
       console.log('Demo mode: opening spin page...');
-      onNavigate('spin1', { isDemo: true });
+      onNavigate('spin', { caseId: caseItem.id, isDemo: true });
       onClose();
       return;
     }
@@ -106,7 +110,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
         return;
       }
       
-      const starsCount = caseData.price_stars || parseFloat(caseItem.starsPrice) || 200;
+      const starsCount = caseData.price_stars || 200;
       console.log(`Opening case for ${starsCount} stars...`);
       
       if (checkBalance('stars', starsCount)) {
@@ -133,10 +137,9 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
       
       const apiItem = result.item;
       console.log('🔍 API item from open:', apiItem);
-      console.log('📦 Available case items:', caseItems);
       
+      // Ищем полные данные предмета
       let fullItemData = null;
-      
       if (caseItems.length > 0 && apiItem.index) {
         fullItemData = caseItems.find(item => 
           item.item_index === apiItem.index || 
@@ -145,6 +148,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
         console.log('🔍 Found full item data:', fullItemData);
       }
       
+      // Формируем данные для отображения
       let img = cardton1;
       let price = '0 TON';
       let name = apiItem.name || 'Reward';
@@ -191,13 +195,14 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
           fullDataFound: !!fullItemData
         },
         apiResponse: result,
-        fullItemData: fullItemData
+        fullItemData: fullItemData,
+        caseId: caseItem.id
       };
       
-      console.log('🎯 Formatted winData for Spin1Screen:', winData);
+      console.log('🎯 Formatted winData for SpinScreen:', winData);
       
       onClose();
-      onNavigate('spin1', { winData });
+      onNavigate('spin', { winData, caseId: caseItem.id });
       
     } catch (error) {
       console.error('❌ Error opening case:', error);
@@ -225,7 +230,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
   // Определяем содержимое рамок из данных API
   const getFrameContents = () => {
     if (caseItems.length > 0) {
-      return caseItems.map((item, index) => {
+      return caseItems.map((item) => {
         let img;
         let price;
         
@@ -246,7 +251,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
           itemType: item.item_type, 
           imageUrl: item.image_url,
           id: item.id,
-          index: item.index,
+          index: item.index || item.item_index,
           name: item.name,
           originalItem: item
         };
@@ -284,7 +289,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
     if (caseId === 4) return 'modal-ton-button-case4';
     if (caseId === 5) return 'modal-ton-button-case5';
     if (caseId === 6) return 'modal-ton-button-case6';
-    return 'modal-ton-button-case1'; // По умолчанию
+    return 'modal-ton-button-case1';
   };
 
   const getStarsButtonClass = () => {
@@ -296,7 +301,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
     if (caseId === 4) return 'modal-stars-button-case4';
     if (caseId === 5) return 'modal-stars-button-case5';
     if (caseId === 6) return 'modal-stars-button-case6';
-    return 'modal-stars-button-case1'; // По умолчанию
+    return 'modal-stars-button-case1';
   };
 
   const tonButtonClass = getTonButtonClass();
@@ -308,7 +313,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
         <div className="case-modal" onClick={(e) => e.stopPropagation()}>
           <button className="modal-close" onClick={onClose}>×</button>
           
-          <h2 className="modal-title">{caseItem.title}</h2>
+          <h2 className="modal-title">{caseData?.name || caseItem.name}</h2>
           
           <div className="modal-items-section">
             <div className="modal-items-label">WHAT'S INSIDE?</div>
@@ -355,7 +360,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
                     <>
                       <img src={tonIcon} alt="TON" className="modal-ton-icon" />
                       <span className="modal-button-number">
-                        {caseData?.price_ton || caseItem.tonPrice || '2'}
+                        {caseData?.price_ton || '2'}
                       </span>
                     </>
                   )}
@@ -374,7 +379,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
                     <>
                       <img src={starsIcon} alt="STARS" className="modal-stars-icon" />
                       <span className="modal-button-number">
-                        {caseData?.price_stars || caseItem.starsPrice || '200'}
+                        {caseData?.price_stars || '200'}
                       </span>
                     </>
                   )}

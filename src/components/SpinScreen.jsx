@@ -1,13 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/SpinScreen.css';
 import { useDemo } from '../contexts/DemoContext';
-import { useBalance } from '../contexts/BalanceContext';
-import { casesApi, giftsApi } from '../utils/api';
+import { casesApi } from '../utils/api';
 
-import cardtonDefault from '../assets/MainPage/chest1/ton.png';
+// Импортируем изображения для разных кейсов
+import cardton1 from '../assets/MainPage/chest1/ton.png';
+import cardton2 from '../assets/MainPage/chest2/ton.png';
+import cardton3 from '../assets/MainPage/chest3/ton.png';
 import arrow from '../assets/SpinPage/arrow.png';
 
-export default function SpinScreen({ onNavigate, winData }) {
+// Маппинг изображений по ID кейса
+const caseImages = {
+  1: cardton1,
+  2: cardton2,
+  3: cardton3,
+  4: cardton1, // Можно заменить на свои
+  5: cardton2,
+  6: cardton3
+};
+
+export default function SpinScreen({ onNavigate, caseId, winData, isDemo }) {
   const { 
     isDemoMode, 
     demoBalance, 
@@ -15,10 +27,7 @@ export default function SpinScreen({ onNavigate, winData }) {
     addToDemoBalance, 
     addToDemoInventory 
   } = useDemo();
-  
-  const { balances, updateBalances } = useBalance();
 
-  // Состояния
   const [isLoading, setIsLoading] = useState(true);
   const [caseItems, setCaseItems] = useState([]);
   const [winningItem, setWinningItem] = useState(null);
@@ -27,212 +36,251 @@ export default function SpinScreen({ onNavigate, winData }) {
   const [showModal, setShowModal] = useState(false);
   const [particles, setParticles] = useState([]);
   const [glowOpacity, setGlowOpacity] = useState(0);
+  const [hasCharged, setHasCharged] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  
-  // Данные из API
-  const [payment, setPayment] = useState(null);
-  const [drop, setDrop] = useState(null);
-  const [result, setResult] = useState(null);
-  const [netChange, setNetChange] = useState(null);
-  const [balanceAfter, setBalanceAfter] = useState(null);
-  const [inventoryItemId, setInventoryItemId] = useState(null);
   
   const scrollerRef = useRef(null);
   const animationRef = useRef(null);
 
-  // Базовый URL
-  const BASE_URL = 'https://shamefully-gifted-catbird.cloudpub.ru';
+  // Определяем, какое изображение использовать для этого кейса
+  const getDefaultImage = () => {
+    return caseImages[caseId] || cardton1;
+  };
 
-  // Функция для получения URL изображения
+  // Функция для получения URL изображения из API
   const getImageUrl = (imagePath) => {
-    if (!imagePath) return cardtonDefault;
+    if (!imagePath) return getDefaultImage();
     
     if (imagePath.startsWith('/static/')) {
-      return `${BASE_URL}${imagePath}`;
+      return `https://shamefully-gifted-catbird.cloudpub.ru${imagePath}`;
     }
     
     if (imagePath.trim() === '') {
-      return cardtonDefault;
+      return getDefaultImage();
     }
     
     return imagePath;
   };
 
-  // Загрузка данных при монтировании
+  // Загрузка данных кейса из API
   useEffect(() => {
-    const loadData = async () => {
+    const loadCaseData = async () => {
+      if (!caseId && !winData) {
+        console.error('❌ Нет caseId или winData');
+        return;
+      }
+
       try {
         setIsLoading(true);
         
-        // Парсим winData
-        const data = winData?.winData || winData;
-        console.log('📦 SpinScreen winData:', data);
-        
-        if (!data) {
-          console.error('❌ Нет данных для спина');
-          setTimeout(() => onNavigate('cases'), 100);
+        // Если есть winData, используем его
+        if (winData?.winningItem) {
+          console.log('📦 Используем winData для кейса');
+          setWinningItem(winData.winningItem);
+          
+          // Если есть полные данные предметов, используем их
+          if (winData.fullItemData) {
+            setCaseItems([winData.fullItemData]);
+          } else {
+            // Загружаем предметы кейса
+            await loadCaseItems();
+          }
           return;
         }
         
-        // Сохраняем данные из API
-        if (data.apiResponse) {
-          const api = data.apiResponse;
-          setPayment(api.payment);
-          setDrop(api.drop);
-          setResult(api.result);
-          setNetChange(api.net_change);
-          setBalanceAfter(api.balance_after);
+        // Иначе загружаем данные по caseId
+        await loadCaseItems();
+        
+      } catch (error) {
+        console.error('❌ Ошибка загрузки данных кейса:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const loadCaseItems = async () => {
+      if (!caseId) return;
+      
+      console.log(`🔄 Загрузка данных кейса ${caseId} для спина...`);
+      const response = await casesApi.getCaseById(caseId);
+      console.log('📦 Данные кейса загружены, items count:', response.items?.length);
+      
+      if (response.items && response.items.length > 0) {
+        const items = response.items.map((item) => {
+          let img = getDefaultImage();
+          let price = '0 TON';
           
-          // Обновляем баланс в контексте
-          if (api.balance_after && !isDemoMode) {
-            updateBalances(api.balance_after);
+          if (item.item_type === 'tg_gift') {
+            img = getImageUrl(item.image_url);
+            price = `${item.price_ton} TON`;
+          } else if (item.item_type === 'reward_ton') {
+            price = item.name || `${item.price_ton} TON`;
           }
           
-          // ID предмета в инвентаре (если есть)
-          if (api.result?.inventory_add?.inventory_item_id) {
-            setInventoryItemId(api.result.inventory_add.inventory_item_id);
-          }
-        }
-        
-        // Определяем выигрышный предмет
-        let targetItem = null;
-        
-        if (data.winningItem) {
-          targetItem = data.winningItem;
-        } else if (data.drop) {
-          // Формируем из drop
-          const dropItem = data.drop;
-          targetItem = {
-            img: getImageUrl(dropItem.image_url),
-            price: data.result?.reward 
-              ? `${data.result.reward.amount} ${data.result.reward.currency.toUpperCase()}`
-              : dropItem.title || 'Item',
-            name: dropItem.title || 'Reward',
-            item_type: dropItem.type,
-            index: dropItem.case_item_id,
-            rarity: 'common',
-            image_url: dropItem.image_url,
-            price_ton: data.result?.reward?.amount,
-            id: dropItem.case_item_id
+          return {
+            img,
+            price,
+            name: item.name || 'Item',
+            item_type: item.item_type,
+            id: item.id,
+            image_url: item.image_url,
+            item_index: item.item_index,
+            index: item.item_index,
+            rarity: item.rarity || 'common',
+            price_ton: item.price_ton
           };
+        });
+        
+        console.log('✅ Создано предметов из API:', items.length);
+        setCaseItems(items);
+      }
+    };
+
+    loadCaseData();
+  }, [caseId, winData]);
+
+  // Инициализация выигрышного предмета и запуск спина
+  useEffect(() => {
+    if (isLoading) return;
+    
+    console.log('🔄 SpinScreen инициализация');
+    console.log('📦 winData получены:', winData);
+    console.log('📦 caseItems загружены:', caseItems.length);
+    
+    const initializeData = () => {
+      let targetItem = null;
+      
+      // Проверяем, демо ли режим
+      const isDemoActive = isDemoMode || isDemo === true;
+      
+      // ПРОВЕРКА: ДЕМО РЕЖИМ
+      if (isDemoActive && !winData?.winningItem) {
+        console.log('🎮 ДЕМО РЕЖИМ: Используем случайный предмет');
+        if (caseItems.length > 0) {
+          const randomIndex = Math.floor(Math.random() * caseItems.length);
+          targetItem = { ...caseItems[randomIndex], isDemo: true };
         } else {
-          // Демо режим или заглушка
           targetItem = {
-            img: cardtonDefault,
+            img: getDefaultImage(),
             price: '1 TON',
             name: 'Demo Item',
             item_type: 'reward_ton',
             isDemo: true
           };
         }
+      } 
+      // РЕАЛЬНЫЙ РЕЖИМ С winData
+      else if (!isDemoActive && winData?.winningItem) {
+        console.log('📡 РЕАЛЬНЫЙ РЕЖИМ: Используем winData');
         
-        setWinningItem(targetItem);
+        const apiItem = winData.winningItem;
         
-        // Загружаем предметы кейса (для фреймов)
-        try {
-          const caseId = data.caseId || (data.apiResponse?.case_id);
-          if (caseId) {
-            // Здесь должен быть запрос на получение всех предметов кейса
-            // Пока генерируем случайные
-            const mockItems = [];
-            for (let i = 0; i < 20; i++) {
-              mockItems.push({
-                img: cardtonDefault,
-                price: `${(Math.random() * 5).toFixed(2)} TON`,
-                name: `Item ${i + 1}`,
-                item_type: Math.random() > 0.5 ? 'reward_ton' : 'tg_gift',
-                id: i + 1
-              });
-            }
-            setCaseItems(mockItems);
-          }
-        } catch (e) {
-          console.warn('⚠️ Не удалось загрузить предметы кейса:', e);
-          setCaseItems([]);
-        }
+        console.log('🔍 Предмет из /open:', {
+          индекс: apiItem.index,
+          имя: apiItem.name,
+          цена: apiItem.price,
+          тип: apiItem.item_type
+        });
         
-      } catch (error) {
-        console.error('❌ Ошибка загрузки данных спина:', error);
-      } finally {
-        setIsLoading(false);
+        targetItem = {
+          img: apiItem.img || getDefaultImage(),
+          price: apiItem.price || '0 TON',
+          name: apiItem.name || 'Reward',
+          item_type: apiItem.item_type || 'reward_ton',
+          index: apiItem.index,
+          item_index: apiItem.index,
+          rarity: apiItem.rarity || 'common',
+          fromApi: true,
+          isRealWin: true,
+          originalWinData: winData
+        };
+        
+        console.log('🎯 ИТОГОВЫЙ выигрышный предмет:', {
+          имя: targetItem.name,
+          цена: targetItem.price
+        });
+      } 
+      // РЕАЛЬНЫЙ РЕЖИМ БЕЗ winData (ошибка)
+      else if (!isDemoActive && !winData) {
+        console.error('❌ РЕАЛЬНЫЙ РЕЖИМ: нет winData, возвращаем к кейсам');
+        alert('Ошибка загрузки данных выигрыша. Пожалуйста, попробуйте снова.');
+        setTimeout(() => onNavigate('cases'), 100);
+        return;
       }
+      
+      setWinningItem(targetItem);
+      
+      const generatedFrames = generateFrames(targetItem);
+      setFrames(generatedFrames);
+      
+      setTimeout(() => {
+        console.log('▶️ ЗАПУСК СПИНА');
+        console.log('🎯 Целевой предмет:', targetItem?.name, targetItem?.price);
+        startSpin(targetItem);
+      }, 200);
     };
 
-    loadData();
-  }, [winData, onNavigate, isDemoMode, updateBalances]);
-
-  // Генерация фреймов после загрузки
-  useEffect(() => {
-    if (isLoading || !winningItem) return;
-    
-    console.log('🎯 Генерация фреймов для:', winningItem.name);
-    const generatedFrames = generateFrames(winningItem);
-    setFrames(generatedFrames);
-    
-    // Запуск спина
-    setTimeout(() => {
-      startSpin();
-    }, 200);
-    
-  }, [isLoading, winningItem]);
+    initializeData();
+  }, [isLoading, isDemoMode, isDemo, winData, caseItems]);
 
   // Генерация фреймов для анимации
   const generateFrames = (targetItem) => {
+    console.log('🖼️ Генерация фреймов для предмета:', targetItem?.name);
+    
     const frames = [];
     const itemsForRandom = caseItems.length > 0 ? caseItems : [];
     
-    // 95 случайных фреймов
+    // 95 случайных фреймов (прокрутка)
     for (let i = 0; i < 95; i++) {
       if (itemsForRandom.length > 0) {
         const randomIndex = Math.floor(Math.random() * itemsForRandom.length);
         frames.push(itemsForRandom[randomIndex]);
       } else {
         frames.push({
-          img: cardtonDefault,
-          price: `${(Math.random() * 5).toFixed(2)} TON`,
-          name: 'Random',
+          img: getDefaultImage(),
+          price: '0.5 TON',
+          name: 'Default',
           item_type: 'reward_ton'
         });
       }
     }
     
-    // Целевой предмет (3-й с конца)
+    // Целевой фрейм (выигранный предмет) - третий с конца
+    console.log('🎯 Добавляем ЦЕЛЕВОЙ фрейм (3й с конца):', targetItem?.name);
     frames.push(targetItem);
     
-    // Еще 2 случайных после
+    // Еще 2 случайных фрейма после выигрышного
     for (let i = 0; i < 2; i++) {
       if (itemsForRandom.length > 0) {
         const randomIndex = Math.floor(Math.random() * itemsForRandom.length);
         frames.push(itemsForRandom[randomIndex]);
-      } else {
-        frames.push({
-          img: cardtonDefault,
-          price: `${(Math.random() * 5).toFixed(2)} TON`,
-          name: 'Random',
-          item_type: 'reward_ton'
-        });
       }
     }
     
-    console.log(`📊 Сгенерировано ${frames.length} фреймов, целевой индекс: ${frames.length - 3}`);
+    console.log('📊 Всего фреймов:', frames.length);
+    console.log('🎯 Индекс целевого фрейма:', frames.length - 3);
+    
     return frames;
   };
 
   // Запуск спина
-  const startSpin = () => {
+  const startSpin = (targetItem) => {
     console.log('🎰 Запуск спина');
     
     // В демо-режиме списываем баланс
-    if (isDemoMode && payment) {
-      if (demoBalance < (payment.charged?.amount || 2)) {
+    if ((isDemoMode || isDemo) && !hasCharged && targetItem) {
+      const price = parseFloat(targetItem.price) || 2;
+      if (demoBalance < price) {
         alert("Not enough TON in demo balance!");
         onNavigate('cases');
         return;
       }
-      removeFromDemoBalance(payment.charged?.amount || 2);
+      removeFromDemoBalance(price);
+      setHasCharged(true);
     }
 
     setIsSpinning(true);
+    console.log('✅ Спин запущен');
   };
 
   // Анимация спина
@@ -252,7 +300,10 @@ export default function SpinScreen({ onNavigate, winData }) {
     const visibleWidth = scroller.offsetWidth;
     const targetScroll = targetFrameIndex * totalFrameWidth - (visibleWidth / 2) + (frameWidth / 2);
 
-    console.log('📐 Анимация:', { targetFrameIndex, targetScroll });
+    console.log('📐 Параметры анимации:', {
+      targetFrameIndex,
+      targetItem: frames[targetFrameIndex]?.name
+    });
 
     const duration = 8000;
     const glowStartTime = duration - 1500;
@@ -276,6 +327,7 @@ export default function SpinScreen({ onNavigate, winData }) {
       if (progress < 1) {
         animationRef.current = requestAnimationFrame(animate);
       } else {
+        console.log('✅ Анимация завершена');
         scroller.scrollLeft = targetScroll;
         setGlowOpacity(1);
         setIsSpinning(false);
@@ -312,72 +364,52 @@ export default function SpinScreen({ onNavigate, winData }) {
     stopAnimation();
   };
 
-  // Продажа предмета (для TON наград)
+  // Продажа предмета (только для TON наград)
   const handleSell = async () => {
     if (isProcessing) return;
     setIsProcessing(true);
 
-    try {
-      if (isDemoMode && winningItem) {
-        // Демо режим
-        const priceValue = parseFloat(winningItem.price.replace(/[^\d.-]/g, ''));
-        addToDemoBalance(priceValue);
-      } else if (winningItem && result?.reward) {
-        // Реальный режим - предмет уже начислен, просто переходим назад
-        console.log('💰 Предмет продан (уже начислен)');
-      }
-      
+    if ((isDemoMode || isDemo) && winningItem) {
+      const priceValue = parseFloat(winningItem.price.replace(/[^\d.-]/g, ''));
+      addToDemoBalance(priceValue);
       setShowModal(false);
       onNavigate('cases');
-      
-    } catch (error) {
-      console.error('❌ Ошибка продажи:', error);
-      alert('Error selling item');
-    } finally {
-      setIsProcessing(false);
+    } else if (winningItem && !isDemoMode) {
+      setShowModal(false);
+      onNavigate('cases');
     }
+
+    setIsProcessing(false);
   };
 
-  // Добавление в инвентарь (для tg_gift)
+  // Добавление в инвентарь (только для tg_gift)
   const handleAddToInventory = async () => {
     if (isProcessing) return;
     setIsProcessing(true);
 
-    try {
-      if (isDemoMode && winningItem) {
-        // Демо режим
-        addToDemoInventory(winningItem);
-      } else if (inventoryItemId) {
-        // В реальном режиме предмет уже в инвентаре
-        console.log(`📦 Предмет ${inventoryItemId} уже в инвентаре`);
-      }
-      
+    if ((isDemoMode || isDemo) && winningItem) {
+      addToDemoInventory(winningItem);
       setShowModal(false);
       onNavigate('cases');
-      
-    } catch (error) {
-      console.error('❌ Ошибка:', error);
-      alert('Error adding to inventory');
-    } finally {
-      setIsProcessing(false);
+    } else if (winningItem && !isDemoMode) {
+      setShowModal(false);
+      onNavigate('cases');
     }
+
+    setIsProcessing(false);
   };
 
-  // Проверка типа предмета
-  const isTonReward = () => {
-    if (!winningItem) return false;
-    
-    if (winningItem.item_type === 'reward_ton') return true;
-    if (result?.reward) return true;
-    
-    return false;
+  // Проверка, является ли предмет TON наградой
+  const isCardtonItem = (item) => {
+    return item && item.item_type === 'reward_ton';
   };
 
   // Создание снежинок
   useEffect(() => {
     const createParticles = () => {
       const newParticles = [];
-      for (let i = 0; i < 25; i++) {
+      const particleCount = 25;
+      for (let i = 0; i < particleCount; i++) {
         newParticles.push({
           id: i,
           left: Math.random() * 100,
@@ -407,7 +439,7 @@ export default function SpinScreen({ onNavigate, winData }) {
     return (
       <div className="spin-screen-content loading-spin">
         <div className="spinner"></div>
-        <p>Loading spin...</p>
+        <p>Loading spin data...</p>
       </div>
     );
   }
@@ -462,12 +494,12 @@ export default function SpinScreen({ onNavigate, winData }) {
             >
               <div className="spin-item-content">
                 <img 
-                  src={content?.img || cardtonDefault} 
+                  src={content?.img || getDefaultImage()} 
                   alt={`Item ${index + 1}`} 
                   className="spin-item-image" 
                   loading="lazy" 
                   onError={(e) => {
-                    e.target.src = cardtonDefault;
+                    e.target.src = getDefaultImage();
                   }}
                 />
                 <div className={getPriceClass(content?.price || '0 TON')}>
@@ -497,12 +529,12 @@ export default function SpinScreen({ onNavigate, winData }) {
             <div className="winning-frame-large">
               <div className="winning-content-large">
                 <img 
-                  src={winningItem.img || cardtonDefault} 
+                  src={winningItem.img || getDefaultImage()} 
                   alt="Winning Item" 
                   className="winning-image-large" 
                   loading="lazy" 
                   onError={(e) => {
-                    e.target.src = cardtonDefault;
+                    e.target.src = getDefaultImage();
                   }}
                 />
                 <div className={`${getPriceClass(winningItem.price)} winning-price-large`}>
@@ -512,13 +544,13 @@ export default function SpinScreen({ onNavigate, winData }) {
               <div className="purple-border-overlay"></div>
             </div>
             
-            {isTonReward() ? (
+            {isCardtonItem(winningItem) ? (
               <button 
                 className="modal-secondary-button modal-single-button" 
                 onClick={handleSell}
                 disabled={isProcessing}
               >
-                {isProcessing ? 'PROCESSING...' : `CLAIM ${winningItem.price}`}
+                {isProcessing ? 'PROCESSING...' : `SELL FOR ${winningItem.price}`}
               </button>
             ) : (
               <button 

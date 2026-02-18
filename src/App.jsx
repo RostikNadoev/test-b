@@ -5,18 +5,13 @@ import LoadingScreen from './components/LoadingScreen';
 import MainScreen from './components/MainScreen';
 import PvpScreen from './components/PvpScreen';
 import TasksScreen from './components/TasksScreen';
-import Card1Screen from './components/Card1Screen';
-import Card2Screen from './components/Card2Screen';
-import Card3Screen from './components/Card3Screen';
 import ProfileScreen from './components/ProfileScreen';
-import Spin3Screen from './components/Spin3Screen';
-import Spin2Screen from './components/Spin2Screen';
-import Spin1Screen from './components/Spin1Screen';
 import MainLayout from './components/MainLayout';
 import LuckyBalls from './components/LuckyBalls';
 import Rocket from './components/Rocket.jsx';
 import CasesScreen from './components/CasesScreen';
 import PlinkoScreen from './components/PlinkoScreen';
+import SpinScreen from './components/SpinScreen'; // Единый SpinScreen
 
 // Импортируем AssetLoader
 import { preloadImages } from './utils/AssetLoader';
@@ -88,14 +83,21 @@ import gameCard1 from './assets/MainPage/game-card-1.png';
 import gameCard2 from './assets/MainPage/ttmb.png';
 import gameCard3 from './assets/MainPage/cases.png';
 
+// Cases
+import firstCase from './assets/MainPage/cases/firstcasee.png';
+import secondCase from './assets/MainPage/cases/secondcasee.png';
+import thirdCase from './assets/MainPage/cases/thirdcasee.png';
+import fourthCase from './assets/MainPage/cases/fourthcasee.png';
+import fifthCase from './assets/MainPage/cases/fifthcasee.png';
+import sixthCase from './assets/MainPage/cases/esixthcase.png';
+
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticating, setIsAuthenticating] = useState(true);
   const [currentScreen, setCurrentScreen] = useState('main');
-  const [currentCardIndex, setCurrentCardIndex] = useState(2);
-  const [screenParams, setScreenParams] = useState({}); // Состояние для хранения параметров экрана
+  const [screenParams, setScreenParams] = useState({});
   const [userData, setUserData] = useState(null);
-  const [tg, setTg] = useState(null); // Состояние для Telegram WebApp
+  const [tg, setTg] = useState(null);
 
   // Функция для обновления высоты viewport
   const applyViewport = (telegramApp) => {
@@ -397,7 +399,7 @@ export default function App() {
         html, body, #root {
           overscroll-behavior: none !important;
           -webkit-overflow-scrolling: none !important;
-          touch-action: manipulation !important; /* вместо 'none' для лучшей совместимости */
+          touch-action: manipulation !important;
           position: fixed !important;
           width: 100% !important;
           height: 100% !important;
@@ -462,15 +464,6 @@ export default function App() {
     
     // Сохраняем параметры для экрана
     setScreenParams(params);
-    
-    // Если в параметрах есть cardIndex, используем его
-    if (params.cardIndex !== undefined) {
-      setCurrentCardIndex(params.cardIndex);
-    } else if (['card1', 'card2', 'card3'].includes(screen)) {
-      // По умолчанию для карточных экранов
-      setCurrentCardIndex(2);
-    }
-    
     setCurrentScreen(screen);
   }, []);
 
@@ -482,7 +475,7 @@ export default function App() {
     }
 
     // Страницы, где нужна кнопка "Назад"
-    const backButtonScreens = ['profile', 'card1', 'card2', 'card3', 'luckyballs', 'rocket', 'cases','plinko'];
+    const backButtonScreens = ['profile', 'luckyballs', 'rocket', 'cases', 'plinko', 'spin'];
     
     if (backButtonScreens.includes(screen)) {
       try {
@@ -566,7 +559,13 @@ export default function App() {
     timerImg,
     gameCard1,
     gameCard2,
-    gameCard3
+    gameCard3,
+    firstCase,
+    secondCase,
+    thirdCase,
+    fourthCase,
+    fifthCase,
+    sixthCase
   ];
 
   // Функция загрузки и анимации
@@ -605,39 +604,15 @@ export default function App() {
         return <PvpScreen onNavigate={navigateTo} />;
       case 'tasks':
         return <TasksScreen onNavigate={navigateTo} />;
-        case 'plinko':
-  return <PlinkoScreen onNavigate={navigateTo} />;
-      case 'card1':
-        return <Card1Screen 
-          onNavigate={navigateTo} 
-          currentCardIndex={currentCardIndex} 
-        />;
-      case 'card2':
-        return <Card2Screen 
-          onNavigate={navigateTo} 
-          currentCardIndex={currentCardIndex} 
-        />;
-      case 'card3':
-        return <Card3Screen 
-          onNavigate={navigateTo} 
-          currentCardIndex={currentCardIndex} 
-        />;
+      case 'plinko':
+        return <PlinkoScreen onNavigate={navigateTo} />;
       case 'luckyballs': 
-        return <LuckyBalls 
-          onNavigate={navigateTo} 
-          currentCardIndex={currentCardIndex} 
-        />;
+        return <LuckyBalls onNavigate={navigateTo} />;
       case 'rocket':
-        return <Rocket 
-          onNavigate={navigateTo} 
-          currentCardIndex={currentCardIndex}
-        />;
+        return <Rocket onNavigate={navigateTo} />;
       case 'cases':
-        return <CasesScreen 
-          onNavigate={navigateTo} 
-          currentCardIndex={currentCardIndex}
-        />;
-      case 'spin1':
+        return <CasesScreen onNavigate={navigateTo} />;
+      case 'spin':
         return (
           <MainLayout
             onNavigate={navigateTo}
@@ -645,46 +620,17 @@ export default function App() {
             hideFooter={true}
             customBackground={'../assets/SpinPage/back.png'}
           >
-            <Spin1Screen 
+            <SpinScreen 
               onNavigate={navigateTo} 
+              caseId={screenParams.caseId}
               winData={screenParams.winData}
-            />
-          </MainLayout>
-        );
-      case 'spin2':
-        return (
-          <MainLayout
-            onNavigate={navigateTo}
-            currentScreen={currentScreen}
-            hideFooter={true}
-            customBackground={'../assets/SpinPage/back.png'}
-          >
-            <Spin2Screen 
-              onNavigate={navigateTo} 
-              winData={screenParams.winData}
-            />
-          </MainLayout>
-        );
-      case 'spin3':
-        return (
-          <MainLayout
-            onNavigate={navigateTo}
-            currentScreen={currentScreen}
-            hideFooter={true}
-            customBackground={'../assets/SpinPage/back.png'}
-          >
-            <Spin3Screen 
-              onNavigate={navigateTo} 
-              winData={screenParams.winData}
+              isDemo={screenParams.isDemo}
             />
           </MainLayout>
         );
       case 'main':
       default:
-        return <MainScreen 
-          onNavigate={navigateTo} 
-          initialCardIndex={currentCardIndex} 
-        />;
+        return <MainScreen onNavigate={navigateTo} />;
     }
   };
 

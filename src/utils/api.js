@@ -389,6 +389,8 @@ export const tonApi = {
   }
 };
 
+// Добавьте этот метод в объект casesApi в вашем api.js
+
 export const casesApi = {
   // Получить список всех активных кейсов
   async getAllCases() {
@@ -406,7 +408,6 @@ export const casesApi = {
         return response.data;
       } else {
         console.warn('⚠️ Unexpected response structure:', response.data);
-        // Возвращаем пустой массив или дефолтные данные
         return [];
       }
     } catch (error) {
