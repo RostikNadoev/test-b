@@ -560,7 +560,7 @@
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
   font-size: 14px;
-  background: linear-gradient(180deg, rgb(161, 68, 175), rgba(106, 50, 188, 1));
+  background: linear-gradient(180deg, rgb(161, 68, 175), rgb(106, 50, 190));
   border: 2px solid white;
   border-radius: 10px;
   color: white;
