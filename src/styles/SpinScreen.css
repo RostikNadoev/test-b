@@ -437,4 +437,154 @@
 }
 
 
+/* Уникальные стили для модалки SpinScreen (чтобы не конфликтовать с CaseModal) */
+.spin-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: inherit;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  z-index: 100;
+  pointer-events: auto;
+  backdrop-filter: blur(5px);
+}
 
+.spin-modal-content {
+  width: 100%;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  box-sizing: border-box;
+  background: inherit;
+  transform: translateY(100%);
+  animation: spinSlideUp 0.5s forwards;
+}
+
+@keyframes spinSlideUp {
+  to {
+    transform: translateY(0);
+  }
+}
+
+.spin-winning-frame-large {
+  width: 260px;
+  max-width: 350px;
+  aspect-ratio: 100 / 120;
+  background-image: url('../assets/MainPage/chest3/back.png');
+  background-size: cover;
+  background-position: center;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  margin-top: 20px;
+  position: relative;
+}
+
+.spin-winning-content-large {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.spin-winning-image-large {
+  max-width: 69%;
+  max-height: 70%;
+  object-fit: contain;
+  margin-bottom: 8px;
+}
+
+.spin-winning-price-large {
+  font-size: 18px !important;
+  padding-top: 15px;
+  line-height: 100%;
+  letter-spacing: 0%;
+  paint-order: stroke fill;
+}
+
+.spin-purple-border-overlay {
+  position: absolute;
+  top: 10%;
+  left: 6%;
+  width: 88%;
+  height: 80%;
+  pointer-events: none; 
+  border-radius: 15px;
+  border: 5px solid transparent;
+  background-clip: padding-box;
+  box-shadow: 
+    inset 0 0 10px rgba(255, 255, 255, 0.3),
+    0 0 20px rgba(106, 50, 188, 0.7),
+    0 0 30px rgba(106, 50, 188, 0.4);
+  z-index: 105;
+}
+
+.spin-modal-secondary-button {
+  padding: 15px 40px;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  background: linear-gradient(180deg, rgb(235, 146, 248), rgb(135, 74, 226));
+  border: 2px solid white;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  min-width: 150px;
+  width: calc(100% - 40px);
+  max-width: 300px;
+  margin-bottom: -70px;
+}
+
+.spin-modal-single-button {
+  margin-bottom: 0px !important;
+  position: relative;
+  z-index: 110;
+}
+
+.spin-modal-exit-button {
+  padding: 15px 40px;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  background: linear-gradient(180deg, rgb(161, 68, 175), rgba(106, 50, 188, 1));
+  border: 2px solid white;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  min-width: 150px;
+  width: calc(100% - 40px);
+  max-width: 300px;
+}
+
+@media (max-height:690px) {
+  .spin-modal-secondary-button {
+    margin-bottom: -50px;
+  }
+}
+
+@media (max-height:663px) {
+  .spin-modal-secondary-button {
+    margin-bottom: -30px;
+  }
+}
+
+@media (max-height:637px) {
+  .spin-modal-secondary-button {
+    margin-bottom: -10px;
+  }
+}
