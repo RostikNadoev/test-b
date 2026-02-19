@@ -233,6 +233,19 @@
   }
 }
 
+@media (max-width: 348px) {
+  
+  .referral-text {
+    font-size: 13.7px;
+  }
+  
+  .referral-highlight {
+    height: 24px;
+    line-height: 28px;
+    font-size: 13.6px;
+  }
+}
+
 .content-section {
   width: clamp(260px, 85vw, 400px);
   height: 200px;
