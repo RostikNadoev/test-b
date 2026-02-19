@@ -2,8 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import '../styles/SpinScreen.css';
 import { useDemo } from '../contexts/DemoContext';
 import { casesApi } from '../utils/api';
-import Header from './Header';
-import rocketBack from '../assets/Plinko/Back.png';
 
 // Импортируем изображения для разных кейсов
 import cardton1 from '../assets/MainPage/chest1/ton.png';
@@ -464,7 +462,6 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo }) {
   if (isLoading) {
     return (
       <div className="spin-screen-content loading-spin">
-        <Header onNavigate={onNavigate} variant="cases" />
         <div className="spinner"></div>
         <p>Loading spin data...</p>
       </div>
@@ -473,9 +470,6 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo }) {
 
   return (
     <div className="spin-screen-content">
-      {/* Header ТОЛЬКО ОДИН РАЗ */}
-      <Header onNavigate={onNavigate} variant="cases" />
-
       {/* Снежинки */}
       <div className="snow-particles-container">
         {particles.map(particle => (
@@ -553,7 +547,7 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo }) {
         </button>
       </div>
 
-      {/* Модальное окно с выигрышем */}
+      {/* Модальное окно с выигрышем - УНИКАЛЬНЫЕ КЛАССЫ */}
       {showModal && winningItem && (
         <div className="spin-modal-overlay" onClick={(e) => e.stopPropagation()}>
           <div className="spin-modal-content">
