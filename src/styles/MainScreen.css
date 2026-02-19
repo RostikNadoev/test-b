@@ -130,6 +130,7 @@
   -webkit-text-stroke: 2px white;
   paint-order: stroke fill;
   text-stroke: 2px white; /* Для Firefox */
+  white-space: nowrap; /* ЗАПРЕЩАЕМ ПЕРЕНОС ТЕКСТА */
 }
 
 .referral-highlight {
