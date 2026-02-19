@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import '../styles/SpinScreen.css';
 import { useDemo } from '../contexts/DemoContext';
 import { casesApi } from '../utils/api';
+import Header from './Header'; // ДОБАВЛЯЕМ ИМПОРТ HEADER
+import rocketBack from '../assets/Plinko/Back.png'; // ДОБАВЛЯЕМ ИМПОРТ ФОНА
 
 // Импортируем изображения для разных кейсов
 import cardton1 from '../assets/MainPage/chest1/ton.png';
@@ -461,7 +463,19 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo }) {
 
   if (isLoading) {
     return (
-      <div className="spin-screen-content loading-spin">
+      <div 
+        className="spin-screen-content loading-spin"
+        style={{
+          backgroundImage: `url(${rocketBack})`,
+          backgroundSize: '100% 100%',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+          width: '100%',
+          height: '100%',
+          position: 'relative'
+        }}
+      >
+        <Header onNavigate={onNavigate} variant="cases" />
         <div className="spinner"></div>
         <p>Loading spin data...</p>
       </div>
@@ -469,7 +483,21 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo }) {
   }
 
   return (
-    <div className="spin-screen-content">
+    <div 
+      className="spin-screen-content"
+      style={{
+        backgroundImage: `url(${rocketBack})`,
+        backgroundSize: '100% 100%',
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center',
+        width: '100%',
+        height: '100%',
+        position: 'relative'
+      }}
+    >
+      {/* ДОБАВЛЯЕМ HEADER */}
+      <Header onNavigate={onNavigate} variant="cases" />
+
       {/* Снежинки */}
       <div className="snow-particles-container">
         {particles.map(particle => (
