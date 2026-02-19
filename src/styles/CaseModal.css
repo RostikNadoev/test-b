@@ -182,7 +182,7 @@
   max-width: 70%;
   max-height: 60%;
   object-fit: contain;
-  margin-bottom: 4px;
+  margin-bottom: 7px;
 }
 
 /* Цена в рамке (обычная) */
@@ -191,7 +191,7 @@
   font-weight: 800;
   font-style: normal;
   font-size: 11px;
-  line-height: 1.1;
+  line-height: 1.3;
   letter-spacing: 0%;
   color: white;
   text-align: center;
