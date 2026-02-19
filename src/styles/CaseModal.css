@@ -495,19 +495,3 @@
   color: white;
 }
 
-/* CaseModal.css - добавьте эти стили в конец файла */
-
-/* Фиксируем высоту для всех рамок в 6 кейсе */
-.case-modal[data-case-id="6"] .modal-item-frame {
-  height: 100%;
-  min-height: 0;
-}
-
-.case-modal[data-case-id="6"] .modal-item-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start; /* Выравнивание сверху */
-  height: 100%;
-  width: 100%;
-}
