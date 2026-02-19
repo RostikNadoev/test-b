@@ -1,9 +1,10 @@
+// SpinScreen.js - исправленный код
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/SpinScreen.css';
 import rocketBack from '../assets/Plinko/Back.png';
 import { useDemo } from '../contexts/DemoContext';
 import { casesApi } from '../utils/api';
-import Header from './Header'; // Импортируем Header
+import Header from './Header';
 
 // Импортируем изображения для разных кейсов
 import cardton1 from '../assets/MainPage/chest1/ton.png';
@@ -491,7 +492,10 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo }) {
         backgroundPosition: 'center'
       }}
     >
-      <Header onNavigate={onNavigate} variant="spin" />
+      {/* Добавляем контейнер для центрирования хедера */}
+      <div className="spin-header-wrapper">
+        <Header onNavigate={onNavigate} variant="spin" />
+      </div>
       
       <div className="spin-screen-content">
         {/* Снежинки */}
@@ -533,10 +537,10 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo }) {
                 }`}
                 style={{
                   boxShadow: index === frames.length - 3 
-                    ? `0 0 20px ${glowOpacity * 10}px rgba(58, 171, 237, ${glowOpacity * 0.8})` 
+                    ? `0 0 ${glowOpacity * 15}px rgba(58, 171, 237, ${glowOpacity * 0.5})` 
                     : undefined,
                   border: index === frames.length - 3 
-                    ? `3px solid rgba(58, 171, 237, ${glowOpacity})` 
+                    ? `2px solid rgba(58, 171, 237, ${glowOpacity * 0.7})` 
                     : undefined
                 }}
               >
@@ -571,7 +575,7 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo }) {
           </button>
         </div>
 
-        {/* Модальное окно с выигрышем - УНИКАЛЬНЫЕ КЛАССЫ */}
+        {/* Модальное окно с выигрышем */}
         {showModal && winningItem && (
           <div className="spin-modal-overlay" onClick={(e) => e.stopPropagation()}>
             <div className="spin-modal-content">
@@ -590,7 +594,12 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo }) {
                     {winningItem.price}
                   </div>
                 </div>
-                <div className="spin-purple-border-overlay"></div>
+                {/* Меняем фиолетовое свечение на темно-синее */}
+                <div className="spin-purple-border-overlay" style={{
+                  boxShadow: `inset 0 0 10px rgba(255, 255, 255, 0.3),
+                             0 0 15px rgba(58, 171, 237, 0.5),
+                             0 0 25px rgba(58, 171, 237, 0.3)`
+                }}></div>
               </div>
               
               {isCardtonItem(winningItem) ? (

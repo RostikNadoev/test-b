@@ -1,3 +1,5 @@
+/* SpinScreen.css - добавьте в начало файла */
+
 .spin-screen {
   width: 100%;
   height: var(--app-height, 100vh);
@@ -7,7 +9,17 @@
   position: relative;
 }
 
-/* Ваш существующий spin-screen-content - УБРАТЬ ФОН */
+/* Контейнер для центрирования хедера */
+.spin-header-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 10px 0 0 0;
+  position: relative;
+  z-index: 100;
+}
+
+/* Ваш существующий spin-screen-content */
 .spin-screen-content {
   width: 100%;
   flex: 1;
@@ -17,7 +29,6 @@
   justify-content: flex-end;
   align-items: center;
   overflow: hidden;
-  /* background свойства УДАЛЕНЫ - они теперь у spin-screen */
 }
 
 /* Остальные стили остаются без изменений */
@@ -32,6 +43,8 @@
   overflow: hidden;
   position: relative;
 }
+  
+/* ... все остальные ваши стили ... */
   
   /* Скроллер рамок - теперь горизонтальный */
   .spin-frames-scroller {
@@ -183,7 +196,7 @@
     font-family: 'KZ Supercell-Magic', sans-serif;
     font-weight: 800;
     font-size: 18px;
-    background: linear-gradient(180deg, rgba(237, 123, 255, 1), rgba(106, 50, 188, 1));
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border: 2px solid white;
     border-radius: 10px;
     color: white;
@@ -379,7 +392,7 @@
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
   font-size: 14px;
-  background: linear-gradient(180deg, rgb(235, 146, 248), rgb(135, 74, 226));
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: 2px solid white;
   border-radius: 10px;
   color: white;
@@ -425,7 +438,7 @@
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
   font-size: 14px;
-  background: linear-gradient(180deg, rgb(161, 68, 175), rgba(106, 50, 188, 1));
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: 2px solid white;
   border-radius: 10px;
   color: white;
@@ -546,7 +559,7 @@
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
   font-size: 14px;
-  background: linear-gradient(180deg, rgb(235, 146, 248), rgb(135, 74, 226));
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: 2px solid white;
   border-radius: 10px;
   color: white;
@@ -569,7 +582,7 @@
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
   font-size: 14px;
-  background: linear-gradient(180deg, rgb(161, 68, 175), rgb(106, 50, 190));
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: 2px solid white;
   border-radius: 10px;
   color: white;
