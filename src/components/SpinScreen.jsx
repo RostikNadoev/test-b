@@ -3,7 +3,7 @@ import '../styles/SpinScreen.css';
 import rocketBack from '../assets/Plinko/Back.png';
 import { useDemo } from '../contexts/DemoContext';
 import { casesApi } from '../utils/api';
-import Header from './Header';
+import Header from './Header'; // Импортируем Header
 
 // Импортируем изображения для разных кейсов
 import cardton1 from '../assets/MainPage/chest1/ton.png';

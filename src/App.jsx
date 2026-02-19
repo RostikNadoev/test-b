@@ -613,21 +613,14 @@ export default function App() {
       case 'cases':
         return <CasesScreen onNavigate={navigateTo} />;
       case 'spin':
-        return (
-          <MainLayout
-            onNavigate={navigateTo}
-            currentScreen={currentScreen}
-            hideFooter={true}
-            customBackground={'../assets/SpinPage/back.png'}
-          >
-            <SpinScreen 
-              onNavigate={navigateTo} 
-              caseId={screenParams.caseId}
-              winData={screenParams.winData}
-              isDemo={screenParams.isDemo}
-            />
-          </MainLayout>
-        );
+  return (
+    <SpinScreen 
+      onNavigate={navigateTo} 
+      caseId={screenParams.caseId}
+      winData={screenParams.winData}
+      isDemo={screenParams.isDemo}
+    />
+  );
       case 'main':
       default:
         return <MainScreen onNavigate={navigateTo} />;
