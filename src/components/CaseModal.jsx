@@ -9,6 +9,14 @@ import tonIcon from '../assets/MainPage/cases/tonicon.png';
 import starsIcon from '../assets/MainPage/cases/starsicon.png';
 import cardton1 from '../assets/MainPage/chest1/ton.png';
 
+// Импортируем фоны для рамок
+import back1 from '../assets/MainPage/cases/back1case.png';
+import back2 from '../assets/MainPage/chest1/back.png'; // Для второго кейса (оставляем текущий)
+import back3 from '../assets/MainPage/cases/back3case.png';
+import back4 from '../assets/MainPage/cases/back4case.png';
+import back5 from '../assets/MainPage/cases/back5case.png';
+import back6 from '../assets/MainPage/cases/back6case.png';
+
 export default function CaseModal({ caseItem, onClose, onNavigate }) {
   const [caseData, setCaseData] = useState(null);
   const [caseItems, setCaseItems] = useState([]);
@@ -16,6 +24,28 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const { isDemoMode } = useDemo();
   const { balances, checkBalance, loadBalances } = useBalance();
+
+  // Функция для получения фона рамки в зависимости от ID кейса
+  const getFrameBackground = () => {
+    const caseId = caseItem.id;
+    
+    switch(caseId) {
+      case 1:
+        return back1;
+      case 2:
+        return back2; // Оставляем текущий для второго кейса
+      case 3:
+        return back3;
+      case 4:
+        return back4;
+      case 5:
+        return back5;
+      case 6:
+        return back6;
+      default:
+        return back1; // По умолчанию для первого
+    }
+  };
 
   // Загружаем данные кейса по ID
   useEffect(() => {
@@ -306,6 +336,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
 
   const tonButtonClass = getTonButtonClass();
   const starsButtonClass = getStarsButtonClass();
+  const frameBackground = getFrameBackground();
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -326,7 +357,15 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
             ) : (
               <div className="modal-items-grid">
                 {frameContents.map((content, index) => (
-                  <div key={index} className="modal-item-frame">
+                  <div 
+                    key={index} 
+                    className="modal-item-frame"
+                    style={{
+                      backgroundImage: `url(${frameBackground})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center'
+                    }}
+                  >
                     <div className="modal-item-content">
                       <img 
                         src={content.img} 
@@ -355,7 +394,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
               >
                 <span className="modal-button-text">
                   {isProcessing ? (
-                    <span className="modal-processing-text">Processing...</span>
+                    <span className="modal-processing-text">Wait...</span>
                   ) : (
                     <>
                       <img src={tonIcon} alt="TON" className="modal-ton-icon" />
@@ -374,7 +413,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
               >
                 <span className="modal-button-text">
                   {isProcessing ? (
-                    <span className="modal-processing-text">Processing...</span>
+                    <span className="modal-processing-text">Wait...</span>
                   ) : (
                     <>
                       <img src={starsIcon} alt="STARS" className="modal-stars-icon" />
