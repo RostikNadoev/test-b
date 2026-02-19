@@ -511,11 +511,3 @@
   height: 100%;
   width: 100%;
 }
-
-.case-modal[data-case-id="6"] .modal-item-image {
-  max-width: 70%;
-  max-height: 60%;
-  object-fit: contain;
-  margin-bottom: 4px; /* Фиксированный отступ */
-  flex-shrink: 0;
-}
