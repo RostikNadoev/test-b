@@ -36,12 +36,12 @@ export default function Header({ onNavigate, variant = 'default' }) {
   const shouldAutoCloseRef = useRef(false);
 
   // Определяем класс для варианта header
-  const headerClass = variant === 'cases' || variant === 'plinko' 
+  const headerClass = variant === 'cases' || variant === 'plinko' || variant === 'spin'
     ? 'header-outer header-special' 
     : 'header-outer';
 
   // Определяем какую иконку использовать для кнопки добавления баланса
-  const addBalanceIcon = variant === 'cases' || variant === 'plinko' 
+  const addBalanceIcon = variant === 'cases' || variant === 'plinko' || variant === 'spin'
     ? add_balance_black 
     : add_balance;
 
@@ -516,7 +516,7 @@ export default function Header({ onNavigate, variant = 'default' }) {
             <div className="balances-container">
               <div className="balance-container ton-balance">
                 <img 
-                  src={variant === 'cases' || variant === 'plinko' ? tonBack : ton} 
+                  src={variant === 'cases' || variant === 'plinko' || variant === 'spin' ? tonBack : ton} 
                   alt="TON" 
                   className="balance-icon" 
                 />

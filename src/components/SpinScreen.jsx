@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/SpinScreen.css';
+import rocketBack from '../assets/Plinko/Back.png';
 import { useDemo } from '../contexts/DemoContext';
 import { casesApi } from '../utils/api';
 
@@ -469,7 +470,14 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo }) {
   }
 
   return (
-    <div className="spin-screen-content">
+    <div className="spin-screen-content" 
+    style={{
+              backgroundImage: `url(${rocketBack})`,
+              backgroundSize: '100% 100%',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'center'
+            }}
+      >
       {/* Снежинки */}
       <div className="snow-particles-container">
         {particles.map(particle => (
