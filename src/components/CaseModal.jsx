@@ -341,7 +341,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-container">
-        <div className="case-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="case-modal" onClick={(e) => e.stopPropagation()}  data-case-id={caseItem.id}>
           <button className="modal-close" onClick={onClose}>×</button>
           
           <h2 className="modal-title">{caseData?.name || caseItem.name}</h2>
