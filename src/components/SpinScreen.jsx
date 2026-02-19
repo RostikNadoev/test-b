@@ -3,6 +3,7 @@ import '../styles/SpinScreen.css';
 import rocketBack from '../assets/Plinko/Back.png';
 import { useDemo } from '../contexts/DemoContext';
 import { casesApi } from '../utils/api';
+import Header from './Header';
 
 // Импортируем изображения для разных кейсов
 import cardton1 from '../assets/MainPage/chest1/ton.png';
@@ -462,141 +463,157 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo }) {
 
   if (isLoading) {
     return (
-      <div className="spin-screen-content loading-spin">
-        <div className="spinner"></div>
-        <p>Loading spin data...</p>
+      <div 
+        className="spin-screen"
+        style={{
+          backgroundImage: `url(${rocketBack})`,
+          backgroundSize: '100% 100%',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center'
+        }}
+      >
+        <Header onNavigate={onNavigate} variant="spin" />
+        <div className="spin-screen-content loading-spin">
+          <div className="spinner"></div>
+          <p>Loading spin data...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="spin-screen-content" 
-    style={{
-              backgroundImage: `url(${rocketBack})`,
-              backgroundSize: '100% 100%',
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'center'
-            }}
-      >
-      {/* Снежинки */}
-      <div className="snow-particles-container">
-        {particles.map(particle => (
-          <div
-            key={particle.id}
-            className="snow-particle"
-            style={{
-              left: `${particle.left}%`,
-              width: `${particle.size}px`,
-              height: `${particle.size}px`,
-              opacity: particle.opacity,
-              animationDuration: `${particle.duration}s`,
-              animationDelay: `${particle.delay}s`,
-              transform: `translateX(${particle.sway}px)`
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Контейнер с фреймами */}
-      <div className="spin-frames-container">
-        <div className="spin-arrow-container">
-          <img src={arrow} alt="Arrow" className="spin-arrow" loading="lazy" />
-        </div>
-
-        <div
-          className={`spin-frames-scroller ${isSpinning ? 'spinning' : ''}`}
-          ref={scrollerRef}
-        >
-          {frames.map((content, index) => (
+    <div 
+      className="spin-screen"
+      style={{
+        backgroundImage: `url(${rocketBack})`,
+        backgroundSize: '100% 100%',
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center'
+      }}
+    >
+      <Header onNavigate={onNavigate} variant="spin" />
+      
+      <div className="spin-screen-content">
+        {/* Снежинки */}
+        <div className="snow-particles-container">
+          {particles.map(particle => (
             <div
-              key={index}
-              className={`spin-item-frame ${
-                index === frames.length - 3 && glowOpacity > 0 
-                  ? 'spin-item-frame-glowing' 
-                  : ''
-              }`}
+              key={particle.id}
+              className="snow-particle"
               style={{
-                boxShadow: index === frames.length - 3 
-                  ? `0 0 20px ${glowOpacity * 10}px rgba(58, 171, 237, ${glowOpacity * 0.8})` 
-                  : undefined,
-                border: index === frames.length - 3 
-                  ? `3px solid rgba(58, 171, 237, ${glowOpacity})` 
-                  : undefined
+                left: `${particle.left}%`,
+                width: `${particle.size}px`,
+                height: `${particle.size}px`,
+                opacity: particle.opacity,
+                animationDuration: `${particle.duration}s`,
+                animationDelay: `${particle.delay}s`,
+                transform: `translateX(${particle.sway}px)`
               }}
-            >
-              <div className="spin-item-content">
-                <img 
-                  src={content?.img || getDefaultImage()} 
-                  alt={`Item ${index + 1}`} 
-                  className="spin-item-image" 
-                  loading="lazy" 
-                  onError={(e) => {
-                    console.error('Failed to load image:', content?.img);
-                    e.target.src = getDefaultImage();
-                  }}
-                />
-                <div className={getPriceClass(content?.price || '0 TON')}>
-                  {content?.price || '0 TON'}
-                </div>
-              </div>
-            </div>
+            />
           ))}
         </div>
-      </div>
 
-      {/* Кнопка пропуска */}
-      <div className="spin-skip-footer">
-        <button 
-          className="spin-skip-button" 
-          onClick={handleSkip}
-          disabled={!isSpinning}
-        >
-          SKIP
-        </button>
-      </div>
+        {/* Контейнер с фреймами */}
+        <div className="spin-frames-container">
+          <div className="spin-arrow-container">
+            <img src={arrow} alt="Arrow" className="spin-arrow" loading="lazy" />
+          </div>
 
-      {/* Модальное окно с выигрышем - УНИКАЛЬНЫЕ КЛАССЫ */}
-      {showModal && winningItem && (
-        <div className="spin-modal-overlay" onClick={(e) => e.stopPropagation()}>
-          <div className="spin-modal-content">
-            <div className="spin-winning-frame-large">
-              <div className="spin-winning-content-large">
-                <img 
-                  src={winningItem.img || getDefaultImage()} 
-                  alt="Winning Item" 
-                  className="spin-winning-image-large" 
-                  loading="lazy" 
-                  onError={(e) => {
-                    e.target.src = getDefaultImage();
-                  }}
-                />
-                <div className={`${getPriceClass(winningItem.price)} spin-winning-price-large`}>
-                  {winningItem.price}
+          <div
+            className={`spin-frames-scroller ${isSpinning ? 'spinning' : ''}`}
+            ref={scrollerRef}
+          >
+            {frames.map((content, index) => (
+              <div
+                key={index}
+                className={`spin-item-frame ${
+                  index === frames.length - 3 && glowOpacity > 0 
+                    ? 'spin-item-frame-glowing' 
+                    : ''
+                }`}
+                style={{
+                  boxShadow: index === frames.length - 3 
+                    ? `0 0 20px ${glowOpacity * 10}px rgba(58, 171, 237, ${glowOpacity * 0.8})` 
+                    : undefined,
+                  border: index === frames.length - 3 
+                    ? `3px solid rgba(58, 171, 237, ${glowOpacity})` 
+                    : undefined
+                }}
+              >
+                <div className="spin-item-content">
+                  <img 
+                    src={content?.img || getDefaultImage()} 
+                    alt={`Item ${index + 1}`} 
+                    className="spin-item-image" 
+                    loading="lazy" 
+                    onError={(e) => {
+                      console.error('Failed to load image:', content?.img);
+                      e.target.src = getDefaultImage();
+                    }}
+                  />
+                  <div className={getPriceClass(content?.price || '0 TON')}>
+                    {content?.price || '0 TON'}
+                  </div>
                 </div>
               </div>
-              <div className="spin-purple-border-overlay"></div>
-            </div>
-            
-            {isCardtonItem(winningItem) ? (
-              <button 
-                className="spin-modal-secondary-button spin-modal-single-button" 
-                onClick={handleSell}
-                disabled={isProcessing}
-              >
-                {isProcessing ? 'PROCESSING...' : `SELL FOR ${winningItem.price}`}
-              </button>
-            ) : (
-              <button 
-                className="spin-modal-exit-button" 
-                onClick={handleAddToInventory}
-                disabled={isProcessing}
-              >
-                {isProcessing ? 'PROCESSING...' : 'ADD TO INVENTORY'}
-              </button>
-            )}
+            ))}
           </div>
         </div>
-      )}
+
+        {/* Кнопка пропуска */}
+        <div className="spin-skip-footer">
+          <button 
+            className="spin-skip-button" 
+            onClick={handleSkip}
+            disabled={!isSpinning}
+          >
+            SKIP
+          </button>
+        </div>
+
+        {/* Модальное окно с выигрышем - УНИКАЛЬНЫЕ КЛАССЫ */}
+        {showModal && winningItem && (
+          <div className="spin-modal-overlay" onClick={(e) => e.stopPropagation()}>
+            <div className="spin-modal-content">
+              <div className="spin-winning-frame-large">
+                <div className="spin-winning-content-large">
+                  <img 
+                    src={winningItem.img || getDefaultImage()} 
+                    alt="Winning Item" 
+                    className="spin-winning-image-large" 
+                    loading="lazy" 
+                    onError={(e) => {
+                      e.target.src = getDefaultImage();
+                    }}
+                  />
+                  <div className={`${getPriceClass(winningItem.price)} spin-winning-price-large`}>
+                    {winningItem.price}
+                  </div>
+                </div>
+                <div className="spin-purple-border-overlay"></div>
+              </div>
+              
+              {isCardtonItem(winningItem) ? (
+                <button 
+                  className="spin-modal-secondary-button spin-modal-single-button" 
+                  onClick={handleSell}
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? 'PROCESSING...' : `SELL FOR ${winningItem.price}`}
+                </button>
+              ) : (
+                <button 
+                  className="spin-modal-exit-button" 
+                  onClick={handleAddToInventory}
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? 'PROCESSING...' : 'ADD TO INVENTORY'}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
