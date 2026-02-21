@@ -12,7 +12,7 @@ import linkIcon from '../assets/MainPage/link.svg';
 // Импортируем иконку замка
 import lockIcon from '../assets/MainPage/lock.svg';
 // Импортируем API
-import { referralsApi } from '../api/api';
+import { referralsApi } from '../utils/api';
 
 // Константы
 const BOT_USERNAME = 'Bouncecase_bot';
