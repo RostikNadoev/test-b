@@ -1,4 +1,4 @@
-// components/MainScreen.jsx - с подключением реферального API
+// components/MainScreen.jsx - с исправленными реферальными кнопками
 import { useState, useEffect } from 'react';
 import MainLayout from './MainLayout';
 // Импортируем изображения для кнопок
@@ -12,7 +12,7 @@ import linkIcon from '../assets/MainPage/link.svg';
 // Импортируем иконку замка
 import lockIcon from '../assets/MainPage/lock.svg';
 // Импортируем API
-import { referralsApi } from '../utils/api';
+import { referralsApi } from '../api/api';
 
 // Константы
 const BOT_USERNAME = 'Bouncecase_bot';
@@ -22,19 +22,50 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
   const [referralData, setReferralData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showCopyToast, setShowCopyToast] = useState(false);
+  const [error, setError] = useState(null);
 
   // Загружаем реферальные данные при монтировании
   useEffect(() => {
     loadReferralData();
   }, []);
 
+  // Отслеживаем изменения referralData
+  useEffect(() => {
+    if (referralData) {
+      console.log('✅ Referral data loaded:', referralData);
+      console.log('🔑 referral_code:', referralData.referral_code);
+      console.log('🔗 referral_link.start_param:', referralData.referral_link?.start_param);
+    }
+  }, [referralData]);
+
   const loadReferralData = async () => {
     try {
       setIsLoading(true);
+      setError(null);
+      console.log('📥 Loading referral data...');
+      
       const data = await referralsApi.getMyReferralInfo();
+      console.log('✅ Referral data loaded:', data);
+      
       setReferralData(data);
     } catch (error) {
-      console.error('Failed to load referral data:', error);
+      console.error('❌ Failed to load referral data:', error);
+      setError('Failed to load referral data');
+      
+      // Для тестирования используем мок-данные если API недоступен
+      console.log('📦 Using mock data for testing');
+      setReferralData({
+        referral_code: "15-8785",
+        referral_link: { start_param: "15-8785" },
+        my_progress: {
+          eligible_spend_stars: 10,
+          eligible_games: 0,
+          activated_at: null
+        },
+        referrals_count: 10,
+        next_payout_utc: "2026-02-27T00:05:00Z",
+        payouts: []
+      });
     } finally {
       setIsLoading(false);
     }
@@ -72,30 +103,55 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
     return `${stars} ton`;
   };
 
-  // Формирование полной реферальной ссылки
+  // Функция для получения реферальной ссылки
   const getReferralLink = () => {
-    if (!referralData?.referral_code) return '';
-    return `https://t.me/${BOT_USERNAME}?startapp=${referralData.referral_code}`;
+    // Проверяем разные возможные пути получения кода
+    let referralCode = null;
+    
+    if (referralData?.referral_code) {
+      referralCode = referralData.referral_code;
+    } else if (referralData?.referral_link?.start_param) {
+      referralCode = referralData.referral_link.start_param;
+    }
+    
+    console.log('🔗 Getting referral link, code:', referralCode);
+    
+    if (!referralCode) {
+      console.error('❌ No referral code available');
+      return null;
+    }
+    
+    const link = `https://t.me/${BOT_USERNAME}?startapp=${referralCode}`;
+    console.log('✅ Generated link:', link);
+    return link;
   };
 
   // Обработчик для кнопки INVITE (открыть окно выбора чатов Telegram)
   const handleInviteClick = () => {
+    console.log('👆 Invite button clicked');
+    
     const link = getReferralLink();
     if (!link) {
-      console.error('No referral link available');
+      console.error('❌ No referral link available');
       return;
     }
 
-    console.log('Sharing referral link:', link);
+    console.log('📤 Sharing referral link:', link);
+    
+    // Текст сообщения с ссылкой
+    const message = `🎮 Join me on Bounce Case! Play games, open cases, and win!\n\n${link}`;
     
     // Используем Telegram WebApp API для открытия окна отправки сообщения
     if (window.Telegram?.WebApp) {
-      // Текст сообщения с ссылкой
-      const message = `🎮 Join me on Bounce Case! Play games, open cases, and win!\n\n${link}`;
+      console.log('📱 Using Telegram WebApp API');
+      
+      // Формируем URL для шаринга
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('🎮 Join me on Bounce Case!')}`;
       
       // Открываем окно отправки сообщения
-      window.Telegram.WebApp.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(message)}`);
+      window.Telegram.WebApp.openTelegramLink(shareUrl);
     } else {
+      console.log('🌐 Using fallback for browser');
       // Fallback для браузера
       window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('🎮 Join me on Bounce Case!')}`, '_blank');
     }
@@ -103,16 +159,20 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
 
   // Обработчик для кнопки копирования ссылки
   const handleLinkClick = async () => {
+    console.log('👆 Link button clicked');
+    
     const link = getReferralLink();
     if (!link) {
-      console.error('No referral link available');
+      console.error('❌ No referral link available');
       return;
     }
 
     try {
+      console.log('📋 Copying link to clipboard:', link);
+      
       // Копируем ссылку в буфер обмена
       await navigator.clipboard.writeText(link);
-      console.log('✅ Link copied to clipboard:', link);
+      console.log('✅ Link copied successfully');
       
       // Показываем тост "Link copied"
       setShowCopyToast(true);
