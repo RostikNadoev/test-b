@@ -1,4 +1,5 @@
-// components/MainScreen.jsx - обновленная версия с реферальным блоком и кнопками
+// components/MainScreen.jsx - с исправленной информационной модалкой
+import { useState } from 'react';
 import MainLayout from './MainLayout';
 // Импортируем изображения для кнопок
 import gameCard1 from '../assets/MainPage/game-card-1.png';
@@ -8,8 +9,12 @@ import gameCard4 from '../assets/MainPage/pinkocard.png';
 // Импортируем изображения для новых кнопок
 import inviteBg from '../assets/MainPage/invite.png';
 import linkIcon from '../assets/MainPage/link.svg';
+// Импортируем иконку замка
+import lockIcon from '../assets/MainPage/lock.svg';
 
 export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+
   const handleImageButtonClick = (buttonNumber) => {
     console.log(`🎯 Image button ${buttonNumber} clicked`);
     
@@ -32,6 +37,20 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
   const handleLinkClick = () => {
     console.log('Link button clicked');
     // Добавить логику для копирования ссылки
+  };
+
+  const openInfoModal = () => {
+    setIsInfoModalOpen(true);
+  };
+
+  const closeInfoModal = () => {
+    setIsInfoModalOpen(false);
+  };
+
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      closeInfoModal();
+    }
   };
 
   return (
@@ -108,9 +127,21 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
         
               {/* Верхний ряд с надписями (дата и Invited) */}
               <div className="referral-stats-header">
-                <span className="referral-date-label">
-                  You’ll get <span className="referral-date-value">25.08.2026</span>
-                </span>
+                <div className="inf_date_container">
+                  <span className="referral-date-label">
+                    You’ll get <span className="referral-date-value">25.08.2026</span>
+                  </span>
+                  {/* Кнопка с вопросиком - чуть больше */}
+                  <div 
+                    className="inf_info_button"
+                    onClick={openInfoModal}
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Information"
+                  >
+                    ?
+                  </div>
+                </div>
                 <span className="referral-invited-text">Invited</span>
               </div>
               
@@ -149,6 +180,32 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
           </div>
         </div>
       </div>
+
+      {/* Информационное модальное окно */}
+      {isInfoModalOpen && (
+        <div className="inf_overlay" onClick={handleOverlayClick}>
+          <div className="inf_modal">
+            <div className="inf_close_btn" onClick={closeInfoModal}>×</div>
+            
+            <div className="inf_content">
+              {/* Первый пункт - выплата на внутриигровой баланс (без иконки) */}
+              <div className="inf_item">
+                <span className="inf_text">
+                  <strong>Payment</strong> is made to the in-game balance
+                </span>
+              </div>
+
+              {/* Второй пункт - с иконкой замка про TON кошелек */}
+              <div className="inf_item_with_icon">
+                <img src={lockIcon} alt="" className="inf_icon" />
+                <span className="inf_text_with_icon">
+                  <strong>To receive payments to your TON wallet,</strong> you need 50+ referrals
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </MainLayout>
   );
 }

@@ -584,7 +584,7 @@
   display: flex;
   gap: 15px; /* Отступ между кнопками 15px */
   width: 100%;
-  margin-top: 15px; /* Отступ от реферальной рамки 15px */
+  margin-top: 10px; /* Отступ от реферальной рамки 15px */
   box-sizing: border-box;
 }
 
@@ -726,5 +726,239 @@
   
   .referral-button {
     height: 38px;
+  }
+}
+
+/* --- Уникальные классы для информационной кнопки и модалки (префикс inf_) --- */
+
+/* Контейнер для строки с датой */
+.inf_date_container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Кнопка с вопросиком - чуть больше */
+.inf_info_button {
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #35A3F2, #37BDF3);
+  border: 2px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+  color: white;
+  line-height: 1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  flex-shrink: 0;
+  padding-top: 2px;
+  margin-top: -3px;
+}
+
+.inf_info_button:active {
+  transform: scale(0.95);
+  opacity: 0.9;
+}
+
+/* Затемняющий фон */
+.inf_overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: inf_fade_in 0.2s ease;
+}
+
+/* Модальное окно */
+.inf_modal {
+  width: auto;
+  max-width: 300px;
+  background: linear-gradient(135deg, #ffffff, #f5fbff);
+  border: 3px solid white;
+  border-radius: 20px;
+  padding: 24px 20px 20px 20px;
+  box-shadow: 0 12px 30px rgba(53, 163, 242, 0.25);
+  animation: inf_slide_up 0.2s ease;
+  position: relative;
+  margin: 0 16px;
+}
+
+/* Кнопка закрытия - больше */
+.inf_close_btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #35A3F2, #37BDF3);
+  border: 2.5px solid white;
+  color: white;
+  font-size: 19px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: bold;
+  line-height: 1;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  font-family: Arial, sans-serif;
+  padding-bottom: 2px;
+}
+
+.inf_close_btn:active {
+  transform: scale(0.95);
+}
+
+/* Контейнер для контента */
+.inf_content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+/* Строка информации */
+.inf_item {
+  background: rgba(216, 237, 255, 0.4);
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+}
+
+/* Текст информационного сообщения */
+.inf_text {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #89c8f5;
+  display: block;
+}
+
+.inf_text strong {
+  color: #35A3F2;
+  font-weight: 800;
+  background: linear-gradient(90deg, #35A3F2, #37BDF3);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+/* Строка с иконкой замка */
+.inf_item_with_icon {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(216, 237, 255, 0.4);
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+}
+
+.inf_icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  object-fit: contain;
+  margin-top: 2px;
+}
+
+.inf_text_with_icon {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #89c8f5;
+  flex: 1;
+}
+
+.inf_text_with_icon strong {
+  color: #35A3F2;
+  font-weight: 800;
+  background: linear-gradient(90deg, #35A3F2, #37BDF3);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Анимации */
+@keyframes inf_fade_in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes inf_slide_up {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Адаптив */
+@media (max-width: 450px) {
+  
+  .inf_modal {
+    max-width: 270px;
+    padding: 22px 18px 18px 18px;
+  }
+
+  
+  .inf_text {
+    font-size: 14px;
+  }
+  
+  .inf_text_with_icon {
+    font-size: 14px;
+  }
+  
+  .inf_item, .inf_item_with_icon {
+    padding: 12px 14px;
+  }
+}
+
+@media (max-width: 375px) {
+  
+  .inf_modal {
+    max-width: 250px;
+    padding: 20px 16px 16px 16px;
+  }
+
+  
+  .inf_text {
+    font-size: 13px;
+  }
+  
+  .inf_text_with_icon {
+    font-size: 13px;
+  }
+  
+  .inf_icon {
+    width: 18px;
+    height: 18px;
   }
 }
