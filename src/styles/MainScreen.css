@@ -760,7 +760,7 @@
   touch-action: manipulation;
   user-select: none;
   flex-shrink: 0;
-  padding-top: 2px;
+  padding-top: 3px;
   margin-top: -3px;
 }
 
@@ -822,7 +822,7 @@
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   font-family: Arial, sans-serif;
-  padding-bottom: 2px;
+  padding-bottom: 0px;
 }
 
 .inf_close_btn:active {
