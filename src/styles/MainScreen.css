@@ -877,8 +877,8 @@
 }
 
 .inf_icon {
-  width: 20px;
-  height: 20px;
+  width: 44px;
+  height: 44px;
   flex-shrink: 0;
   object-fit: contain;
   margin-top: 2px;
@@ -955,10 +955,5 @@
   
   .inf_text_with_icon {
     font-size: 13px;
-  }
-  
-  .inf_icon {
-    width: 18px;
-    height: 18px;
   }
 }
