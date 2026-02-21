@@ -131,7 +131,7 @@
   -webkit-text-fill-color: transparent;
   -webkit-text-stroke: 2px white;
   paint-order: stroke fill;
-  text-stroke: 1.5px white;
+  text-stroke: 2px white;
   white-space: nowrap;
 }
 
@@ -246,7 +246,7 @@
   font-weight: 800;
   font-style: normal;
   font-size: 18px;
-  line-height: 1.3;
+  line-height: 100%;
   letter-spacing: 0%;
   background: linear-gradient(90deg, #35A3F2, #37BDF3);
   -webkit-background-clip: text;
@@ -400,7 +400,7 @@
   }
   
   .referral-text {
-    font-size: 17px;
+    font-size: 16px;
     -webkit-text-stroke: 1.5px white;
   }
   
@@ -463,7 +463,7 @@
   }
   
   .referral-text {
-    font-size: 16px;
+    font-size: 15.5px;
   }
   
   .referral-highlight {
@@ -505,7 +505,7 @@
   }
   
   .referral-text {
-    font-size: 15px;
+    font-size: 14.2px;
   }
   
   .referral-highlight {
@@ -530,9 +530,9 @@
   }
 }
 
-@media (max-width: 360px) {
+@media (max-width: 348px) {
   .referral-text {
-    font-size: 14.3px;
+    font-size: 13.7px;
   }
   
   .referral-highlight {
