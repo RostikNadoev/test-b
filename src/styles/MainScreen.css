@@ -95,7 +95,7 @@
 /* --- Стили для реферального блока --- */
 .referral-block {
   width: 100%;
-  margin-top: 20px;
+  margin-top: 10px;
   margin-bottom: 20px;
 }
 
@@ -396,7 +396,7 @@
   }
   
   .referral-frame {
-    height: 180px;
+    height: 160px;
   }
   
   .referral-text {
