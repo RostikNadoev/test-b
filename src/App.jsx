@@ -53,9 +53,6 @@ import tonIcon from './assets/Ton.svg';
 import ballsq from './assets/Lucky/ballsq.png';
 import timerImg from './assets/Rocket/timer.png';
 
-// Spin Screens
-import arrow from './assets/SpinPage/arrow.png';
-
 // TasksScreen
 import coinIcon from './assets/Tasks/coin.png';
 
@@ -550,7 +547,6 @@ export default function App() {
     emptypat,
     mainpvp,
     tonIcon,
-    arrow,
     coinIcon,
     logoImage,
     l1, l2, l3, l4, l5, l6,
