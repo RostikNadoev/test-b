@@ -10,7 +10,7 @@ import Header from './Header';
 import cardton1 from '../assets/MainPage/chest1/ton.png';
 import cardton2 from '../assets/MainPage/chest2/ton.png';
 import cardton3 from '../assets/MainPage/chest3/ton.png';
-import arrow from '../assets/SpinPage/arrow.svg';
+import arrow from '../assets/SpinPage/arrow.png';
 
 // Маппинг изображений по ID кейса
 const caseImages = {

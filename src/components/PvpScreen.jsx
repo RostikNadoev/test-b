@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import MainLayout from './MainLayout';
 import '../styles/PvpScreen.css';
-import arrow from '../assets/SpinPage/arrow.svg';
+import arrow from '../assets/SpinPage/arrow.png';
 import emptyPat from '../assets/PVP/empty-pat.png';
 import pvpBackground from '../assets/PVP/main.png';
 import { useDemo } from '../contexts/DemoContext';
