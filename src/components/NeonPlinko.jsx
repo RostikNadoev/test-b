@@ -5,7 +5,7 @@ import { PerspectiveCamera, Stars, Text, Circle, Ring } from '@react-three/drei'
 
 // ========== КОНФИГУРАЦИЯ ==========
 const LAUNCH_CONFIG = {
-  current: { x: 0.0155, vx: 0.0015, vy: -0.000000001 },
+  current: { x: -0.005, vx: 0.0691, vy: -0.000000001 },
 }
 
 const GAME_CONFIG = {

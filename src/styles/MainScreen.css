@@ -74,13 +74,13 @@
   justify-content: center;
   gap: 20px;
   width: 100%;
-  margin-top: 0px; /* Без отрицательного margin, чтобы были под второй кнопкой */
+  margin-top: 0px;
 }
 
 .square-button {
-  width: calc(50% - 10px); /* Половина ширины минус половина gap */
-  max-width: 212px; /* Примерно половина от 437px с учетом gap */
-  aspect-ratio: 1 / 1; /* Квадратный формат */
+  width: calc(50% - 10px);
+  max-width: 212px;
+  aspect-ratio: 1 / 1;
   border-radius: 12px;
   overflow: hidden;
 }
@@ -88,14 +88,14 @@
 .square-image {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* Чтобы изображение заполняло квадрат */
+  object-fit: cover;
   border-radius: 12px;
 }
 
 /* --- Стили для реферального блока --- */
 .referral-block {
   width: 100%;
-  margin-top: 20px; /* Отступ 20px снизу от кнопок */
+  margin-top: 20px;
   margin-bottom: 20px;
 }
 
@@ -107,14 +107,16 @@
   background: linear-gradient(135deg, rgba(216, 237, 255, 0.8), rgba(255, 255, 255, 0.8));
   position: relative;
   box-sizing: border-box;
-  backdrop-filter: blur(5px); /* Легкое размытие для полупрозрачности */
+  backdrop-filter: blur(5px);
 }
 
 .referral-content {
   width: 100%;
   height: 100%;
-  padding: 15px 14px 0 14px; /* Отступы: сверху 15, слева/справа 14 */
+  padding: 15px 14px 0 14px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 .referral-text {
@@ -129,8 +131,8 @@
   -webkit-text-fill-color: transparent;
   -webkit-text-stroke: 2px white;
   paint-order: stroke fill;
-  text-stroke: 2px white; /* Для Firefox */
-  white-space: nowrap; /* ЗАПРЕЩАЕМ ПЕРЕНОС ТЕКСТА */
+  text-stroke: 2px white;
+  white-space: nowrap;
 }
 
 .referral-highlight {
@@ -140,10 +142,10 @@
   -webkit-text-fill-color: white;
   -webkit-text-stroke: 0;
   text-stroke: 0;
-  padding: 0 4px; /* Отступы по 4px до краев */
+  padding: 0 4px;
   height: 34px;
   line-height: 34px;
-  border-radius: 4px; /* Небольшой радиус, если нужен, но по ТЗ не указан */
+  border-radius: 4px;
   margin-left: 6px;
   border: 2px solid white;
   font-size: 18px;
@@ -151,100 +153,108 @@
   vertical-align: middle;
 }
 
-/* Адаптив для маленьких экранов */
-@media (max-width: 450px) {
-  .banner-images-container {
-    width: 100%;
-    padding: 0 10px;
-    max-width: 100%;
-  }
-  
-  .banner-image-button {
-    width: 100%;
-    max-width: 380px;
-  }
-  
-  .square-button {
-    max-width: 180px; /* Примерно половина от 380px */
-  }
-
-  .square-buttons-row {
-    gap: 8px;
-  }
-  
-  .referral-frame {
-    height: 180px;
-  }
-  
-  .referral-text {
-    font-size: 16px;
-    -webkit-text-stroke: 1.5px white;
-  }
-  
-  .referral-highlight {
-    height: 30px;
-    line-height: 30px;
-    font-size: 16px;
-    border-width: 1.5px;
-  }
+/* Контейнер для верхних надписей (дата и Invited) */
+.referral-stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: 15px;
+  padding: 0 0px;
+  box-sizing: border-box;
 }
 
-@media (max-width: 395px) {
-  .referral-frame {
-    height: 160px;
-  }
-  
-  .referral-text {
-    font-size: 15.5px;
-  }
-  
-  .referral-highlight {
-    height: 28px;
-    line-height: 28px;
-    font-size: 15px;
-  }
+/* Стиль для текста "You'll get" */
+.referral-date-label {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 16px;
+  line-height: 140%;
+  letter-spacing: 0%;
+  background: linear-gradient(90deg, #80CAF4, #7BCFFF);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-
-@media (max-width: 375px) {
-  .banner-image-button {
-    max-width: 340px;
-  }
-  
-  .square-button {
-    max-width: 159px; 
-  }
-  
-  .square-buttons-row {
-    gap: 8px;
-  }
-  
-  .referral-frame {
-    height: 160px;
-  }
-  
-  .referral-text {
-    font-size: 14.2px;
-  }
-  
-  .referral-highlight {
-    height: 28px;
-    line-height: 28px;
-    font-size: 15px;
-  }
+/* Стиль для самой даты */
+.referral-date-value {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 16px;
+  line-height: 140%;
+  letter-spacing: 0%;
+  background: linear-gradient(90deg, #35A3F2, #37BDF3);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  margin-left: 4px;
 }
 
-@media (max-width: 348px) {
-  
-  .referral-text {
-    font-size: 13.7px;
-  }
-  
-  .referral-highlight {
-    height: 24px;
-    line-height: 28px;
-    font-size: 13.6px;
-  }
+/* Стиль для текста Invited - теперь одного цвета с "You'll get" */
+.referral-invited-text {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 16px;
+  line-height: 140%;
+  letter-spacing: 0%;
+  background: linear-gradient(90deg, #80CAF4, #7BCFFF);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Контейнер для полей со значениями */
+.referral-stats-values {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Стиль для каждого поля */
+.referral-stat-field {
+  background: linear-gradient(15deg, #D8EDFF, #FFFFFF);
+  border: 2px solid #FFFFFF;
+  border-radius: 12px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+/* Первое поле (75% ширины) */
+.referral-stat-field:first-child {
+  width: calc(75% - 5px);
+}
+
+/* Второе поле (25% ширины) */
+.referral-stat-field:last-child {
+  width: calc(25% - 5px);
+}
+
+/* Стиль для чисел внутри полей */
+.referral-stat-number {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 18px;
+  line-height: 100%;
+  letter-spacing: 0%;
+  background: linear-gradient(90deg, #35A3F2, #37BDF3);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1.5px white;
+  text-stroke: 1.5px white;
+  paint-order: stroke fill;
 }
 
 .content-section {
@@ -364,7 +374,59 @@
   paint-order: stroke fill;
 }
 
-/* Адаптив для маленьких экранов */
+/* --- Адаптивные стили --- */
+@media (max-width: 450px) {
+  .banner-images-container {
+    width: 100%;
+    padding: 0 10px;
+    max-width: 100%;
+  }
+  
+  .banner-image-button {
+    width: 100%;
+    max-width: 380px;
+  }
+  
+  .square-button {
+    max-width: 180px;
+  }
+
+  .square-buttons-row {
+    gap: 8px;
+  }
+  
+  .referral-frame {
+    height: 180px;
+  }
+  
+  .referral-text {
+    font-size: 16px;
+    -webkit-text-stroke: 1.5px white;
+  }
+  
+  .referral-highlight {
+    height: 30px;
+    line-height: 30px;
+    font-size: 16px;
+    border-width: 1.5px;
+  }
+  
+  .referral-date-label,
+  .referral-invited-text,
+  .referral-date-value {
+    font-size: 14px;
+  }
+  
+  .referral-stat-field {
+    height: 40px;
+  }
+  
+  .referral-stat-number {
+    font-size: 16px;
+    -webkit-text-stroke: 1.2px white;
+  }
+}
+
 @media (max-width: 430px) {
   .footer-blocks-container {
     gap: 25px;
@@ -395,6 +457,101 @@
   }
 }
 
+@media (max-width: 395px) {
+  .referral-frame {
+    height: 160px;
+  }
+  
+  .referral-text {
+    font-size: 15.5px;
+  }
+  
+  .referral-highlight {
+    height: 28px;
+    line-height: 28px;
+    font-size: 15px;
+  }
+  
+  .referral-date-label,
+  .referral-invited-text,
+  .referral-date-value {
+    font-size: 13px;
+  }
+  
+  .referral-stat-field {
+    height: 38px;
+  }
+  
+  .referral-stat-number {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 375px) {
+  .banner-image-button {
+    max-width: 340px;
+  }
+  
+  .square-button {
+    max-width: 159px; 
+  }
+  
+  .square-buttons-row {
+    gap: 8px;
+  }
+  
+  .referral-frame {
+    height: 160px;
+  }
+  
+  .referral-text {
+    font-size: 14.2px;
+  }
+  
+  .referral-highlight {
+    height: 28px;
+    line-height: 28px;
+    font-size: 15px;
+  }
+  
+  .referral-date-label,
+  .referral-invited-text,
+  .referral-date-value {
+    font-size: 12px;
+  }
+  
+  .referral-stat-field {
+    height: 36px;
+  }
+  
+  .referral-stat-number {
+    font-size: 14px;
+    -webkit-text-stroke: 1px white;
+  }
+}
+
+@media (max-width: 348px) {
+  .referral-text {
+    font-size: 13.7px;
+  }
+  
+  .referral-highlight {
+    height: 24px;
+    line-height: 28px;
+    font-size: 13.6px;
+  }
+  
+  .referral-date-label,
+  .referral-invited-text,
+  .referral-date-value {
+    font-size: 11px;
+  }
+  
+  .referral-stat-number {
+    font-size: 13px;
+  }
+}
+
 /* Класс для лайоута без фона */
 .main-screen-no-bg {
   width: 100%;
@@ -402,11 +559,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-image: none; /* Убираем стандартный фон */
+  background-image: none;
   overflow: hidden;
 }
 
-/* styles/MainScreen.css - добавляем disabled состояния */
+/* Disabled состояния */
 .footer-block-item--disabled {
   opacity: 0.5;
   cursor: not-allowed !important;
@@ -418,4 +575,156 @@
 
 .footer-block-item--disabled .footer-label {
   opacity: 0.7;
+}
+
+/* --- Стили для кнопок под реферальным блоком --- */
+
+/* Контейнер для двух кнопок */
+.referral-buttons-row {
+  display: flex;
+  gap: 15px; /* Отступ между кнопками 15px */
+  width: 100%;
+  margin-top: 15px; /* Отступ от реферальной рамки 15px */
+  box-sizing: border-box;
+}
+
+/* Общие стили для обеих кнопок */
+.referral-button {
+  height: 49px;
+  border: 1px solid #FFFFFF;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  
+  /* Для мобильных устройств */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Левая кнопка (75% ширины) */
+.invite-button {
+  width: calc(75% - 7.5px); /* 75% минус половина gap */
+  position: relative;
+  padding: 0;
+  background: none;
+}
+
+/* Правая кнопка (25% ширины) */
+.link-button {
+  width: calc(25% - 7.5px); /* 25% минус половина gap */
+  background: linear-gradient(135deg, #D8EDFF, #FFFFFF);
+  border: 1px solid #FFFFFF;
+}
+
+/* Фоновое изображение для левой кнопки */
+.invite-button-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Чтобы изображение покрывало всю кнопку */
+  z-index: 1;
+  pointer-events: none; /* Чтобы не мешало нажатию */
+}
+
+/* Текст INVITE */
+.invite-button-text {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 100%;
+  letter-spacing: 0%;
+  text-transform: uppercase;
+  color: #FFFFFF;
+  -webkit-text-stroke: 1.5px #3AABED;
+  text-stroke: 1.5px #3AABED;
+  paint-order: stroke fill;
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 9px 9px rgba(0, 0, 0, 0.1); /* Легкая тень для читаемости */
+}
+
+/* Иконка ссылки */
+.link-icon {
+  width: 39px;
+  height: 39px;
+  object-fit: contain;
+  z-index: 2;
+  position: relative;
+}
+
+/* Эффекты при нажатии */
+.invite-button:active,
+.link-button:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
+
+/* Адаптивные стили для кнопок */
+@media (max-width: 450px) {
+  .invite-button-text {
+    font-size: 18px;
+    -webkit-text-stroke: 1.2px #3AABED;
+  }
+  
+  .link-icon {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .referral-button {
+    height: 45px;
+  }
+}
+
+@media (max-width: 395px) {
+  .invite-button-text {
+    font-size: 16px;
+    -webkit-text-stroke: 1px #3AABED;
+  }
+  
+  .link-icon {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .referral-button {
+    height: 42px;
+  }
+}
+
+@media (max-width: 375px) {
+  .invite-button-text {
+    font-size: 15px;
+  }
+  
+  .link-icon {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .referral-button {
+    height: 40px;
+  }
+}
+
+@media (max-width: 348px) {
+  .invite-button-text {
+    font-size: 14px;
+  }
+  
+  .link-icon {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .referral-button {
+    height: 38px;
+  }
 }
