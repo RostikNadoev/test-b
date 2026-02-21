@@ -957,3 +957,53 @@
     font-size: 13px;
   }
 }
+
+/* Toast уведомление */
+.toast_notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #35A3F2, #37BDF3);
+  border: 2px solid white;
+  border-radius: 30px;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  z-index: 10000;
+  animation: toast_slide_down 0.3s ease;
+}
+
+.toast_icon {
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #35A3F2;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.toast_text {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes toast_slide_down {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}

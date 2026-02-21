@@ -515,5 +515,22 @@ export const luckyBallsApi = {
     }
   }
 };
+
+// Добавьте в существующий api.js файл
+
+export const referralsApi = {
+  // Получить реферальную информацию текущего пользователя
+  async getMyReferralInfo() {
+    try {
+      console.log('👥 Requesting referral info...');
+      const response = await api.get('/api/v1/referrals/me');
+      console.log('✅ Referral info received:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error getting referral info:', error);
+      throw error;
+    }
+  }
+};
 // Export base axios instance for other requests
 export default api;

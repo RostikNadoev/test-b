@@ -1,5 +1,5 @@
-// components/MainScreen.jsx - с исправленной информационной модалкой
-import { useState } from 'react';
+// components/MainScreen.jsx - с подключением реферального API
+import { useState, useEffect } from 'react';
 import MainLayout from './MainLayout';
 // Импортируем изображения для кнопок
 import gameCard1 from '../assets/MainPage/game-card-1.png';
@@ -11,9 +11,34 @@ import inviteBg from '../assets/MainPage/invite.png';
 import linkIcon from '../assets/MainPage/link.svg';
 // Импортируем иконку замка
 import lockIcon from '../assets/MainPage/lock.svg';
+// Импортируем API
+import { referralsApi } from '../utils/api';
+
+// Константы
+const BOT_USERNAME = 'Bouncecase_bot';
 
 export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+  const [referralData, setReferralData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showCopyToast, setShowCopyToast] = useState(false);
+
+  // Загружаем реферальные данные при монтировании
+  useEffect(() => {
+    loadReferralData();
+  }, []);
+
+  const loadReferralData = async () => {
+    try {
+      setIsLoading(true);
+      const data = await referralsApi.getMyReferralInfo();
+      setReferralData(data);
+    } catch (error) {
+      console.error('Failed to load referral data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleImageButtonClick = (buttonNumber) => {
     console.log(`🎯 Image button ${buttonNumber} clicked`);
@@ -29,14 +54,76 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
     }
   };
 
-  const handleInviteClick = () => {
-    console.log('Invite button clicked');
-    // Добавить логику для инвайта
+  // Форматирование даты из UTC в формат DD.MM.YYYY
+  const formatNextPayoutDate = (utcDateString) => {
+    if (!utcDateString) return '25.08.2026'; // fallback
+    
+    const date = new Date(utcDateString);
+    const day = date.getUTCDate().toString().padStart(2, '0');
+    const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+    const year = date.getUTCFullYear();
+    
+    return `${day}.${month}.${year}`;
   };
 
-  const handleLinkClick = () => {
-    console.log('Link button clicked');
-    // Добавить логику для копирования ссылки
+  // Форматирование суммы из eligible_spend_stars
+  const formatEligibleAmount = (stars) => {
+    if (stars === undefined || stars === null) return '0 ton';
+    return `${stars} ton`;
+  };
+
+  // Формирование полной реферальной ссылки
+  const getReferralLink = () => {
+    if (!referralData?.referral_code) return '';
+    return `https://t.me/${BOT_USERNAME}?startapp=${referralData.referral_code}`;
+  };
+
+  // Обработчик для кнопки INVITE (открыть окно выбора чатов Telegram)
+  const handleInviteClick = () => {
+    const link = getReferralLink();
+    if (!link) {
+      console.error('No referral link available');
+      return;
+    }
+
+    console.log('Sharing referral link:', link);
+    
+    // Используем Telegram WebApp API для открытия окна отправки сообщения
+    if (window.Telegram?.WebApp) {
+      // Текст сообщения с ссылкой
+      const message = `🎮 Join me on Bounce Case! Play games, open cases, and win!\n\n${link}`;
+      
+      // Открываем окно отправки сообщения
+      window.Telegram.WebApp.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(message)}`);
+    } else {
+      // Fallback для браузера
+      window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('🎮 Join me on Bounce Case!')}`, '_blank');
+    }
+  };
+
+  // Обработчик для кнопки копирования ссылки
+  const handleLinkClick = async () => {
+    const link = getReferralLink();
+    if (!link) {
+      console.error('No referral link available');
+      return;
+    }
+
+    try {
+      // Копируем ссылку в буфер обмена
+      await navigator.clipboard.writeText(link);
+      console.log('✅ Link copied to clipboard:', link);
+      
+      // Показываем тост "Link copied"
+      setShowCopyToast(true);
+      
+      // Скрываем тост через 2 секунды
+      setTimeout(() => {
+        setShowCopyToast(false);
+      }, 2000);
+    } catch (error) {
+      console.error('❌ Failed to copy link:', error);
+    }
   };
 
   const openInfoModal = () => {
@@ -129,9 +216,12 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
               <div className="referral-stats-header">
                 <div className="inf_date_container">
                   <span className="referral-date-label">
-                    You’ll get <span className="referral-date-value">25.08.2026</span>
+                    You’ll get{' '}
+                    <span className="referral-date-value">
+                      {isLoading ? 'Loading...' : formatNextPayoutDate(referralData?.next_payout_utc)}
+                    </span>
                   </span>
-                  {/* Кнопка с вопросиком - чуть больше */}
+                  {/* Кнопка с вопросиком */}
                   <div 
                     className="inf_info_button"
                     onClick={openInfoModal}
@@ -148,10 +238,14 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
               {/* Нижний ряд с полями и числами */}
               <div className="referral-stats-values">
                 <div className="referral-stat-field">
-                  <span className="referral-stat-number">10 ton</span>
+                  <span className="referral-stat-number">
+                    {isLoading ? '...' : formatEligibleAmount(referralData?.my_progress?.eligible_spend_stars)}
+                  </span>
                 </div>
                 <div className="referral-stat-field">
-                  <span className="referral-stat-number">10</span>
+                  <span className="referral-stat-number">
+                    {isLoading ? '...' : referralData?.referrals_count || '0'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -188,7 +282,7 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
             <div className="inf_close_btn" onClick={closeInfoModal}>×</div>
             
             <div className="inf_content">
-              {/* Первый пункт - выплата на внутриигровой баланс (без иконки) */}
+              {/* Первый пункт - выплата на внутриигровой баланс */}
               <div className="inf_item">
                 <span className="inf_text">
                   <strong>Payment</strong> is made to the in-game balance
@@ -204,6 +298,14 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Toast уведомление "Link copied" */}
+      {showCopyToast && (
+        <div className="toast_notification">
+          <span className="toast_icon">✓</span>
+          <span className="toast_text">Link copied</span>
         </div>
       )}
     </MainLayout>
