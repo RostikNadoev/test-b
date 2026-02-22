@@ -1021,7 +1021,7 @@
 @keyframes toast_slide_down {
   0% {
     opacity: 0;
-    transform: translate(-50%, -100px); /* Начинает за пределами экрана сверху */
+    transform: translate(-50%, -190px); /* Начинает за пределами экрана сверху */
   }
   100% {
     opacity: 1;
@@ -1037,7 +1037,7 @@
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -100px); /* Уезжает за пределы экрана сверху */
+    transform: translate(-50%, -190px); /* Уезжает за пределы экрана сверху */
   }
 }
 
