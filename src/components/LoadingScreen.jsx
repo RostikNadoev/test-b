@@ -23,7 +23,7 @@ const activeLetters = [l1a, l2a, l3a, l4a, l5a, l6a];
 export default function LoadingScreen({ onLoaded }) {
   // Анимация длится 3 круга по 6 букв с задержкой 200мс = 3600мс
   useEffect(() => {
-    const ROUNDS = 3.5;
+    const ROUNDS = 2;
     const LETTERS = 6;
     const DELAY = 200;
     const totalTime = ROUNDS * LETTERS * DELAY;
@@ -57,7 +57,7 @@ function AnimatedLetter({ index, inactiveSrc, activeSrc }) {
   const [opacity, setOpacity] = useState(0);
 
   useEffect(() => {
-    const ROUNDS = 3.5;
+    const ROUNDS = 2;
     const LETTERS = 6;
     const DELAY = 200;
     const timeouts = [];

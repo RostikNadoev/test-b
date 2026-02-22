@@ -186,7 +186,7 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
           setShowCopyToast(false);
           setIsToastHiding(false);
         }, 300);
-      }, 2000);
+      }, 1300);
     } catch (error) {
       console.error('❌ Failed to copy link:', error);
     }
