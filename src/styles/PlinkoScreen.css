@@ -226,7 +226,7 @@
   align-items: center;
   justify-content: space-between;
   /* Дополнительный внутренний отступ для визуального разделения */
-  padding: 5px 0;
+  padding: 0px 0;
 }
 
 .plinko-balls-label {
@@ -267,6 +267,7 @@
   color: #00f2ff;
   min-width: 35px;
   text-align: center;
+  line-height: 1.5;
   -webkit-text-stroke: 0.5px white;
 }
 
@@ -347,6 +348,7 @@
 .plinko-value-number {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-size: 17px;
+  line-height: 1.2;
   color: #00f2ff;
   -webkit-text-stroke: 0.5px white;
 }
