@@ -60,11 +60,11 @@ function Peg({ position, config }) {
     if (ringRef.current && pulse > 0) {
       ringRef.current.visible = true
       // ИЗМЕНЕНО: Меньше начальный размер, быстрее расширение
-      const s = 0.8 + (1 - pulse) * 2.2 
+      const s = 1 + (1 - pulse) * 2.7 
       ringRef.current.scale.set(s, s, s)
       ringRef.current.material.opacity = pulse
       // ИЗМЕНЕНО: Быстрее затухание для резкости (0.07 вместо 0.05)
-      setPulse(prev => Math.max(0, prev - 0.07))
+      setPulse(prev => Math.max(0, prev - 0.05))
     } else if (ringRef.current) {
       ringRef.current.visible = false
     }
