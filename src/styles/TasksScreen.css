@@ -20,7 +20,7 @@
 /* Контейнер для изображения leaderboard */
 .tasks-leaderboard-image-container {
   width: 100%;
-  margin-bottom: 5px; /* Отступ снизу 15px как вы просили */
+  margin-bottom: -3px; 
 }
 
 /* Стили для самого изображения */
