@@ -9,7 +9,7 @@ import gameCard4 from '../assets/MainPage/pinkocard.png';
 import inviteBg from '../assets/MainPage/invite.png';
 import linkIcon from '../assets/MainPage/link.svg';
 // Импортируем иконку замка
-import lockIcon from '../assets/MainPage/lock.svg';
+import lockIcon from '../assets/MainPage/lock.png';
 // Импортируем API
 import { referralsApi } from '../utils/api';
 
