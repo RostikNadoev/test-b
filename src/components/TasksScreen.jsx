@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import '../styles/TasksScreen.css';
 import MainLayout from './MainLayout';
 import coinIcon from '../assets/Tasks/coin.png';
+import leaderboardImage from '../assets/Tasks/leaderboard.png'; // Импортируем картинку
 import api, { usersApi, authApi } from '../utils/api';
 
 export default function TasksScreen({ onNavigate }) {
@@ -208,18 +209,27 @@ export default function TasksScreen({ onNavigate }) {
   return (
     <MainLayout onNavigate={onNavigate} currentScreen="tasks">
       <div className="tasks-content-section">
+        {/* Добавляем картинку leaderboard во всю ширину */}
+        <div className="tasks-leaderboard-image-container">
+          <img 
+            src={leaderboardImage} 
+            alt="Leaderboard" 
+            className="tasks-leaderboard-image" 
+          />
+        </div>
+
         <div className="tasks-header">
           <div className="coin-balance-container">
             <img src={coinIcon} alt="Coin" className="coin-icon" />
             <span className="coin-balance">{formatBalance(balance)}</span>
           </div>
-<button 
-  className={`claim-all-button ${!hasClaimableRewards ? 'claim-all-button--disabled' : 'claim-all-button--pulse'}`} 
-  disabled={!hasClaimableRewards}
-  onClick={claimAllRewards}
->
-  {isClaiming ? 'CLAIMING...' : 'CLAIM ALL'}
-</button>
+          <button 
+            className={`claim-all-button ${!hasClaimableRewards ? 'claim-all-button--disabled' : 'claim-all-button--pulse'}`} 
+            disabled={!hasClaimableRewards}
+            onClick={claimAllRewards}
+          >
+            {isClaiming ? 'CLAIMING...' : 'CLAIM ALL'}
+          </button>
         </div>
 
         <div className="tasks-main-content">
