@@ -958,10 +958,9 @@
   }
 }
 
-/* Toast уведомление */
 .toast_notification {
   position: fixed;
-  top: 20px;
+  top: 160px; /* Позиция под хедером (предполагая что хедер высотой ~60px) */
   left: 50%;
   transform: translateX(-50%);
   background: linear-gradient(135deg, #35A3F2, #37BDF3);
@@ -973,7 +972,7 @@
   gap: 8px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   z-index: 10000;
-  animation: toast_slide_down 0.3s ease;
+  animation: toast_slide_down 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.1) forwards;
 }
 
 .toast_icon {
@@ -997,13 +996,31 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
+/* Анимация появления - выезжает с самого верха */
 @keyframes toast_slide_down {
-  from {
+  0% {
     opacity: 0;
-    transform: translate(-50%, -20px);
+    transform: translate(-50%, -100px); /* Начинает за пределами экрана сверху */
   }
-  to {
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0); /* Останавливается под хедером */
+  }
+}
+
+/* Анимация исчезновения - уезжает наверх за пределы экрана */
+@keyframes toast_slide_up {
+  0% {
     opacity: 1;
     transform: translate(-50%, 0);
   }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -100px); /* Уезжает за пределы экрана сверху */
+  }
+}
+
+/* Класс для анимации исчезновения */
+.toast_notification.hide {
+  animation: toast_slide_up 0.3s ease forwards;
 }

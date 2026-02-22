@@ -1,4 +1,3 @@
-// components/MainScreen.jsx - с исправленными реферальными кнопками
 import { useState, useEffect } from 'react';
 import MainLayout from './MainLayout';
 // Импортируем изображения для кнопок
@@ -22,6 +21,7 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
   const [referralData, setReferralData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showCopyToast, setShowCopyToast] = useState(false);
+  const [isToastHiding, setIsToastHiding] = useState(false);
   const [error, setError] = useState(null);
 
   // Загружаем реферальные данные при монтировании
@@ -176,10 +176,16 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
       
       // Показываем тост "Link copied"
       setShowCopyToast(true);
+      setIsToastHiding(false);
       
-      // Скрываем тост через 2 секунды
+      // Скрываем тост через 2 секунды с анимацией
       setTimeout(() => {
-        setShowCopyToast(false);
+        setIsToastHiding(true);
+        // Полностью скрываем после завершения анимации
+        setTimeout(() => {
+          setShowCopyToast(false);
+          setIsToastHiding(false);
+        }, 300);
       }, 2000);
     } catch (error) {
       console.error('❌ Failed to copy link:', error);
@@ -363,7 +369,7 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
 
       {/* Toast уведомление "Link copied" */}
       {showCopyToast && (
-        <div className="toast_notification">
+        <div className={`toast_notification ${isToastHiding ? 'hide' : ''}`}>
           <span className="toast_icon">✓</span>
           <span className="toast_text">Link copied</span>
         </div>
