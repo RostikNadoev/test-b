@@ -51,7 +51,7 @@ export default function PlinkoScreen({ onNavigate }) {
     for (let i = 0; i < ballCount; i++) {
       setTimeout(() => {
         if (plinkoRef.current) plinkoRef.current.dropBall();
-      }, i * 300); 
+      }, i * 400); // ИЗМЕНЕНО: Таймаут 0.4 сек
     }
   };
 
@@ -90,12 +90,15 @@ export default function PlinkoScreen({ onNavigate }) {
       className="plinko-screen"
       style={{
         backgroundImage: `url(${rocketBack})`,
-        backgroundSize: '100% 100%',
+        backgroundSize: 'cover',
         backgroundRepeat: 'no-repeat',
         backgroundPosition: 'center'
       }}
     >
-      <Header onNavigate={onNavigate} variant="plinko" />
+      {/* ИЗМЕНЕНО: Контейнер для центровки хедера */}
+      <div className="plinko-header-wrapper">
+        <Header onNavigate={onNavigate} variant="plinko" />
+      </div>
       
       <main className="plinko-content">
         <div className="plinko-container">

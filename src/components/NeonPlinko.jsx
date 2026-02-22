@@ -40,6 +40,8 @@ const getColorBySlotIndex = (index) => {
 }
 
 // ========== ПРЕПЯТСТВИЕ ==========
+// Внутри NeonPlinko.jsx находим функцию Peg:
+
 function Peg({ position, config }) {
   const ringRef = useRef()
   const [pulse, setPulse] = useState(0)
@@ -57,10 +59,12 @@ function Peg({ position, config }) {
   useFrame(() => {
     if (ringRef.current && pulse > 0) {
       ringRef.current.visible = true
-      const s = 1 + (1 - pulse) * 3.5
+      // ИЗМЕНЕНО: Меньше начальный размер, быстрее расширение
+      const s = 0.8 + (1 - pulse) * 2.2 
       ringRef.current.scale.set(s, s, s)
       ringRef.current.material.opacity = pulse
-      setPulse(prev => Math.max(0, prev - 0.05))
+      // ИЗМЕНЕНО: Быстрее затухание для резкости (0.07 вместо 0.05)
+      setPulse(prev => Math.max(0, prev - 0.07))
     } else if (ringRef.current) {
       ringRef.current.visible = false
     }
@@ -71,8 +75,9 @@ function Peg({ position, config }) {
       <Circle args={[pegRadius, 32]}>
         <meshStandardMaterial color="#555" emissive="white" emissiveIntensity={0.2} />
       </Circle>
-      <Ring ref={ringRef} args={[pegRadius * 0.8, pegRadius * 1.2, 32]} visible={false}>
-        <meshStandardMaterial color="#00f2ff" transparent emissive="#00f2ff" depthWrite={false} />
+      {/* ИЗМЕНЕНО: Уменьшены радиусы кольца для аккуратности */}
+      <Ring ref={ringRef} args={[pegRadius * 0.4, pegRadius * 0.7, 32]} visible={false}>
+        <meshStandardMaterial color="#00f2ff" transparent emissive="#00f2ff" emissiveIntensity={2} depthWrite={false} />
       </Ring>
     </group>
   )
