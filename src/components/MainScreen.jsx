@@ -139,21 +139,21 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
     console.log('📤 Sharing referral link:', link);
     
     // Текст сообщения с ссылкой
-    const message = `🎮 Join me on Bounce Case! Play games, open cases, and win!\n\n${link}`;
+    const message = `Join me on Bounce! Play games, open cases, and win!\n\n${link}`;
     
     // Используем Telegram WebApp API для открытия окна отправки сообщения
     if (window.Telegram?.WebApp) {
       console.log('📱 Using Telegram WebApp API');
       
       // Формируем URL для шаринга
-      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('🎮 Join me on Bounce Case!')}`;
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('Join me on Bounce!')}`;
       
       // Открываем окно отправки сообщения
       window.Telegram.WebApp.openTelegramLink(shareUrl);
     } else {
       console.log('🌐 Using fallback for browser');
       // Fallback для браузера
-      window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('🎮 Join me on Bounce Case!')}`, '_blank');
+      window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('Join me on Bounce!')}`, '_blank');
     }
   };
 
@@ -351,7 +351,7 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
               {/* Первый пункт - выплата на внутриигровой баланс */}
               <div className="inf_item">
                 <span className="inf_text">
-                  <strong>Payment</strong> is made to the in-game balance
+                  <strong>Default payment</strong> is to the in-game balance
                 </span>
               </div>
 
