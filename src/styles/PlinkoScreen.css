@@ -291,10 +291,10 @@
   border-radius: 30px;
   color: white;
   font-family: 'KZ Supercell-Magic', sans-serif;
-  font-size: 19px;
+  font-size: 18px;
   text-transform: uppercase;
   box-shadow: 0 0 15px rgba(0, 242, 255, 0.4);
-  margin-top: 5px;
+  line-height: 1.4;
 }
 
 .plinko-drop-button:active { transform: scale(0.98); }
