@@ -5,7 +5,7 @@ import { PerspectiveCamera, Stars, Text, Circle, Ring } from '@react-three/drei'
 
 // ========== КОНФИГУРАЦИЯ ==========
 const LAUNCH_CONFIG = {
-  current: { x: -0.07474, vx: 0.27202, vy: -0.000000001 },
+  current: {  x: 0.0157, vx: -0.0011, vy: -0.000000001 },
 }
 
 const GAME_CONFIG = {
@@ -275,7 +275,7 @@ const NeonPlinko = forwardRef((props, ref) => {
           position={[
             0, 
             centerViewY - 0.3, 
-            window.innerWidth <= 350 ? 3.7 : (window.innerWidth <= 393 ? 3.4 : 3.2)
+            window.innerWidth <= 350 ? 3.7 : (window.innerWidth <= 370 ? 3.4 : 3.2)
           ]} 
           fov={50}
         />
