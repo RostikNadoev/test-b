@@ -1,10 +1,14 @@
+/* ==========================================================================
+   PlinkoScreen.css - FULL VERSION
+   ========================================================================== */
+
 .plinko-screen {
   width: 100%;
-  height: 100vh;
+  height: var(--app-height, 100vh);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding-left: 20px;
+  position: relative;
 }
 
 .plinko-content {
@@ -15,8 +19,6 @@
   align-items: center;
   overflow: hidden;
   position: relative;
-  padding-top: -30px;
-  margin-left: -10px;
 }
 
 .plinko-container {
@@ -34,55 +36,325 @@
   width: 100%;
   position: relative;
   overflow: hidden;
+  min-height: 250px;
 }
 
-/* Контейнер для Canvas */
 .plinko-game-area canvas {
   width: 100% !important;
   height: 100% !important;
   display: block;
 }
 
-.plinko-controls {
+/* Секция управления */
+.plinko-controls-section {
   width: 100%;
-  padding: 20px 16px 30px;
+  padding: 10px 16px 30px;
   display: flex;
-  justify-content: center;
-  position: relative;
+  flex-direction: column;
+  box-sizing: border-box;
   z-index: 10;
 }
 
-.plinko-drop-btn {
-  width: 80%;
-  max-width: 300px;
-  padding: 16px 0;
-  background: linear-gradient(135deg, #00f2ff, #0088ff);
+.plinko-idle-controls, 
+.plinko-active-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+/* Лейбл и Инпуты */
+.plinko-bet-label {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  background: linear-gradient(90deg, #00f2ff, #0088ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: -4px;
+}
+
+.plinko-bet-input-container {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plinko-bet-input-wrapper {
+  flex: 1;
+  min-width: 0; 
+  height: 50px;
+  background: linear-gradient(135deg, rgba(0, 150, 255, 0.2) 0%, rgba(0, 100, 255, 0.1) 100%);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(0, 242, 255, 0.5);
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  box-shadow: 0 4px 15px rgba(0, 242, 255, 0.2);
+}
+
+.plinko-bet-placeholder {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-size: 14px;
+  position: absolute;
+  left: 16px;
+  pointer-events: none;
+  background: linear-gradient(90deg, #00f2ff, #0088ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.plinko-bet-placeholder.hidden {
+  opacity: 0;
+}
+
+.plinko-bet-input {
+  width: 100%;
+  height: 100%;
+  background: transparent;
   border: none;
+  outline: none;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-size: 16px;
+  color: transparent;
+  background: linear-gradient(90deg, #00f2ff, #0088ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-stroke: 0.5px white;
+  padding: 0 16px;
+  padding-right: 80px;
+  box-sizing: border-box;
+  caret-color: #00f2ff;
+}
+
+/* Селектор валюты */
+.plinko-currency-selector {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.plinko-currency-icon {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 5px #00f2ff);
+}
+
+.plinko-currency-switch {
+  width: 10px;
+  height: 10px;
+  transition: transform 0.2s ease;
+}
+
+.plinko-currency-dropdown {
+  position: absolute;
+  top: 45px;
+  right: -5px;
+  width: 100px;
+  background: rgba(10, 20, 40, 0.95);
+  backdrop-filter: blur(15px);
+  border: 2px solid rgba(0, 242, 255, 0.5);
+  border-radius: 12px;
+  overflow: hidden;
+  z-index: 100;
+}
+
+.plinko-dropdown-item {
+  padding: 10px;
+  text-align: center;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-size: 13px;
+  color: #00f2ff;
+  border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+}
+
+.plinko-dropdown-item.selected {
+  background: rgba(0, 242, 255, 0.2);
+}
+
+/* Быстрые кнопки ставок */
+.plinko-quick-bet-buttons {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.plinko-quick-bet-button {
+  width: 48px;
+  height: 50px;
+  background: linear-gradient(135deg, rgba(0, 150, 255, 0.2) 0%, rgba(0, 100, 255, 0.1) 100%);
+  border: 2px solid rgba(0, 242, 255, 0.5);
+  border-radius: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.plinko-quick-bet-button:active { transform: scale(0.95); }
+
+.plinko-quick-bet-value {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-size: 14px;
+  color: #00f2ff;
+  -webkit-text-stroke: 0.5px white;
+}
+
+/* Селектор шариков */
+.plinko-balls-selector {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.plinko-balls-label {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-size: 16px;
+  color: #00f2ff;
+}
+
+.plinko-balls-counter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.plinko-ball-control {
+  width: 36px;
+  height: 36px;
+  background: rgba(0, 242, 255, 0.1);
+  border: 2px solid #00f2ff;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.plinko-ball-control.disabled { opacity: 0.3; pointer-events: none; }
+
+.plinko-control-sign {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-size: 20px;
+  color: #00f2ff;
+}
+
+.plinko-ball-count-display {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-size: 20px;
+  color: #00f2ff;
+  min-width: 30px;
+  text-align: center;
+  -webkit-text-stroke: 0.5px white;
+}
+
+/* Кнопки DROP и COLLECT */
+.plinko-drop-button {
+  width: 100%;
+  height: 55px;
+  background: linear-gradient(135deg, #00f2ff, #0088ff);
+  border: 2px solid white;
   border-radius: 30px;
   color: white;
-  font-size: 18px;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 0 20px rgba(0, 242, 255, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.3);
   font-family: 'KZ Supercell-Magic', sans-serif;
+  font-size: 18px;
+  text-transform: uppercase;
+  box-shadow: 0 0 15px rgba(0, 242, 255, 0.4);
 }
 
-.plinko-drop-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 30px rgba(0, 242, 255, 0.8);
+.plinko-drop-button:disabled { opacity: 0.5; }
+
+.plinko-action-btn {
+  width: 100%;
+  height: 55px;
+  border-radius: 30px;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-size: 18px;
+  text-transform: uppercase;
+  border: 2px solid white;
+  transition: all 0.3s ease;
 }
 
-.plinko-drop-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 0 15px rgba(0, 242, 255, 0.8);
-}
-
-.plinko-drop-btn:disabled {
+.plinko-btn-waiting {
+  background: linear-gradient(135deg, #00f2ff, #0088ff);
   opacity: 0.5;
+  color: rgba(255,255,255,0.8);
   cursor: not-allowed;
-  transform: none;
+}
+
+.plinko-btn-collect {
+  background: linear-gradient(135deg, #00f2ff, #0088ff);
+  color: white;
+  box-shadow: 0 0 20px rgba(0, 242, 255, 0.6);
+  cursor: pointer;
+}
+
+/* Игровая панель (активная фаза) */
+.plinko-game-panel {
+  width: 100%;
+  background: linear-gradient(135deg, rgba(0, 150, 255, 0.25) 0%, rgba(0, 100, 255, 0.15) 100%);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(0, 242, 255, 0.5);
+  border-radius: 20px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.plinko-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.plinko-info-label {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-size: 13px;
+  color: #00f2ff;
+  opacity: 0.9;
+}
+
+.plinko-info-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.plinko-value-number {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-size: 16px;
+  color: #00f2ff;
+  -webkit-text-stroke: 0.5px white;
+}
+
+.winnings-highlight {
+  font-size: 18px;
+  text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+}
+
+.plinko-panel-currency-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Фикс для маленьких экранов */
+@media screen and (max-width: 380px) {
+  .plinko-bet-input { padding-right: 70px; font-size: 14px; }
+  .plinko-quick-bet-button { width: 40px; }
+  .plinko-quick-bet-value { font-size: 12px; }
+  .plinko-drop-button, .plinko-action-btn { height: 50px; font-size: 16px; }
 }

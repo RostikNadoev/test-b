@@ -1,11 +1,11 @@
-import React, { useState, useMemo, useRef, useCallback, forwardRef, useImperativeHandle } from 'react'
+import React, { useState, useMemo, useRef, useCallback, forwardRef, useImperativeHandle, useEffect } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Physics, useSphere, useBox, useCylinder } from '@react-three/cannon'
 import { PerspectiveCamera, Stars, Text, Circle, Ring } from '@react-three/drei'
 
 // ========== КОНФИГУРАЦИЯ ==========
 const LAUNCH_CONFIG = {
-  current: { x: -0.005, vx: 0.0691, vy: -0.000000001 },
+  current: { x: -0.07474, vx: 0.27202, vy: -0.000000001 },
 }
 
 const GAME_CONFIG = {
@@ -24,13 +24,13 @@ const GAME_CONFIG = {
 }
 
 const COLOR_GRADIENT = [
-  { main: '#FFFFFF', emissive: '#60A5FA' },     // Белый + синее свечение
-  { main: '#BFDBFE', emissive: '#3B82F6' },     // Очень светло-синий
-  { main: '#93C5FD', emissive: '#2563EB' },     // Светло-синий
-  { main: '#60A5FA', emissive: '#1D4ED8' },     // Голубой
-  { main: '#3B82F6', emissive: '#1E40AF' },     // Синий
-  { main: '#2563EB', emissive: '#1E3A8A' },     // Темно-синий
-  { main: '#1D4ED8', emissive: '#23346d' }      // Очень темно-синий
+  { main: '#FFFFFF', emissive: '#60A5FA' },
+  { main: '#BFDBFE', emissive: '#3B82F6' },
+  { main: '#93C5FD', emissive: '#2563EB' },
+  { main: '#60A5FA', emissive: '#1D4ED8' },
+  { main: '#3B82F6', emissive: '#1E40AF' },
+  { main: '#2563EB', emissive: '#1E3A8A' },
+  { main: '#1D4ED8', emissive: '#23346d' }
 ]
 
 const getColorBySlotIndex = (index) => {
@@ -78,7 +78,7 @@ function Peg({ position, config }) {
   )
 }
 
-// ========== КНОПКА-ЛУНКА (ТЕКСТ НА ПЛАТФОРМЕ) ==========
+// ========== КНОПКА-ЛУНКА ==========
 function IndividualSlot({ index, val, x, bottomY, slotWidth, config, onHit }) {
   const [impact, setImpact] = useState(0)
   const slotColor = getColorBySlotIndex(index)
@@ -88,19 +88,21 @@ function IndividualSlot({ index, val, x, bottomY, slotWidth, config, onHit }) {
     position: [x, bottomY, 0],
     args: [slotWidth * 0.96, 0.12, 0.4], 
     collisionFilterGroup: GAME_CONFIG.GROUP_STATIC,
-    onCollide: () => {
-      setImpact(1.0); // Уменьшил с 1.2 до 1.0
-      onHit();
+    onCollide: (e) => {
+      setImpact(1.0);
+      // Достаем ID именно того шарика, который коснулся
+      const ballId = e.body.userData?.id;
+      if (onHit && ballId) onHit(val, ballId);
     }
   }))
 
   useFrame((_, delta) => {
     if (impact > 0) {
-      setImpact(prev => Math.max(0, prev - delta * 2.0)) // Уменьшил скорость затухания
+      setImpact(prev => Math.max(0, prev - delta * 2.0))
     }
   })
 
-  const currentY = bottomY - (impact * 0.03); // Уменьшил амплитуду движения
+  const currentY = bottomY - (impact * 0.03);
 
   return (
     <group>
@@ -118,22 +120,22 @@ function IndividualSlot({ index, val, x, bottomY, slotWidth, config, onHit }) {
         <meshStandardMaterial 
           color={slotColor.main} 
           emissive={slotColor.emissive}
-          emissiveIntensity={0.2 + impact * 8} // Уменьшил с 0.3 + impact*25 до 0.2 + impact*8
+          emissiveIntensity={0.2 + impact * 8}
         />
       </mesh>
 
       <pointLight 
-        position={[x, currentY + 0.2, 0.15]} // Опустил свет ниже
+        position={[x, currentY + 0.2, 0.15]}
         color={slotColor.emissive} 
-        intensity={impact * 3} // Уменьшил с 20 до 5
-        distance={0.4} // Уменьшил расстояние свечения
+        intensity={impact * 3}
+        distance={0.4}
       />
     </group>
   )
 }
 
 // ========== ШАРИК ==========
-function Ball({ config }) {
+function Ball({ id, config }) {
   const [ref] = useSphere(() => ({
     mass: 1,
     fixedRotation: true,
@@ -142,7 +144,8 @@ function Ball({ config }) {
     args: [config.ballRadius],
     material: { friction: 0.1, restitution: config.ballRestitution },
     collisionFilterGroup: config.GROUP_BALL,
-    collisionFilterMask: config.GROUP_STATIC
+    collisionFilterMask: config.GROUP_STATIC,
+    userData: { id } // Передаем ID внутрь физического тела!
   }))
 
   return (
@@ -166,7 +169,9 @@ function SlotGeometry({ config, bottomY, onBallLand }) {
     <group>
       {multipliers.map((val, i) => (
         <IndividualSlot 
-          key={i} index={i} val={val} 
+          key={i} 
+          index={i} 
+          val={val} 
           x={lastRowStartX + (i + 0.5) * slotWidth}
           bottomY={bottomY} 
           slotWidth={slotWidth} 
@@ -183,13 +188,37 @@ function InvisibleWall({ position, args }) {
   return <mesh ref={ref} visible={false}><boxGeometry args={args} /></mesh>
 }
 
+// Зона для "улетевших" шариков (множитель 0)
+function KillZone({ bottomY, onMiss }) {
+  const [ref] = useBox(() => ({
+    type: 'Static',
+    position: [0, bottomY - 0.8, 0], 
+    args: [20, 0.5, 5],
+    collisionFilterGroup: GAME_CONFIG.GROUP_STATIC,
+    onCollide: (e) => {
+      const ballId = e.body.userData?.id;
+      if (onMiss && ballId) onMiss(0, ballId); 
+    }
+  }))
+  return <mesh ref={ref} visible={false}><boxGeometry args={[20, 0.5, 5]} /></mesh>
+}
+
 // ========== ГЛАВНЫЙ КОМПОНЕНТ ==========
 const NeonPlinko = forwardRef((props, ref) => {
+  const { onBallLand, gameState } = props;
   const [balls, setBalls] = useState([])
+  const processedBalls = useRef(new Set()) 
   const config = GAME_CONFIG
 
+  // Используем Ref для коллбэка, чтобы физика всегда видела актуальную ставку из PlinkoScreen
+  const latestOnBallLand = useRef(onBallLand);
+  useEffect(() => {
+    latestOnBallLand.current = onBallLand;
+  }, [onBallLand]);
+
   const dropBall = useCallback(() => {
-    setBalls([Date.now()])
+    const newId = Date.now() + Math.random(); // Надежный уникальный ID
+    setBalls(prev => [...prev, newId])
   }, [])
 
   useImperativeHandle(ref, () => ({ dropBall }))
@@ -210,26 +239,46 @@ const NeonPlinko = forwardRef((props, ref) => {
       }
     }
 
-    // ИЗМЕНЕНИЕ: Теперь bY (высота блоков) зависит напрямую от последнего ряда колышков
-    // 0.2 — это минимальное расстояние. Уменьшай до 0.1, если нужно еще ближе
     const bY = lastY - 0.2 
     const cY = (startY + bY) / 2
 
     return { bottomY: bY, pegs: p, centerViewY: cY }
   }, [config])
 
+  // Обработчик касания
+  const handleBallHit = useCallback((multiplier, ballId) => {
+    if (!ballId || processedBalls.current.has(ballId)) return; 
+    processedBalls.current.add(ballId); 
+    
+    // 1. УДАЛЯЕМ шарик со сцены
+    setBalls(prev => prev.filter(id => id !== ballId));
+
+    // 2. Вызываем обновление счета
+    if (latestOnBallLand.current) {
+      latestOnBallLand.current(multiplier);
+    }
+  }, []);
+
+  // Очистка при финише/заборе денег
+  useEffect(() => {
+    if (gameState === 'idle') {
+      setBalls([]);
+      processedBalls.current.clear();
+    }
+  }, [gameState]);
+
   return (
     <div className="plinko-game-wrapper" style={{ width: '100%', height: '100%', minHeight: '500px' }}>
       <Canvas dpr={[1, 2]} gl={{ antialias: true, toneMappingExposure: 1.5 }}>
         <PerspectiveCamera 
-  makeDefault 
-  position={[
-    0, 
-    centerViewY - 0.3, 
-    window.innerWidth <= 350 ? 3.8 : (window.innerWidth <= 393 ? 3.6 : 3.2)
-  ]} 
-  fov={50}
-/>
+          makeDefault 
+          position={[
+            0, 
+            centerViewY - 0.3, 
+            window.innerWidth <= 350 ? 3.7 : (window.innerWidth <= 393 ? 3.4 : 3.2)
+          ]} 
+          fov={50}
+        />
         <Stars count={100} factor={4} fade depth={50} />
         <ambientLight intensity={1.2} />
         <pointLight position={[0, 5, 5]} intensity={2} />
@@ -239,8 +288,16 @@ const NeonPlinko = forwardRef((props, ref) => {
           defaultContactMaterial={{ friction: 0, restitution: 0.5 }}
         >
           {pegs.map((pos, i) => <Peg key={i} position={pos} config={config} />)}
-          <SlotGeometry config={config} bottomY={bottomY} onBallLand={() => setBalls([])} />
-          {balls.map(id => <Ball key={id} config={config} />)}
+          <SlotGeometry 
+            config={config} 
+            bottomY={bottomY} 
+            onBallLand={handleBallHit} 
+          />
+          <KillZone bottomY={bottomY} onMiss={handleBallHit} />
+          
+          {/* Передаем ID в компонент шарика */}
+          {balls.map(id => <Ball key={id} id={id} config={config} />)}
+          
           <InvisibleWall position={[0, 0, 0.05]} args={[10, 10, 0.01]} />
           <InvisibleWall position={[0, 0, -0.05]} args={[10, 10, 0.01]} />
         </Physics>
