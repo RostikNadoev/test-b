@@ -60,7 +60,7 @@ function Peg({ position, config }) {
     if (ringRef.current && pulse > 0) {
       ringRef.current.visible = true
       // ИЗМЕНЕНО: Меньше начальный размер, быстрее расширение
-      const s = 1 + (1 - pulse) * 2.7 
+      const s = 1 + (1 - pulse) * 3.1 
       ringRef.current.scale.set(s, s, s)
       ringRef.current.material.opacity = pulse
       // ИЗМЕНЕНО: Быстрее затухание для резкости (0.07 вместо 0.05)
@@ -76,7 +76,7 @@ function Peg({ position, config }) {
         <meshStandardMaterial color="#555" emissive="white" emissiveIntensity={0.2} />
       </Circle>
       {/* ИЗМЕНЕНО: Уменьшены радиусы кольца для аккуратности */}
-      <Ring ref={ringRef} args={[pegRadius * 0.4, pegRadius * 0.7, 32]} visible={false}>
+      <Ring ref={ringRef} args={[pegRadius * 0.6, pegRadius * 1, 32]} visible={false}>
         <meshStandardMaterial color="#00f2ff" transparent emissive="#00f2ff" emissiveIntensity={2} depthWrite={false} />
       </Ring>
     </group>
