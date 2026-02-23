@@ -4,8 +4,52 @@ import { Physics, useSphere, useBox, useCylinder } from '@react-three/cannon'
 import { PerspectiveCamera, Stars, Text, Circle, Ring } from '@react-three/drei'
 
 // ========== КОНФИГУРАЦИЯ ==========
-const LAUNCH_CONFIG = {
-  current: {  x: 0.0017, vx: -0.039, vy: -0.000000001 },
+// Экспортируем функцию для изменения параметров запуска
+let LAUNCH_CONFIG = {
+  current: { x: -0.048500, vx: -0.005000, vy: -0.000000001 },
+  queue: [] // Очередь для нескольких шариков
+}
+
+// Функция для обновления параметров запуска
+export function setLaunchParams(x, vx) {
+  LAUNCH_CONFIG.current = { ...LAUNCH_CONFIG.current, x, vx };
+  console.log('🚀 Параметры запуска обновлены:', { x, vx });
+}
+
+// Функция для добавления параметров в очередь
+export function queueLaunchParams(x, vx) {
+  LAUNCH_CONFIG.queue.push({ x, vx, vy: -0.000000001 });
+  console.log(`📦 Добавлены параметры в очередь (${LAUNCH_CONFIG.queue.length}):`, { x, vx });
+}
+
+// Функция для получения следующего параметра из очереди
+export function getNextLaunchParams() {
+  if (LAUNCH_CONFIG.queue.length > 0) {
+    const next = LAUNCH_CONFIG.queue.shift();
+    LAUNCH_CONFIG.current = next;
+    console.log('🎯 Взят следующий параметр из очереди:', next);
+    return next;
+  }
+  console.log('🎯 Используются текущие параметры:', LAUNCH_CONFIG.current);
+  return LAUNCH_CONFIG.current;
+}
+
+// Функция для очистки очереди
+export function clearLaunchQueue() {
+  LAUNCH_CONFIG.queue = [];
+  console.log('🧹 Очередь параметров очищена');
+}
+
+// Функция для получения текущих параметров
+export function getLaunchParams() {
+  return LAUNCH_CONFIG.current;
+}
+
+// Делаем функции доступными глобально
+if (typeof window !== 'undefined') {
+  window.setLaunchParams = setLaunchParams;
+  window.queueLaunchParams = queueLaunchParams;
+  window.clearLaunchQueue = clearLaunchQueue;
 }
 
 const GAME_CONFIG = {
@@ -40,8 +84,6 @@ const getColorBySlotIndex = (index) => {
 }
 
 // ========== ПРЕПЯТСТВИЕ ==========
-// Внутри NeonPlinko.jsx находим функцию Peg:
-
 function Peg({ position, config }) {
   const ringRef = useRef()
   const [pulse, setPulse] = useState(0)
@@ -59,11 +101,9 @@ function Peg({ position, config }) {
   useFrame(() => {
     if (ringRef.current && pulse > 0) {
       ringRef.current.visible = true
-      // ИЗМЕНЕНО: Меньше начальный размер, быстрее расширение
       const s = 1 + (1 - pulse) * 3
       ringRef.current.scale.set(s, s, s)
       ringRef.current.material.opacity = pulse
-      // ИЗМЕНЕНО: Быстрее затухание для резкости (0.07 вместо 0.05)
       setPulse(prev => Math.max(0, prev - 0.05))
     } else if (ringRef.current) {
       ringRef.current.visible = false
@@ -75,7 +115,6 @@ function Peg({ position, config }) {
       <Circle args={[pegRadius, 32]}>
         <meshStandardMaterial color="#555" emissive="white" emissiveIntensity={0.2} />
       </Circle>
-      {/* ИЗМЕНЕНО: Уменьшены радиусы кольца для аккуратности */}
       <Ring ref={ringRef} args={[pegRadius * 0.5, pegRadius *0.9, 32]} visible={false}>
         <meshStandardMaterial color="#00f2ff" transparent emissive="#00f2ff" emissiveIntensity={2} depthWrite={false} />
       </Ring>
@@ -95,7 +134,6 @@ function IndividualSlot({ index, val, x, bottomY, slotWidth, config, onHit }) {
     collisionFilterGroup: GAME_CONFIG.GROUP_STATIC,
     onCollide: (e) => {
       setImpact(1.0);
-      // Достаем ID именно того шарика, который коснулся
       const ballId = e.body.userData?.id;
       if (onHit && ballId) onHit(val, ballId);
     }
@@ -141,16 +179,23 @@ function IndividualSlot({ index, val, x, bottomY, slotWidth, config, onHit }) {
 
 // ========== ШАРИК ==========
 function Ball({ id, config }) {
+  // Получаем следующий параметр из очереди при создании шарика
+  const launchParams = useMemo(() => {
+    return getNextLaunchParams();
+  }, []);
+  
+  console.log(`🎯 Запуск шарика ${id} с параметрами:`, launchParams);
+  
   const [ref] = useSphere(() => ({
     mass: 1,
     fixedRotation: true,
-    position: [LAUNCH_CONFIG.current.x, config.startY, 0],
-    velocity: [LAUNCH_CONFIG.current.vx, LAUNCH_CONFIG.current.vy, 0],
+    position: [launchParams.x, config.startY, 0],
+    velocity: [launchParams.vx, launchParams.vy, 0],
     args: [config.ballRadius],
     material: { friction: 0.1, restitution: config.ballRestitution },
     collisionFilterGroup: config.GROUP_BALL,
     collisionFilterMask: config.GROUP_STATIC,
-    userData: { id } // Передаем ID внутрь физического тела!
+    userData: { id }
   }))
 
   return (
@@ -215,14 +260,13 @@ const NeonPlinko = forwardRef((props, ref) => {
   const processedBalls = useRef(new Set()) 
   const config = GAME_CONFIG
 
-  // Используем Ref для коллбэка, чтобы физика всегда видела актуальную ставку из PlinkoScreen
   const latestOnBallLand = useRef(onBallLand);
   useEffect(() => {
     latestOnBallLand.current = onBallLand;
   }, [onBallLand]);
 
   const dropBall = useCallback(() => {
-    const newId = Date.now() + Math.random(); // Надежный уникальный ID
+    const newId = Date.now() + Math.random();
     setBalls(prev => [...prev, newId])
   }, [])
 
@@ -250,25 +294,25 @@ const NeonPlinko = forwardRef((props, ref) => {
     return { bottomY: bY, pegs: p, centerViewY: cY }
   }, [config])
 
-  // Обработчик касания
   const handleBallHit = useCallback((multiplier, ballId) => {
     if (!ballId || processedBalls.current.has(ballId)) return; 
     processedBalls.current.add(ballId); 
     
-    // 1. УДАЛЯЕМ шарик со сцены
     setBalls(prev => prev.filter(id => id !== ballId));
 
-    // 2. Вызываем обновление счета
     if (latestOnBallLand.current) {
       latestOnBallLand.current(multiplier);
     }
   }, []);
 
-  // Очистка при финише/заборе денег
   useEffect(() => {
     if (gameState === 'idle') {
       setBalls([]);
       processedBalls.current.clear();
+      // Очищаем очередь при возврате в idle
+      if (window.clearLaunchQueue) {
+        window.clearLaunchQueue();
+      }
     }
   }, [gameState]);
 
@@ -300,7 +344,6 @@ const NeonPlinko = forwardRef((props, ref) => {
           />
           <KillZone bottomY={bottomY} onMiss={handleBallHit} />
           
-          {/* Передаем ID в компонент шарика */}
           {balls.map(id => <Ball key={id} id={id} config={config} />)}
           
           <InvisibleWall position={[0, 0, 0.05]} args={[10, 10, 0.01]} />

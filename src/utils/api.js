@@ -275,6 +275,47 @@ export const usersApi = {
   
 };
 
+// Добавьте в существующий api.js файл
+
+export const bounceFallApi = {
+  // Начать игру (сделать ставку)
+  async play(currency, bet, balls) {
+    try {
+      console.log(`🎮 Starting BounceFall game: ${balls} balls, ${bet} ${currency} each`);
+      
+      const requestBody = {
+        currency: currency.toLowerCase(),
+        bet: parseFloat(bet),
+        balls: parseInt(balls)
+      };
+      
+      console.log('📦 Request body:', requestBody);
+      
+      const response = await api.post('/api/v1/bounce-fall/play', requestBody);
+      
+      console.log('✅ Game started:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error starting BounceFall game:', error);
+      console.error('📡 Server response:', error.response?.data);
+      throw error;
+    }
+  },
+
+  // Получить информацию о раунде (опционально)
+  async getRound(roundId) {
+    try {
+      console.log(`🎮 Getting round ${roundId}...`);
+      const response = await api.get(`/api/v1/bounce-fall/round/${roundId}`);
+      console.log('✅ Round info:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error getting round:', error);
+      throw error;
+    }
+  }
+};
+
 export const starsApi = {
   async createInvoice(amount) {
     try {

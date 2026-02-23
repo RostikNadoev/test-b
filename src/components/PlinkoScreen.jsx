@@ -7,8 +7,11 @@ import starSvg from '../assets/MainPage/star1.png';
 import switchSvg from '../assets/MainPage/switch.svg';
 import switchbSvg from '../assets/MainPage/switchd.svg';
 import rocketBack from '../assets/Plinko/Back.png';
+import { bounceFallApi } from '../utils/api';
+import { getRandomPreset } from '../utils/bounceFallPresets';
+import { useBalance } from '../contexts/BalanceContext';
 
-export default function PlinkoScreen({ onNavigate }) {
+export default function BounceFallScreen({ onNavigate }) {
   const plinkoRef = useRef();
   const currencyDropdownRef = useRef(null);
   
@@ -19,6 +22,10 @@ export default function PlinkoScreen({ onNavigate }) {
   const [gameState, setGameState] = useState('idle'); 
   const [totalWinnings, setTotalWinnings] = useState(0);
   const [ballsDropped, setBallsDropped] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [roundData, setRoundData] = useState(null);
+  
+  const { checkBalance, setNewBalances } = useBalance();
 
   const handleBallLand = useCallback((multiplier) => {
     setBallsDropped(prev => {
@@ -41,24 +48,86 @@ export default function PlinkoScreen({ onNavigate }) {
     }
   }, [betAmount, selectedCurrency, ballCount]);
 
-  const handlePlay = () => {
-    if (!betAmount || parseFloat(betAmount) <= 0) return;
+  const handlePlay = async () => {
+    if (!betAmount || parseFloat(betAmount) <= 0) {
+      alert('Please enter a valid bet amount');
+      return;
+    }
 
-    setTotalWinnings(0);
-    setBallsDropped(0);
-    setGameState('playing');
-    
-    for (let i = 0; i < ballCount; i++) {
+    if (ballCount < 1 || ballCount > 10) {
+      alert('Ball count must be between 1 and 10');
+      return;
+    }
+
+    const totalBet = parseFloat(betAmount) * ballCount;
+    if (!checkBalance(selectedCurrency.toLowerCase(), totalBet)) {
+      alert(`Insufficient ${selectedCurrency} balance`);
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // 1. Отправляем запрос на бэкенд
+      const response = await bounceFallApi.play(
+        selectedCurrency,
+        betAmount,
+        ballCount
+      );
+
+      console.log('✅ Game started:', response);
+      
+      // 2. Сохраняем данные раунда
+      setRoundData(response);
+      
+      // 3. Очищаем очередь перед запуском
+      if (window.clearLaunchQueue) {
+        window.clearLaunchQueue();
+      }
+      
+      // 4. Для каждого шарика добавляем параметры в очередь
+      response.results.forEach((result, index) => {
+        const preset = getRandomPreset(result.outcome_index);
+        if (window.queueLaunchParams) {
+          window.queueLaunchParams(preset.x, preset.vx);
+        }
+      });
+      
+      // 5. Сбрасываем состояние
+      setTotalWinnings(0);
+      setBallsDropped(0);
+      setGameState('playing');
+      
+      // 6. Обновляем баланс
+      if (response.balance) {
+        setNewBalances(response.balance);
+      }
+      
+      // 7. Запускаем шарики
       setTimeout(() => {
-        if (plinkoRef.current) plinkoRef.current.dropBall();
-      }, i * 400); // ИЗМЕНЕНО: Таймаут 0.4 сек
+        if (plinkoRef.current) {
+          for (let i = 0; i < ballCount; i++) {
+            setTimeout(() => {
+              plinkoRef.current.dropBall();
+            }, i * 400);
+          }
+        }
+      }, 100);
+      
+    } catch (error) {
+      console.error('Error starting game:', error);
+      alert(error.response?.data?.error || 'Failed to start game');
+      setGameState('idle');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleTakeWinnings = () => {
     setGameState('idle');
     setTotalWinnings(0);
-    setBallsDropped(0); 
+    setBallsDropped(0);
+    setRoundData(null);
   };
 
   const increaseBallCount = () => ballCount < 10 && setBallCount(prev => prev + 1);
@@ -95,7 +164,6 @@ export default function PlinkoScreen({ onNavigate }) {
         backgroundPosition: 'center'
       }}
     >
-      {/* ИЗМЕНЕНО: Контейнер для центровки хедера */}
       <div className="plinko-header-wrapper">
         <Header onNavigate={onNavigate} variant="plinko" />
       </div>
@@ -113,7 +181,7 @@ export default function PlinkoScreen({ onNavigate }) {
           <div className="plinko-controls-section">
             {gameState === 'idle' ? (
               <div className="plinko-idle-controls">
-                <div className="plinko-bet-label">Your bet</div>
+                <div className="plinko-bet-label">Your bet (per ball)</div>
                 <div className="plinko-bet-input-container">
                   <div className="plinko-bet-input-wrapper">
                     <span className={`plinko-bet-placeholder ${betAmount ? 'hidden' : ''}`}>Enter</span>
@@ -124,9 +192,10 @@ export default function PlinkoScreen({ onNavigate }) {
                       onChange={handleBetChange}
                       placeholder=""
                       inputMode="decimal"
+                      disabled={isLoading}
                     />
                     
-                    <div className="plinko-currency-selector" onClick={() => setIsDropdownOpen(!isDropdownOpen)} ref={currencyDropdownRef}>
+                    <div className="plinko-currency-selector" onClick={() => !isLoading && setIsDropdownOpen(!isDropdownOpen)} ref={currencyDropdownRef}>
                       <img src={selectedCurrency === 'TON' ? tonSvg : starSvg} alt={selectedCurrency} className="plinko-currency-icon"/>
                       <img src={isDropdownOpen ? switchSvg : switchbSvg} alt="switch" className="plinko-currency-switch"/>
                       
@@ -140,10 +209,10 @@ export default function PlinkoScreen({ onNavigate }) {
                   </div>
 
                   <div className="plinko-quick-bet-buttons">
-                    <div className="plinko-quick-bet-button" onClick={() => handleQuickBet(quickBetValues.first)}>
+                    <div className={`plinko-quick-bet-button ${isLoading ? 'disabled' : ''}`} onClick={() => !isLoading && handleQuickBet(quickBetValues.first)}>
                       <span className="plinko-quick-bet-value">{quickBetValues.first}</span>
                     </div>
-                    <div className="plinko-quick-bet-button" onClick={() => handleQuickBet(quickBetValues.second)}>
+                    <div className={`plinko-quick-bet-button ${isLoading ? 'disabled' : ''}`} onClick={() => !isLoading && handleQuickBet(quickBetValues.second)}>
                       <span className="plinko-quick-bet-value">{quickBetValues.second}</span>
                     </div>
                   </div>
@@ -152,11 +221,11 @@ export default function PlinkoScreen({ onNavigate }) {
                 <div className="plinko-balls-selector">
                   <div className="plinko-balls-label">Balls</div>
                   <div className="plinko-balls-counter">
-                    <div className={`plinko-ball-control ${ballCount <= 1 ? 'disabled' : ''}`} onClick={decreaseBallCount}>
+                    <div className={`plinko-ball-control ${ballCount <= 1 || isLoading ? 'disabled' : ''}`} onClick={!isLoading && decreaseBallCount}>
                       <span className="plinko-control-sign">−</span>
                     </div>
                     <div className="plinko-ball-count-display">{ballCount}</div>
-                    <div className={`plinko-ball-control ${ballCount >= 10 ? 'disabled' : ''}`} onClick={increaseBallCount}>
+                    <div className={`plinko-ball-control ${ballCount >= 10 || isLoading ? 'disabled' : ''}`} onClick={!isLoading && increaseBallCount}>
                       <span className="plinko-control-sign">+</span>
                     </div>
                   </div>
@@ -165,9 +234,9 @@ export default function PlinkoScreen({ onNavigate }) {
                 <button 
                   className="plinko-drop-button"
                   onClick={handlePlay}
-                  disabled={!betAmount || parseFloat(betAmount) <= 0}
+                  disabled={isLoading || !betAmount || parseFloat(betAmount) <= 0}
                 >
-                  DROP {totalBetFormatted} {selectedCurrency}
+                  {isLoading ? 'LOADING...' : `DROP ${totalBetFormatted} ${selectedCurrency}`}
                 </button>
               </div>
             ) : (
