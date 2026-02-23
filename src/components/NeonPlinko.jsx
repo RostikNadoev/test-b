@@ -101,10 +101,10 @@ function Peg({ position, config }) {
   useFrame(() => {
     if (ringRef.current && pulse > 0) {
       ringRef.current.visible = true
-      const s = 1 + (1 - pulse) * 3
+      const s = 1 + (1 - pulse) * 2 // УМЕНЬШЕНО: было 3, стало 2
       ringRef.current.scale.set(s, s, s)
-      ringRef.current.material.opacity = pulse
-      setPulse(prev => Math.max(0, prev - 0.05))
+      ringRef.current.material.opacity = pulse * 0.7 // УМЕНЬШЕНО: прозрачность
+      setPulse(prev => Math.max(0, prev - 0.03)) // УМЕНЬШЕНО: скорость затухания
     } else if (ringRef.current) {
       ringRef.current.visible = false
     }
@@ -113,10 +113,10 @@ function Peg({ position, config }) {
   return (
     <group position={position}>
       <Circle args={[pegRadius, 32]}>
-        <meshStandardMaterial color="#555" emissive="white" emissiveIntensity={0.2} />
+        <meshStandardMaterial color="#555" emissive="#333" emissiveIntensity={0.1} /> {/* УМЕНЬШЕНО: emissive */}
       </Circle>
-      <Ring ref={ringRef} args={[pegRadius * 0.5, pegRadius *0.9, 32]} visible={false}>
-        <meshStandardMaterial color="#00f2ff" transparent emissive="#00f2ff" emissiveIntensity={2} depthWrite={false} />
+      <Ring ref={ringRef} args={[pegRadius * 0.5, pegRadius *0.8, 32]} visible={false}> {/* УМЕНЬШЕНО: размер кольца */}
+        <meshStandardMaterial color="#88ccff" transparent emissive="#88ccff" emissiveIntensity={0.8} depthWrite={false} /> {/* УМЕНЬШЕНО: яркость */}
       </Ring>
     </group>
   )
@@ -141,11 +141,11 @@ function IndividualSlot({ index, val, x, bottomY, slotWidth, config, onHit }) {
 
   useFrame((_, delta) => {
     if (impact > 0) {
-      setImpact(prev => Math.max(0, prev - delta * 2.0))
+      setImpact(prev => Math.max(0, prev - delta * 1.5)) // УМЕНЬШЕНО: скорость затухания
     }
   })
 
-  const currentY = bottomY - (impact * 0.03);
+  const currentY = bottomY - (impact * 0.02); // УМЕНЬШЕНО: амплитуда движения
 
   return (
     <group>
@@ -163,15 +163,15 @@ function IndividualSlot({ index, val, x, bottomY, slotWidth, config, onHit }) {
         <meshStandardMaterial 
           color={slotColor.main} 
           emissive={slotColor.emissive}
-          emissiveIntensity={0.2 + impact * 8}
+          emissiveIntensity={0.1 + impact * 4} // УМЕНЬШЕНО: было 0.2 + impact * 8
         />
       </mesh>
 
       <pointLight 
         position={[x, currentY + 0.2, 0.15]}
         color={slotColor.emissive} 
-        intensity={impact * 3}
-        distance={0.4}
+        intensity={impact * 1.5} // УМЕНЬШЕНО: было impact * 3
+        distance={0.3} // УМЕНЬШЕНО: было 0.4
       />
     </group>
   )
@@ -201,7 +201,7 @@ function Ball({ id, config }) {
   return (
     <mesh ref={ref}>
       <sphereGeometry args={[config.ballRadius, 24, 24]} />
-      <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={3} />
+      <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={2} /> {/* УМЕНЬШЕНО: было 3 */}
     </mesh>
   )
 }
@@ -318,7 +318,7 @@ const NeonPlinko = forwardRef((props, ref) => {
 
   return (
     <div className="plinko-game-wrapper" style={{ width: '100%', height: '100%', minHeight: '500px' }}>
-      <Canvas dpr={[1, 2]} gl={{ antialias: true, toneMappingExposure: 1.5 }}>
+      <Canvas dpr={[1, 2]} gl={{ antialias: true, toneMappingExposure: 1.2 }}> {/* УМЕНЬШЕНО: exposure */}
         <PerspectiveCamera 
           makeDefault 
           position={[
@@ -329,8 +329,8 @@ const NeonPlinko = forwardRef((props, ref) => {
           fov={50}
         />
         <Stars count={100} factor={4} fade depth={50} />
-        <ambientLight intensity={1.2} />
-        <pointLight position={[0, 5, 5]} intensity={2} />
+        <ambientLight intensity={0.8} /> {/* УМЕНЬШЕНО: было 1.2 */}
+        <pointLight position={[0, 5, 5]} intensity={1.5} /> {/* УМЕНЬШЕНО: было 2 */}
         
         <Physics 
           gravity={[0, config.gravity, 0]}
