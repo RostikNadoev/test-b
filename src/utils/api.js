@@ -349,6 +349,18 @@ export const starsApi = {
       console.error('❌ Error checking invoice status:', error);
       throw error;
     }
+  },
+
+  async getWithdrawProgress() {
+    try {
+      console.log('📊 Requesting stars withdraw progress...');
+      const response = await api.get('/api/v1/stars/withdraw/progress');
+      console.log('✅ Stars withdraw progress received:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error getting stars withdraw progress:', error);
+      throw error;
+    }
   }
 };
 

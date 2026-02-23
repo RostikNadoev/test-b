@@ -7,10 +7,10 @@ import { tonConnect } from '../utils/tonConnect';
 
 import ava from '../assets/MainPage/ava.jpg';
 import ton from '../assets/MainPage/ton.svg';
-import tonBack from '../assets/MainPage/tonblack.svg'; // Импортируем новую иконку
+import tonBack from '../assets/MainPage/tonblack.svg';
 import star from '../assets/MainPage/star1.png';
 import add_balance from '../assets/MainPage/add_balance.svg';
-import add_balance_black from '../assets/MainPage/add_button_black.svg'; // Импортируем черную иконку
+import add_balance_black from '../assets/MainPage/add_button_black.svg';
 import modalCloseIcon from '../assets/Profile/close.png';
 
 export default function Header({ onNavigate, variant = 'default' }) {
@@ -30,9 +30,11 @@ export default function Header({ onNavigate, variant = 'default' }) {
   const [invoiceLink, setInvoiceLink] = useState(null);
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
   const [progressData, setProgressData] = useState({
-    games: { current: 10, target: 10 },
-    stars: { current: 2400, target: 2500 }
+    games: { current: 0, target: 10 },
+    stars: { current: 0, target: 2500 },
+    canWithdraw: false
   });
+  const [isLoadingProgress, setIsLoadingProgress] = useState(false);
   const shouldAutoCloseRef = useRef(false);
 
   // Определяем класс для варианта header
@@ -117,6 +119,50 @@ export default function Header({ onNavigate, variant = 'default' }) {
     }
   }, [isDemoMode, loadBalances]);
 
+  // Загружаем данные о прогрессе
+  const loadProgressData = useCallback(async () => {
+    if (isDemoMode) {
+      // Демо-данные для тестирования
+      setProgressData({
+        games: { current: 10, target: 10 },
+        stars: { current: 2400, target: 2500 },
+        canWithdraw: false
+      });
+      return;
+    }
+
+    try {
+      setIsLoadingProgress(true);
+      console.log('📊 Loading stars withdraw progress...');
+      
+      const data = await starsApi.getWithdrawProgress();
+      console.log('✅ Progress data loaded:', data);
+      
+      setProgressData({
+        games: { 
+          current: data.games_played || 0, 
+          target: data.need_games || 10 
+        },
+        stars: { 
+          current: data.played_stars_total || 0, 
+          target: data.need_stars || 2500 
+        },
+        canWithdraw: data.can_withdraw || false
+      });
+    } catch (error) {
+      console.error('❌ Failed to load progress data:', error);
+      
+      // Заглушка на случай ошибки
+      setProgressData({
+        games: { current: 0, target: 10 },
+        stars: { current: 0, target: 2500 },
+        canWithdraw: false
+      });
+    } finally {
+      setIsLoadingProgress(false);
+    }
+  }, [isDemoMode]);
+
   const handleOpenBalanceModal = () => {
     if (isDemoMode) {
       alert('Demo mode is active. Connect wallet to use real TON.');
@@ -152,7 +198,8 @@ export default function Header({ onNavigate, variant = 'default' }) {
     }, 300);
   };
 
-  const handleOpenProgressModal = () => {
+  const handleOpenProgressModal = async () => {
+    await loadProgressData();
     setIsProgressModalOpen(true);
   };
 
@@ -481,18 +528,6 @@ export default function Header({ onNavigate, variant = 'default' }) {
     };
   }, [isBalanceModalOpen, isProgressModalOpen]);
 
-  // Загружаем данные о прогрессе (заглушка)
-  useEffect(() => {
-    if (activeCurrency === 'stars' && isBalanceModalOpen) {
-      // Здесь должен быть API запрос для получения данных о прогрессе
-      // Для демо используем статические данные
-      setProgressData({
-        games: { current: 10, target: 10 },
-        stars: { current: 2400, target: 2500 }
-      });
-    }
-  }, [activeCurrency, isBalanceModalOpen]);
-
   return (
     <>
       <header className={headerClass}>
@@ -671,7 +706,11 @@ export default function Header({ onNavigate, variant = 'default' }) {
                       <button
                         className="balance-modal-action-btn stars-withdraw-btn"
                         onClick={() => {
-                          alert('Withdraw feature coming soon!');
+                          if (progressData.canWithdraw) {
+                            alert('Withdraw feature coming soon!');
+                          } else {
+                            handleOpenProgressModal();
+                          }
                         }}
                         disabled={!topUpAmount || isNaN(parseInt(topUpAmount)) || parseInt(topUpAmount) <= 0 || isProcessing}
                       >
@@ -741,11 +780,11 @@ export default function Header({ onNavigate, variant = 'default' }) {
               <div className="progress-task">
                 <div className="task-header">
                   <div className="task-name-container">
-                    <span className="task-name">Play any 10 games</span>
+                    <span className="task-name">Play any {progressData.games.target} games</span>
                   </div>
                   <div className="task-count">
-                    {progressData.games.current}/{progressData.games.target}
-                    {progressData.games.current >= progressData.games.target && (
+                    {isLoadingProgress ? '...' : `${progressData.games.current}/${progressData.games.target}`}
+                    {!isLoadingProgress && progressData.games.current >= progressData.games.target && (
                       <span className="task-complete">✓</span>
                     )}
                   </div>
@@ -754,7 +793,7 @@ export default function Header({ onNavigate, variant = 'default' }) {
                   <div 
                     className="progress-bar"
                     style={{ 
-                      width: `${(progressData.games.current / progressData.games.target) * 100}%` 
+                      width: isLoadingProgress ? '0%' : `${Math.min((progressData.games.current / progressData.games.target) * 100, 100)}%` 
                     }}
                   >
                     <div className="progress-shimmer"></div>
@@ -767,13 +806,13 @@ export default function Header({ onNavigate, variant = 'default' }) {
                 <div className="task-header">
                   <div className="task-name-container">
                     <span className="task-name-place">
-                      Place 2500 
+                      Place {progressData.stars.target.toLocaleString()} 
                       <img src={star} alt="Stars" className="task-icon-stars" />
                     </span>
                   </div>
                   <div className="task-count">
-                    {progressData.stars.current.toLocaleString()}/{progressData.stars.target.toLocaleString()}
-                    {progressData.stars.current >= progressData.stars.target && (
+                    {isLoadingProgress ? '...' : `${progressData.stars.current.toLocaleString()}/${progressData.stars.target.toLocaleString()}`}
+                    {!isLoadingProgress && progressData.stars.current >= progressData.stars.target && (
                       <span className="task-complete">✓</span>
                     )}
                   </div>
@@ -782,7 +821,7 @@ export default function Header({ onNavigate, variant = 'default' }) {
                   <div 
                     className="progress-bar"
                     style={{ 
-                      width: `${(progressData.stars.current / progressData.stars.target) * 100}%` 
+                      width: isLoadingProgress ? '0%' : `${Math.min((progressData.stars.current / progressData.stars.target) * 100, 100)}%` 
                     }}
                   >
                     <div className="progress-shimmer"></div>
