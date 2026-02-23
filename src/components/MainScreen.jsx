@@ -34,7 +34,7 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
     if (referralData) {
       console.log('✅ Referral data loaded:', referralData);
       console.log('🔑 referral_code:', referralData.referral_code);
-      console.log('🔗 referral_link.start_param:', referralData.referral_link?.start_param);
+      console.log('🔗 referral_link:', referralData.referral_link);
     }
   }, [referralData]);
 
@@ -55,16 +55,11 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
       // Для тестирования используем мок-данные если API недоступен
       console.log('📦 Using mock data for testing');
       setReferralData({
-        referral_code: "15-8785",
-        referral_link: { start_param: "15-8785" },
-        my_progress: {
-          eligible_spend_stars: 10,
-          eligible_games: 0,
-          activated_at: null
-        },
-        referrals_count: 10,
-        next_payout_utc: "2026-02-27T00:05:00Z",
-        payouts: []
+        invited_count: 10,
+        accrual_date_utc: "2026-02-27T00:05:00Z",
+        amount_due_ton: 10.5,
+        referral_link: "https://t.me/Bouncecase_bot?start=15-8785",
+        referral_code: "15-8785"
       });
     } finally {
       setIsLoading(false);
@@ -97,10 +92,15 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
     return `${day}.${month}.${year}`;
   };
 
-  // Форматирование суммы из eligible_spend_stars
-  const formatEligibleAmount = (stars) => {
-    if (stars === undefined || stars === null) return '0 ton';
-    return `${stars} ton`;
+  // Форматирование суммы из amount_due_ton с одним знаком после запятой
+  const formatDueAmount = (amount) => {
+    if (amount === undefined || amount === null) return '0.0 ton';
+    
+    // Преобразуем в число и форматируем с одним знаком после запятой
+    const num = Number(amount);
+    if (isNaN(num)) return '0.0 ton';
+    
+    return `${num.toFixed(1)} ton`;
   };
 
   // Функция для получения реферальной ссылки
@@ -110,8 +110,13 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
     
     if (referralData?.referral_code) {
       referralCode = referralData.referral_code;
-    } else if (referralData?.referral_link?.start_param) {
-      referralCode = referralData.referral_link.start_param;
+    } else if (referralData?.referral_link) {
+      // Если пришла полная ссылка, извлекаем код из неё
+      const link = referralData.referral_link;
+      const match = link.match(/[?&]start=([^&]+)/);
+      if (match) {
+        referralCode = match[1];
+      }
     }
     
     console.log('🔗 Getting referral link, code:', referralCode);
@@ -121,7 +126,8 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
       return null;
     }
     
-    const link = `https://t.me/${BOT_USERNAME}?startapp=${referralCode}`;
+    // Используем параметр start (не startapp) как в документации
+    const link = `https://t.me/${BOT_USERNAME}?start=${referralCode}`;
     console.log('✅ Generated link:', link);
     return link;
   };
@@ -284,7 +290,7 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
                   <span className="referral-date-label">
                     You’ll get{' '}
                     <span className="referral-date-value">
-                      {isLoading ? 'Loading...' : formatNextPayoutDate(referralData?.next_payout_utc)}
+                      {isLoading ? 'Loading...' : formatNextPayoutDate(referralData?.accrual_date_utc)}
                     </span>
                   </span>
                   {/* Кнопка с вопросиком */}
@@ -305,12 +311,12 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
               <div className="referral-stats-values">
                 <div className="referral-stat-field">
                   <span className="referral-stat-number">
-                    {isLoading ? '...' : formatEligibleAmount(referralData?.my_progress?.eligible_spend_stars)}
+                    {isLoading ? '...' : formatDueAmount(referralData?.amount_due_ton)}
                   </span>
                 </div>
                 <div className="referral-stat-field">
                   <span className="referral-stat-number">
-                    {isLoading ? '...' : referralData?.referrals_count || '0'}
+                    {isLoading ? '...' : referralData?.invited_count || '0'}
                   </span>
                 </div>
               </div>
