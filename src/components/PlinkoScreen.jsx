@@ -68,7 +68,6 @@ export default function BounceFallScreen({ onNavigate }) {
     setIsLoading(true);
 
     try {
-      // 1. Отправляем запрос на бэкенд
       const response = await bounceFallApi.play(
         selectedCurrency,
         betAmount,
@@ -77,15 +76,12 @@ export default function BounceFallScreen({ onNavigate }) {
 
       console.log('✅ Game started:', response);
       
-      // 2. Сохраняем данные раунда
       setRoundData(response);
       
-      // 3. Очищаем очередь перед запуском
       if (window.clearLaunchQueue) {
         window.clearLaunchQueue();
       }
       
-      // 4. Для каждого шарика добавляем параметры в очередь
       response.results.forEach((result, index) => {
         const preset = getRandomPreset(result.outcome_index);
         if (window.queueLaunchParams) {
@@ -93,17 +89,15 @@ export default function BounceFallScreen({ onNavigate }) {
         }
       });
       
-      // 5. Сбрасываем состояние
       setTotalWinnings(0);
       setBallsDropped(0);
       setGameState('playing');
       
-      // 6. Обновляем баланс
       if (response.balance) {
         setNewBalances(response.balance);
+        window.dispatchEvent(new CustomEvent('balanceUpdate'));
       }
       
-      // 7. Запускаем шарики
       setTimeout(() => {
         if (plinkoRef.current) {
           for (let i = 0; i < ballCount; i++) {
@@ -123,11 +117,56 @@ export default function BounceFallScreen({ onNavigate }) {
     }
   };
 
-  const handleTakeWinnings = () => {
-    setGameState('idle');
-    setTotalWinnings(0);
-    setBallsDropped(0);
-    setRoundData(null);
+  const handleTakeWinnings = async () => {
+    // Добавляем проверку на наличие активной игры
+    if (!roundData?.game_id) {
+      setGameState('idle');
+      setTotalWinnings(0);
+      setBallsDropped(0);
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      // Отправляем запрос на завершение игры и получение выигрыша
+      const response = await bounceFallApi.cashout(roundData.game_id);
+      
+      console.log('✅ Game cashed out:', response);
+      
+      // Обновляем баланс через контекст
+      if (response.balance) {
+        setNewBalances(response.balance);
+        // Отправляем событие обновления баланса для всех компонентов
+        window.dispatchEvent(new CustomEvent('balanceUpdate'));
+      }
+      
+      // Показываем сообщение о выигрыше (опционально)
+      if (totalWinnings > 0) {
+        console.log(`🎉 Выигрыш ${totalWinnings} ${selectedCurrency} зачислен на баланс`);
+      }
+      
+    } catch (error) {
+      console.error('Error cashing out:', error);
+      // Даже если произошла ошибка, обновляем баланс с сервера
+      try {
+        const { getUserBalance } = await import('../utils/api');
+        const balanceResponse = await getUserBalance();
+        if (balanceResponse?.balance) {
+          setNewBalances(balanceResponse.balance);
+          window.dispatchEvent(new CustomEvent('balanceUpdate'));
+        }
+      } catch (balanceError) {
+        console.error('Error refreshing balance:', balanceError);
+      }
+    } finally {
+      // В любом случае сбрасываем состояние игры
+      setGameState('idle');
+      setTotalWinnings(0);
+      setBallsDropped(0);
+      setRoundData(null);
+      setIsLoading(false);
+    }
   };
 
   const increaseBallCount = () => ballCount < 10 && setBallCount(prev => prev + 1);
@@ -271,11 +310,11 @@ export default function BounceFallScreen({ onNavigate }) {
                 </div>
                 
                 <button 
-                  className={`plinko-action-btn ${gameState === 'playing' ? 'plinko-btn-waiting' : 'plinko-btn-collect'}`}
+                  className={`plinko-action-btn ${gameState === 'playing' ? 'plinko-btn-waiting' : 'plinko-btn-collect'} ${isLoading ? 'loading' : ''}`}
                   onClick={gameState === 'finished' ? handleTakeWinnings : undefined}
-                  disabled={gameState === 'playing'}
+                  disabled={gameState === 'playing' || isLoading}
                 >
-                  {gameState === 'playing' ? 'WAITING...' : 'TAKE WINNINGS'}
+                  {isLoading ? 'PROCESSING...' : (gameState === 'playing' ? 'WAITING...' : 'TAKE WINNINGS')}
                 </button>
               </div>
             )}
