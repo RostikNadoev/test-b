@@ -226,6 +226,7 @@
 .plinko-quick-bet-value {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-size: 15px;
+  line-height: 1.4;
   color: #00f2ff;
   -webkit-text-stroke: 0.5px white;
 }
