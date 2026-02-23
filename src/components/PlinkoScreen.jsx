@@ -7,7 +7,7 @@ import starSvg from '../assets/MainPage/star1.png';
 import switchSvg from '../assets/MainPage/switch.svg';
 import switchbSvg from '../assets/MainPage/switchd.svg';
 import rocketBack from '../assets/Plinko/Back.png';
-import { bounceFallApi, authApi } from '../utils/api';
+import { bounceFallApi } from '../utils/api';
 import { getRandomPreset } from '../utils/bounceFallPresets';
 import { useBalance } from '../contexts/BalanceContext';
 
@@ -26,19 +26,6 @@ export default function BounceFallScreen({ onNavigate }) {
   const [roundData, setRoundData] = useState(null);
   
   const { checkBalance, setNewBalances } = useBalance();
-
-  // Функция для обновления баланса с сервера
-  const refreshBalance = async () => {
-    try {
-      const response = await authApi.getMe();
-      if (response?.balances) {
-        setNewBalances(response.balances);
-        console.log('💰 Баланс обновлен:', response.balances);
-      }
-    } catch (error) {
-      console.error('Ошибка обновления баланса:', error);
-    }
-  };
 
   const handleBallLand = useCallback((multiplier) => {
     setBallsDropped(prev => {
@@ -111,7 +98,7 @@ export default function BounceFallScreen({ onNavigate }) {
       setBallsDropped(0);
       setGameState('playing');
       
-      // 6. Обновляем баланс (списание)
+      // 6. Обновляем баланс
       if (response.balance) {
         setNewBalances(response.balance);
       }
@@ -136,10 +123,7 @@ export default function BounceFallScreen({ onNavigate }) {
     }
   };
 
-  const handleTakeWinnings = async () => {
-    // Обновляем баланс перед сбросом состояния
-    await refreshBalance();
-    
+  const handleTakeWinnings = () => {
     setGameState('idle');
     setTotalWinnings(0);
     setBallsDropped(0);
