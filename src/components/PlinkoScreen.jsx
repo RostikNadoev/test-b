@@ -14,6 +14,8 @@ import { useBalance } from '../contexts/BalanceContext';
 export default function BounceFallScreen({ onNavigate }) {
   const plinkoRef = useRef();
   const currencyDropdownRef = useRef(null);
+  const sliderRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
   
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState('TON');
@@ -26,6 +28,49 @@ export default function BounceFallScreen({ onNavigate }) {
   const [roundData, setRoundData] = useState(null);
   
   const { checkBalance, setNewBalances, loadBalances } = useBalance();
+
+  // Обработчики для слайдера
+  const handleSliderStart = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleSliderMove = useCallback((e) => {
+    if (!isDragging || !sliderRef.current) return;
+
+    e.preventDefault();
+    
+    const slider = sliderRef.current;
+    const rect = slider.getBoundingClientRect();
+    const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+    
+    let x = clientX - rect.left;
+    x = Math.max(0, Math.min(x, rect.width));
+    
+    const percentage = x / rect.width;
+    const newValue = Math.round(1 + percentage * 9); // от 1 до 10
+    setBallCount(newValue);
+  }, [isDragging]);
+
+  const handleSliderEnd = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleSliderMove);
+      window.addEventListener('mouseup', handleSliderEnd);
+      window.addEventListener('touchmove', handleSliderMove, { passive: false });
+      window.addEventListener('touchend', handleSliderEnd);
+      
+      return () => {
+        window.removeEventListener('mousemove', handleSliderMove);
+        window.removeEventListener('mouseup', handleSliderEnd);
+        window.removeEventListener('touchmove', handleSliderMove);
+        window.removeEventListener('touchend', handleSliderEnd);
+      };
+    }
+  }, [isDragging, handleSliderMove, handleSliderEnd]);
 
   const handleBallLand = useCallback((multiplier) => {
     setBallsDropped(prev => {
@@ -118,24 +163,18 @@ export default function BounceFallScreen({ onNavigate }) {
   };
 
   const handleTakeWinnings = async () => {
-    // Сразу сбрасываем состояние игры
     setGameState('idle');
     setTotalWinnings(0);
     setBallsDropped(0);
     setRoundData(null);
     
     try {
-      // Просто обновляем баланс с сервера - как в LuckyBalls
       await loadBalances();
-      
-      // Отправляем событие обновления баланса
       window.dispatchEvent(new CustomEvent('balanceUpdate'));
-      
       console.log('✅ Balance updated after taking winnings');
     } catch (error) {
       console.error('Error refreshing balance:', error);
       
-      // Если не получилось через контекст, пробуем напрямую
       try {
         const balanceResponse = await usersApi.getBalance();
         if (balanceResponse?.balances) {
@@ -147,9 +186,6 @@ export default function BounceFallScreen({ onNavigate }) {
       }
     }
   };
-
-  const increaseBallCount = () => ballCount < 10 && setBallCount(prev => prev + 1);
-  const decreaseBallCount = () => ballCount > 1 && setBallCount(prev => prev - 1);
 
   const handleCurrencySelect = (currency) => {
     setSelectedCurrency(currency);
@@ -171,6 +207,9 @@ export default function BounceFallScreen({ onNavigate }) {
   const totalBetFormatted = selectedCurrency === 'STARS' 
     ? Math.round(totalBetAmount)
     : totalBetAmount.toFixed(2);
+
+  // Процент для слайдера
+  const sliderPercentage = ((ballCount - 1) / 9) * 100;
 
   return (
     <div 
@@ -238,13 +277,23 @@ export default function BounceFallScreen({ onNavigate }) {
 
                 <div className="plinko-balls-selector">
                   <div className="plinko-balls-label">Balls</div>
-                  <div className="plinko-balls-counter">
-                    <div className={`plinko-ball-control ${ballCount <= 1 || isLoading ? 'disabled' : ''}`} onClick={!isLoading && decreaseBallCount}>
-                      <span className="plinko-control-sign">−</span>
-                    </div>
-                    <div className="plinko-ball-count-display">{ballCount}</div>
-                    <div className={`plinko-ball-control ${ballCount >= 10 || isLoading ? 'disabled' : ''}`} onClick={!isLoading && increaseBallCount}>
-                      <span className="plinko-control-sign">+</span>
+                  <div className="plinko-balls-slider-container">
+                    <div 
+                      className="plinko-slider-track"
+                      ref={sliderRef}
+                      onMouseDown={handleSliderStart}
+                      onTouchStart={handleSliderStart}
+                    >
+                      <div 
+                        className="plinko-slider-fill"
+                        style={{ width: `${sliderPercentage}%` }}
+                      />
+                      <div 
+                        className={`plinko-slider-thumb ${isDragging ? 'dragging' : ''}`}
+                        style={{ left: `${sliderPercentage}%` }}
+                      >
+                        <span className="plinko-slider-value">{ballCount}</span>
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -9,7 +9,6 @@
   flex-direction: column;
   overflow: hidden;
   position: relative;
-  /* Убрали любые padding, чтобы Header мог центрироваться по всей ширине */
   padding: 0; 
 }
 
@@ -59,7 +58,6 @@
 /* Секция управления */
 .plinko-controls-section {
   width: 100%;
-  /* Увеличили верхний отступ и общий нижний для "воздуха" */
   padding: 20px 16px 35px;
   display: flex;
   flex-direction: column;
@@ -71,7 +69,6 @@
 .plinko-active-controls {
   display: flex;
   flex-direction: column;
-  /* Увеличили отступ между строками (Your Bet / Balls / Button) */
   gap: 20px; 
   width: 100%;
 }
@@ -85,7 +82,6 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  /* Отступ от текста "Your bet" до самого инпута */
   margin-bottom: -5px;
 }
 
@@ -99,7 +95,7 @@
 .plinko-bet-input-wrapper {
   flex: 1;
   min-width: 0; 
-  height: 52px; /* Чуть увеличили высоту для солидности */
+  height: 52px;
   background: linear-gradient(135deg, rgba(0, 150, 255, 0.2) 0%, rgba(0, 100, 255, 0.1) 100%);
   backdrop-filter: blur(10px);
   border: 2px solid rgba(0, 242, 255, 0.5);
@@ -108,6 +104,7 @@
   align-items: center;
   position: relative;
   box-shadow: 0 4px 15px rgba(0, 242, 255, 0.2);
+  z-index: 150;
 }
 
 .plinko-bet-placeholder {
@@ -123,6 +120,8 @@
   transition: opacity 0.2s ease;
   top: 50%;
   transform: translateY(-50%);
+  line-height: 1.5;
+  z-index: 160;
 }
 
 .plinko-bet-placeholder.hidden {
@@ -136,18 +135,16 @@
   border: none;
   outline: none;
   font-family: 'KZ Supercell-Magic', sans-serif;
-  font-size: 17px;
-  
-  /* Вместо прозрачного цвета и градиента по тексту, 
-     используем надежный сплошной цвет с фильтром свечения */
+  font-size: 20px;
+  line-height: 52px;
   color: #00f2ff; 
-  text-shadow: 0 0 5px rgba(0, 242, 255, 0.5);
+  border-radius: 16px;
   -webkit-text-stroke: 0.5px white;
-  
   padding: 0 16px;
   padding-right: 85px;
   box-sizing: border-box;
-  caret-color: #00f2ff;
+  text-align: left;
+  vertical-align: middle;
 }
 
 /* Селектор валюты */
@@ -158,6 +155,7 @@
   align-items: center;
   gap: 6px;
   cursor: pointer;
+  z-index: 200;
 }
 
 .plinko-currency-icon {
@@ -177,13 +175,14 @@
   top: 48px;
   right: -5px;
   width: 110px;
-  background: rgba(10, 20, 40, 0.98);
+  background: rgba(10, 20, 40, 1);
   backdrop-filter: blur(15px);
   border: 2px solid rgba(0, 242, 255, 0.6);
   border-radius: 12px;
   overflow: hidden;
-  z-index: 100;
+  z-index: 1000;
   box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  isolation: isolate;
 }
 
 .plinko-dropdown-item {
@@ -192,10 +191,12 @@
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-size: 14px;
   color: #00f2ff;
-  border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+  border-bottom: 1px solid rgba(0, 242, 255, 1);
 }
 
-.plinko-dropdown-item:last-child { border-bottom: none; }
+.plinko-dropdown-item:last-child { 
+  border-bottom: none; 
+}
 
 .plinko-dropdown-item.selected {
   background: rgba(0, 242, 255, 0.2);
@@ -221,7 +222,9 @@
   transition: transform 0.1s ease, box-shadow 0.2s ease;
 }
 
-.plinko-quick-bet-button:active { transform: scale(0.92); }
+.plinko-quick-bet-button:active { 
+  transform: scale(0.92); 
+}
 
 .plinko-quick-bet-value {
   font-family: 'KZ Supercell-Magic', sans-serif;
@@ -237,50 +240,16 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  /* Дополнительный внутренний отступ для визуального разделения */
   padding: 0px 0;
+  margin-left: 5px;
 }
 
 .plinko-balls-label {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-size: 17px;
   color: #00f2ff;
-}
-
-.plinko-balls-counter {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.plinko-ball-control {
-  width: 40px;
-  height: 40px;
-  background: rgba(0, 242, 255, 0.1);
-  border: 2px solid #00f2ff;
-  border-radius: 12px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-}
-
-.plinko-ball-control.disabled { opacity: 0.3; pointer-events: none; }
-
-.plinko-control-sign {
-  font-family: 'KZ Supercell-Magic', sans-serif;
-  font-size: 24px;
-  color: #00f2ff;
-}
-
-.plinko-ball-count-display {
-  font-family: 'KZ Supercell-Magic', sans-serif;
-  font-size: 22px;
-  color: #00f2ff;
-  min-width: 35px;
-  text-align: center;
-  line-height: 1.5;
-  -webkit-text-stroke: 0.5px white;
+  white-space: nowrap;
+  margin-right: 10px;
 }
 
 /* Кнопки DROP и COLLECT */
@@ -298,7 +267,9 @@
   line-height: 1.4;
 }
 
-.plinko-drop-button:active { transform: scale(0.98); }
+.plinko-drop-button:active { 
+  transform: scale(0.98); 
+}
 
 .plinko-action-btn {
   width: 100%;
@@ -335,7 +306,7 @@
   padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 15px; /* Увеличен зазор между Bet/Balls/Winnings */
+  gap: 15px;
 }
 
 .plinko-info-row {
@@ -375,11 +346,121 @@
   height: 22px;
 }
 
+/* ===== НОВЫЙ СЛАЙДЕР ===== */
+.plinko-balls-slider-container {
+  flex: 1;
+  max-width: 200px;
+  margin-right: 15px;
+  position: relative;
+  z-index: 1;
+}
+
+.plinko-slider-track {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 242, 255, 0.2);
+  border-radius: 10px;
+  cursor: pointer;
+  border: 1px solid rgba(0, 242, 255, 0.3);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.plinko-slider-fill {
+  position: absolute;
+  height: 100%;
+  background: linear-gradient(90deg, #00f2ff, #0088ff);
+  border-radius: 10px;
+  pointer-events: none;
+  box-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+}
+
+.plinko-slider-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #00f2ff, #0088ff);
+  border: 2px solid white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  box-shadow: 0 0 20px rgba(0, 242, 255, 0.6);
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+  pointer-events: auto;
+  z-index: 10;
+}
+
+.plinko-slider-thumb.dragging {
+  cursor: grabbing;
+  transform: translate(-50%, -50%) scale(1.1);
+  box-shadow: 0 0 30px rgba(0, 242, 255, 0.9);
+}
+
+.plinko-slider-value {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-size: 14px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.5);
+}
+
 /* Фикс для маленьких экранов */
 @media screen and (max-width: 380px) {
-  .plinko-bet-input { padding-right: 75px; font-size: 15px; }
-  .plinko-quick-bet-button { width: 44px; height: 48px; }
-  .plinko-quick-bet-value { font-size: 13px; }
-  .plinko-drop-button, .plinko-action-btn { height: 52px; font-size: 17px; }
-  .plinko-controls-section { gap: 15px; padding-bottom: 25px; }
+  .plinko-bet-input { 
+    padding-right: 75px; 
+    font-size: 18px;
+    line-height: 48px;
+  }
+  
+  .plinko-quick-bet-button { 
+    width: 44px; 
+    height: 48px; 
+  }
+  
+  .plinko-quick-bet-value { 
+    font-size: 13px; 
+  }
+  
+  .plinko-drop-button, 
+  .plinko-action-btn { 
+    height: 52px; 
+    font-size: 17px; 
+  }
+  
+  .plinko-controls-section { 
+    gap: 15px; 
+    padding-bottom: 25px; 
+  }
+}
+
+/* Адаптивность для маленьких экранов - слайдер */
+@media screen and (max-width: 400px) {
+  .plinko-balls-slider-container {
+    max-width: 180px;
+  }
+  
+  .plinko-slider-thumb {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .plinko-slider-value {
+    font-size: 12px;
+  }
+}
+
+@media screen and (max-width: 350px) {
+  .plinko-balls-slider-container {
+    max-width: 150px;
+  }
+  
+  .plinko-slider-thumb {
+    width: 28px;
+    height: 28px;
+  }
 }
