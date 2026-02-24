@@ -88,6 +88,7 @@ import fourthCase from './assets/MainPage/cases/fourthcasee.png';
 import fifthCase from './assets/MainPage/cases/fifthcasee.png';
 import sixthCase from './assets/MainPage/cases/esixthcase.png';
 import casesBack from './assets/Plinko/Back.png';
+import rocketback1 from './assets/Rocket/rocketback.png';
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -521,6 +522,7 @@ export default function App() {
   // === 🔥 Список всех URL-адресов изображений для предзагрузки ===
   const allImageUrls = [
     gift,
+    rocketback1,
     casesBack,
     giftchange,
     tonGift,
