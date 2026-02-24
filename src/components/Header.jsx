@@ -528,6 +528,15 @@ export default function Header({ onNavigate, variant = 'default' }) {
     };
   }, [isBalanceModalOpen, isProgressModalOpen]);
 
+  // Определяем класс для модальных окон в зависимости от варианта header
+  const modalClass = variant === 'cases' || variant === 'plinko' || variant === 'spin'
+    ? 'balance-modal-content modal-special'
+    : 'balance-modal-content';
+
+  const progressModalClass = variant === 'cases' || variant === 'plinko' || variant === 'spin'
+    ? 'progress-modal-content modal-special'
+    : 'progress-modal-content';
+
   return (
     <>
       <header className={headerClass}>
@@ -583,7 +592,7 @@ export default function Header({ onNavigate, variant = 'default' }) {
           <div className="balance-modal-blur-layer" />
           <div
             ref={modalRef}
-            className={`balance-modal-content ${isClosing ? 'closing' : ''}`}
+            className={`${modalClass} ${isClosing ? 'closing' : ''}`}
             onClick={(e) => e.stopPropagation()}
             onAnimationEnd={handleAnimationEnd}
           >
@@ -593,7 +602,7 @@ export default function Header({ onNavigate, variant = 'default' }) {
                   className={`currency-tab ${activeCurrency === 'ton' ? 'active' : ''}`}
                   onClick={() => setActiveCurrency('ton')}
                 >
-                  <img src={ton} alt="TON" className="currency-icon" />
+                  <img src={variant === 'cases' || variant === 'plinko' || variant === 'spin' ? tonBack : ton} alt="TON" className="currency-icon" />
                   <span>TON</span>
                 </button>
                 <button
@@ -760,7 +769,7 @@ export default function Header({ onNavigate, variant = 'default' }) {
         <div className="progress-modal-overlay" onClick={handleCloseProgressModal}>
           <div className="progress-modal-blur-layer" />
           <div
-            className="progress-modal-content"
+            className={progressModalClass}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="progress-modal-header">

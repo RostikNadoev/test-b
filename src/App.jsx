@@ -87,6 +87,7 @@ import thirdCase from './assets/MainPage/cases/thirdcasee.png';
 import fourthCase from './assets/MainPage/cases/fourthcasee.png';
 import fifthCase from './assets/MainPage/cases/fifthcasee.png';
 import sixthCase from './assets/MainPage/cases/esixthcase.png';
+import casesBack from './assets/Plinko/Back.png';
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -520,6 +521,7 @@ export default function App() {
   // === 🔥 Список всех URL-адресов изображений для предзагрузки ===
   const allImageUrls = [
     gift,
+    casesBack,
     giftchange,
     tonGift,
     modalCloseIcon,
