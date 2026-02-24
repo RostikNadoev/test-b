@@ -672,11 +672,7 @@ const handleWithdraw = async () => {
         ) : (
           <div className="wallet-info-section">
             <div className="connected-wallet-info-profile">
-              <div className="wallet-status">
-                <span className="wallet-name" style={{ opacity: 0.6 }}>
-                  Demo Mode Active
-                </span>
-              </div>
+              
               <div className="wallet-address" style={{ opacity: 0.6 }}>
                 Disable Demo to connect wallet
               </div>
