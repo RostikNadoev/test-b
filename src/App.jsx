@@ -521,7 +521,6 @@ export default function App() {
 
   // === 🔥 Список всех URL-адресов изображений для предзагрузки ===
   const allImageUrls = [
-    gift,
     rocketback1,
     casesBack,
     giftchange,
