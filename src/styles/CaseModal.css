@@ -210,6 +210,7 @@
   font-weight: 800;
   font-style: normal;
   font-size: 11px;
+  line-height: 1.5;
   letter-spacing: 0%;
   background: rgb(98, 140, 231);
   -webkit-background-clip: text;
@@ -230,6 +231,7 @@
   font-weight: 800;
   font-style: normal;
   font-size: 11px;
+  line-height: 1.5;
   letter-spacing: 0%;
   background: rgb(206, 161, 248);
   -webkit-background-clip: text;
@@ -250,6 +252,7 @@
   font-weight: 800;
   font-style: normal;
   font-size: 11px;
+  line-height: 1.5;
   letter-spacing: 0%;
   background: rgb(255, 237, 156);
   -webkit-background-clip: text;
