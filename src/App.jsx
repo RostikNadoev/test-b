@@ -28,7 +28,6 @@ import modalCloseIcon from './assets/Profile/close.png';
 import middle from './assets/MainPage/middle.png';
 import cardBack1 from './assets/MainPage/chest1/back.png';
 import cardBack2 from './assets/MainPage/chest1/back2.png';
-import cardBack3 from './assets/MainPage/chest1/back3.png';
 import cardton1 from './assets/MainPage/chest1/ton.png';
 import cardton2 from './assets/MainPage/chest2/ton.png';
 import cardton3 from './assets/MainPage/chest3/ton.png';
@@ -525,7 +524,6 @@ export default function App() {
     middle,
     cardBack1,
     cardBack2,
-    cardBack3,
     cardton1,
     cardton2,
     cardton3,
