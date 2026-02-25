@@ -40,21 +40,28 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
     }
   };
 
-  // Функция для форматирования цены
-  const formatPrice = (priceStr) => {
-    const priceValue = parseFloat(priceStr.replace(/[^\d.-]/g, ''));
-    const currency = priceStr.includes('TON') ? ' TON' : '';
+ // Функция для обрезания цены (без округления)
+const formatPrice = (priceStr) => {
+  const priceValue = parseFloat(priceStr.replace(/[^\d.-]/g, ''));
+  const currency = priceStr.includes('TON') ? ' TON' : '';
+  
+  if (priceValue >= 100) {
+    // Преобразуем в строку и обрезаем до 1 знака после запятой БЕЗ округления
+    const priceString = priceValue.toString();
+    const [wholePart, decimalPart] = priceString.split('.');
     
-    if (priceValue >= 100) {
-      // Для чисел >= 100 показываем с 1 знаком после запятой
-      return priceValue % 1 === 0 ? 
-        `${priceValue}${currency}` : 
-        `${priceValue.toFixed(1)}${currency}`;
+    if (decimalPart) {
+      // Если есть десятичная часть, берем только первый знак (обрезаем, не округляем)
+      return `${wholePart}.${decimalPart.substring(0, 1)}${currency}`;
+    } else {
+      // Если целое число
+      return `${wholePart}${currency}`;
     }
-    
-    // Для чисел < 100 оставляем как есть
-    return priceStr;
-  };
+  }
+  
+  // Для чисел < 100 оставляем как есть
+  return priceStr;
+};
 
   // Загружаем данные кейса по ID
   useEffect(() => {
