@@ -175,6 +175,17 @@ export default function ProfileScreen({ onNavigate }) {
     return 'item-price';
   };
 
+  // Функция для получения отсортированного инвентаря
+  const getSortedInventory = () => {
+    const items = isDemoMode ? demoInventory : inventory;
+    
+    return [...items].sort((a, b) => {
+      const priceA = parseFloat(getItemPrice(a).replace(/[^\d.-]/g, ''));
+      const priceB = parseFloat(getItemPrice(b).replace(/[^\d.-]/g, ''));
+      return priceB - priceA; // По убыванию (сначала дорогие)
+    });
+  };
+
   const handleSellItemApi = async (item) => {
     try {
       setSellingItem(true);
@@ -281,15 +292,17 @@ export default function ProfileScreen({ onNavigate }) {
   };
 
   const calculateTotalValue = () => {
+    const items = isDemoMode ? demoInventory : inventory;
+    
     if (isDemoMode) {
-      if (!demoInventory.length) return 0;
-      return demoInventory.reduce((total, item) => {
+      if (!items.length) return 0;
+      return items.reduce((total, item) => {
         const priceValue = parseFloat(item.price?.replace(/[^\d.-]/g, '') || '0');
         return total + priceValue;
       }, 0);
     } else {
-      if (!inventory.length) return 0;
-      return inventory.reduce((total, item) => {
+      if (!items.length) return 0;
+      return items.reduce((total, item) => {
         if (item.item_type === 'tg_gift') {
           return total + (item.price_ton || 0);
         }
@@ -571,11 +584,7 @@ const handleWithdraw = async () => {
   };
 
   const getItemsToDisplay = () => {
-    if (isDemoMode) {
-      return demoInventory;
-    } else {
-      return inventory;
-    }
+    return getSortedInventory(); // Используем отсортированный массив
   };
 
   return (
