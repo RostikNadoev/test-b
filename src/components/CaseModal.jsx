@@ -11,7 +11,7 @@ import cardton1 from '../assets/MainPage/chest1/ton.png';
 
 // Импортируем фоны для рамок
 import back1 from '../assets/MainPage/cases/back1case.png';
-import back2 from '../assets/MainPage/chest1/back.png'; // Для второго кейса (оставляем текущий)
+import back2 from '../assets/MainPage/chest1/back.png';
 import back3 from '../assets/MainPage/cases/back3case.png';
 import back4 from '../assets/MainPage/cases/back4case.png';
 import back5 from '../assets/MainPage/cases/back5case.png';
@@ -30,21 +30,30 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
     const caseId = caseItem.id;
     
     switch(caseId) {
-      case 1:
-        return back1;
-      case 2:
-        return back2; // Оставляем текущий для второго кейса
-      case 3:
-        return back3;
-      case 4:
-        return back4;
-      case 5:
-        return back5;
-      case 6:
-        return back6;
-      default:
-        return back1; // По умолчанию для первого
+      case 1: return back1;
+      case 2: return back2;
+      case 3: return back3;
+      case 4: return back4;
+      case 5: return back5;
+      case 6: return back6;
+      default: return back1;
     }
+  };
+
+  // Функция для форматирования цены
+  const formatPrice = (priceStr) => {
+    const priceValue = parseFloat(priceStr.replace(/[^\d.-]/g, ''));
+    const currency = priceStr.includes('TON') ? ' TON' : '';
+    
+    if (priceValue >= 100) {
+      // Для чисел >= 100 показываем с 1 знаком после запятой
+      return priceValue % 1 === 0 ? 
+        `${priceValue}${currency}` : 
+        `${priceValue.toFixed(1)}${currency}`;
+    }
+    
+    // Для чисел < 100 оставляем как есть
+    return priceStr;
   };
 
   // Загружаем данные кейса по ID
@@ -61,7 +70,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
         setCaseItems(response.items || []);
       } catch (error) {
         console.error('❌ Ошибка загрузки данных кейса:', error);
-        // Используем данные из caseItem как fallback
         setCaseData({ 
           id: caseItem.id,
           name: caseItem.name,
@@ -80,11 +88,8 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
   }, [caseItem]);
 
   useEffect(() => {
-    // Блокируем скролл body при открытии модалки
     document.body.style.overflow = 'hidden';
-    
     return () => {
-      // Возвращаем скролл при закрытии
       document.body.style.overflow = 'unset';
     };
   }, []);
@@ -168,7 +173,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
       const apiItem = result.item;
       console.log('🔍 API item from open:', apiItem);
       
-      // Ищем полные данные предмета
       let fullItemData = null;
       if (caseItems.length > 0 && apiItem.index) {
         fullItemData = caseItems.find(item => 
@@ -178,7 +182,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
         console.log('🔍 Found full item data:', fullItemData);
       }
       
-      // Формируем данные для отображения
       let img = cardton1;
       let price = '0 TON';
       let name = apiItem.name || 'Reward';
@@ -242,7 +245,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
     }
   };
 
-  // Функция для получения URL изображения из API
   const getImageUrl = (imagePath) => {
     if (!imagePath) return cardton1;
     
@@ -257,7 +259,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
     return imagePath;
   };
 
-  // Определяем содержимое рамок из данных API
   const getFrameContents = () => {
     if (caseItems.length > 0) {
       return caseItems.map((item) => {
@@ -288,7 +289,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
       });
     }
     
-    // Заглушка на время загрузки
     return Array(9).fill().map((_, index) => ({
       img: cardton1,
       price: '0 TON',
@@ -309,7 +309,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
     return 'modal-item-price';
   };
 
-  // Определяем градиенты для кнопок в зависимости от ID кейса
   const getTonButtonClass = () => {
     const caseId = caseItem.id;
     
@@ -341,7 +340,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-container">
-        <div className="case-modal" onClick={(e) => e.stopPropagation()}  data-case-id={caseItem.id}>
+        <div className="case-modal" onClick={(e) => e.stopPropagation()} data-case-id={caseItem.id}>
           <button className="modal-close" onClick={onClose}>×</button>
           
           <h2 className="modal-title">{caseData?.name || caseItem.name}</h2>
@@ -377,7 +376,9 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
                           e.target.src = cardton1;
                         }}
                       />
-                      <div className={getPriceClass(content.price)}>{content.price}</div>
+                      <div className={getPriceClass(content.price)}>
+                        {formatPrice(content.price)}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -387,7 +388,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
           
           <div className="modal-footer">
             <div className="modal-button-container">
-              {/* Кнопка TON */}
               <div 
                 className={`modal-button modal-ton-button ${tonButtonClass} ${isProcessing ? 'modal-button-disabled' : ''}`}
                 onClick={handleTonClick}
@@ -406,7 +406,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
                 </span>
               </div>
               
-              {/* Кнопка STARS */}
               <div 
                 className={`modal-button modal-stars-button ${starsButtonClass} ${isProcessing ? 'modal-button-disabled' : ''}`}
                 onClick={handleStarClick}
