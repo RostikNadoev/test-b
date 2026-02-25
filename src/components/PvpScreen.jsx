@@ -333,7 +333,7 @@ useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return;
     
-    const selectedItemsArray = getItemsToDisplay().filter(item => selectedItems.has(getItemId(item)));
+    const selectedItemsArray = getSortedItems().filter(item => selectedItems.has(getItemId(item)));
     const inventoryIds = selectedItemsArray.map(item => item.inventory_id || item.id).filter(id => id);
     
     setIsSubmitting(true);
@@ -400,7 +400,17 @@ useEffect(() => {
   return null;
 };
 
-  const getItemsToDisplay = () => isDemoMode ? demoInventory : inventory;
+  // Функция для получения отсортированного инвентаря
+  const getSortedItems = () => {
+    const items = isDemoMode ? demoInventory : inventory;
+    
+    return [...items].sort((a, b) => {
+      const priceA = parseFloat(getItemPrice(a).replace(/[^\d.-]/g, ''));
+      const priceB = parseFloat(getItemPrice(b).replace(/[^\d.-]/g, ''));
+      return priceB - priceA; // По убыванию (сначала дорогие)
+    });
+  };
+
   const getItemId = (item) => isDemoMode ? (item.id || item.demo_id) : (item.inventory_id || item.id);
   
   const getImageUrl = (imagePath) => {
@@ -602,10 +612,10 @@ const getTonIconForPrice = (priceStr) => {
               <h2 className="pvp-modal-title">SELECT GIFTS</h2>
               {loading ? (
                 <div className="loading-inventory"><div className="spinner"></div><p>Loading inventory...</p></div>
-              ) : getItemsToDisplay().length > 0 ? (
+              ) : getSortedItems().length > 0 ? (
                 <div className="pvp-inventory-container">
                   <div className="items-grid">
-                    {getItemsToDisplay().map((item, index) => {
+                    {getSortedItems().map((item, index) => {
                       const isSelected = selectedItems.has(getItemId(item));
                       return (
                         <div key={index} className={`inventory-item-frame ${isSelected ? 'inventory-item-selected' : ''}`} onClick={() => handleItemClick(item)}>
@@ -651,20 +661,30 @@ const getTonIconForPrice = (priceStr) => {
             <div className="pvp-gift-modal-body">
               <div className="pvp-gift-modal-title">Player's Gifts</div>
               <div className="pvp-gift-items-container">
-                {getUserGifts(selectedUser.user_id).length > 0 ? (
-                  <div className="gift-items-grid">
-                    {getUserGifts(selectedUser.user_id).map((gift, index) => (
+                {(() => {
+                  const gifts = getUserGifts(selectedUser.user_id);
+                  // Сортируем подарки игрока по убыванию цены
+                  const sortedGifts = [...gifts].sort((a, b) => {
+                    const priceA = parseFloat(a.item_value || 0);
+                    const priceB = parseFloat(b.item_value || 0);
+                    return priceB - priceA;
+                  });
+                  
+                  return sortedGifts.length > 0 ? (
+                    <div className="gift-items-grid">
+                      {sortedGifts.map((gift, index) => (
                         <div key={index} className="gift-item-frame">
                           <div className="gift-item-content">
                             <img src={getImageUrl(gift.case_item?.image_url || gift.image_url)} alt="Gift" className="gift-item-image" loading="lazy" onError={(e) => handleImageError(e)} />
                             <div className={`gift-item-price ${getPriceClass(gift.item_value)}`}>{gift.item_value} TON</div>
                           </div>
                         </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="pvp-gift-empty-content"><div className="pvp-gift-empty-icon"><img src={gift} className="pvp-gift-empty-image" alt="No gifts" /></div><p className="pvp-gift-empty-text">Player hasn't placed any gifts yet</p></div>
-                )}
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="pvp-gift-empty-content"><div className="pvp-gift-empty-icon"><img src={gift} className="pvp-gift-empty-image" alt="No gifts" /></div><p className="pvp-gift-empty-text">Player hasn't placed any gifts yet</p></div>
+                  );
+                })()}
               </div>
             </div>
             <div className="pvp-gift-modal-buttons"><button className="pvp-gift-modal-cancel-btn" onClick={handleCloseGiftModal}>Close</button></div>
@@ -685,19 +705,28 @@ const getTonIconForPrice = (priceStr) => {
             <div className="winner-prize-section">
               <div className="winner-prize-title">Won Prizes</div>
               <div className="winner-prizes-container">
-                {winModal.gifts?.map((gift, index) => ( 
+                {(() => {
+                  // Сортируем выигранные призы по убыванию цены
+                  const sortedGifts = [...(winModal.gifts || [])].sort((a, b) => {
+                    const priceA = parseFloat(a.item_value || 0);
+                    const priceB = parseFloat(b.item_value || 0);
+                    return priceB - priceA;
+                  });
+                  
+                  return sortedGifts.map((gift, index) => (
                     <div key={index} className="winner-prize-item">
                       <img src={getImageUrl(gift.case_item?.image_url)} alt="Prize" className="winner-prize-image" onError={(e) => { e.target.src = cardton1; }} />
-<div className={`winner-prize-value ${getPriceClass(gift.item_value)}`}>
-  <span className="winner-price-amount">{gift.item_value}</span>
-  <img 
-    src={getTonIconForPrice(gift.item_value)} 
-    alt="TON" 
-    className="winner-price-ton-icon" 
-  />
-</div>
+                      <div className={`winner-prize-value ${getPriceClass(gift.item_value)}`}>
+                        <span className="winner-price-amount">{gift.item_value}</span>
+                        <img 
+                          src={getTonIconForPrice(gift.item_value)} 
+                          alt="TON" 
+                          className="winner-price-ton-icon" 
+                        />
+                      </div>
                     </div>
-                ))}
+                  ));
+                })()}
               </div>
             </div>
             <div className="winner-total-section">
