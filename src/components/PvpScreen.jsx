@@ -290,6 +290,17 @@ useEffect(() => {
     return false;
   }, [gameStatus.type, countdownValue]);
 
+  // --- ФУНКЦИЯ ДЛЯ ПОЛУЧЕНИЯ ОТСОРТИРОВАННЫХ ИГРОКОВ ---
+  const getSortedPlayers = () => {
+    if (!players || !Array.isArray(players)) return [];
+    
+    return [...players].sort((a, b) => {
+      const valueA = parseFloat(a.sum_value || 0);
+      const valueB = parseFloat(b.sum_value || 0);
+      return valueB - valueA; // По убыванию (кто больше поставил - тот выше)
+    });
+  };
+
   // --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
   const loadInventory = async () => {
     if (isDemoMode) return;
@@ -482,6 +493,9 @@ const getTonIconForPrice = (priceStr) => {
 
   // Выбираем, какой список рендерить
   const framesToRender = (gameStatus.type === 'spinning' && fixedFrames.length > 0) ? fixedFrames : framePositions;
+  
+  // Получаем отсортированных игроков
+  const sortedPlayers = getSortedPlayers();
 
   return (
     <MainLayout onNavigate={onNavigate} currentScreen="pvp" customBackground={pvpBackground}>
@@ -561,9 +575,9 @@ const getTonIconForPrice = (priceStr) => {
               <div className="header-cell">INVESTS</div>
             </div>
             <div className="table-body">
-              {players && players.length > 0 ? (
+              {sortedPlayers && sortedPlayers.length > 0 ? (
                 <div className="participants-list">
-                  {players.map((player) => (
+                  {sortedPlayers.map((player) => (
                       <div key={player.user_id} className={`participant-row ${selectedUser?.user_id === player.user_id && isGiftModalOpen ? 'participant-row-active' : ''}`}>
                         <div className="participant-left-section">
                           <div 
