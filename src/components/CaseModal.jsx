@@ -41,7 +41,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
       case 5:
         return back5;
       case 6:
-        return back6;
+        return back5;
       default:
         return back1; // По умолчанию для первого
     }
