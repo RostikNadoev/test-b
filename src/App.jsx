@@ -25,14 +25,10 @@ import tonGift from './assets/Profile/ton-gift.svg';
 import modalCloseIcon from './assets/Profile/close.png';
 
 // MainScreen
-import banner from './assets/MainPage/banner.png';
 import middle from './assets/MainPage/middle.png';
 import cardBack1 from './assets/MainPage/chest1/back.png';
 import cardBack2 from './assets/MainPage/chest1/back2.png';
 import cardBack3 from './assets/MainPage/chest1/back3.png';
-import cardMain1 from './assets/MainPage/chest1/main.png';
-import cardMain2 from './assets/MainPage/chest2/main.png';
-import cardMain3 from './assets/MainPage/chest3/main.png';
 import cardton1 from './assets/MainPage/chest1/ton.png';
 import cardton2 from './assets/MainPage/chest2/ton.png';
 import cardton3 from './assets/MainPage/chest3/ton.png';
@@ -526,14 +522,10 @@ export default function App() {
     giftchange,
     tonGift,
     modalCloseIcon,
-    banner,
     middle,
     cardBack1,
     cardBack2,
     cardBack3,
-    cardMain1,
-    cardMain2,
-    cardMain3,
     cardton1,
     cardton2,
     cardton3,
