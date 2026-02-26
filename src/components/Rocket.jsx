@@ -740,7 +740,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
                             </div>
                             <div className="participant-info">
                               <div className="participant-nickname">
-                                {username} {isMyBetFlag ? '(You)' : ''}
+                                {username}
                               </div>
                               <div className="participant-bet-currency">
                                 <img 
