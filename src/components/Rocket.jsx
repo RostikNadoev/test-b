@@ -165,37 +165,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     loadInitialData();
   }, [loadBalances]);
 
-  // --- ИСПРАВЛЕНО: МГНОВЕННОЕ ОБНОВЛЕНИЕ БАЛАНСА ПРИ КЭШАУТЕ (как при ставке) ---
-  useEffect(() => {
-    if (engineEvents.cashout_ok) {
-      console.log('💰 Cashout OK received');
-      setCashoutPending(false);
-      setRecentlyPlacedBet(null);
-      
-      // Обновляем баланс через updateBalanceImmediately (как при ставке)
-      if (engineEvents.cashout_ok.bet) {
-        const bet = engineEvents.cashout_ok.bet;
-        const currency = bet.currency;
-        // Тут нужно получить payout из bet
-        // Если в ответе нет суммы выигрыша, используем multiplierNow
-        const winAmount = bet.amount * (bet.cashout_multiplier || multiplierNow);
-        
-        console.log(`💰 Updating balance: +${winAmount} ${currency}`);
-        
-        // Используем тот же метод, что и при ставке, но с плюсом
-        if (updateBalanceImmediately) {
-          updateBalanceImmediately(currency, winAmount);
-        }
-      }
-      
-      // Дополнительно запрашиваем баланс для синхронизации
-      setTimeout(() => {
-        loadBalances();
-        window.dispatchEvent(new CustomEvent('balanceUpdate'));
-      }, 100);
-    }
-  }, [engineEvents.cashout_ok, multiplierNow, updateBalanceImmediately, loadBalances]);
-
   // Обработка ошибок
   useEffect(() => {
     if (engineEvents.error) {
@@ -205,28 +174,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     }
   }, [engineEvents.error]);
 
-  // --- МГНОВЕННОЕ ОБНОВЛЕНИЕ БАЛАНСА ПРИ РЕЗУЛЬТАТЕ СТАВКИ (для проигрыша) ---
-  useEffect(() => {
-    if (engineEvents.bet_result) {
-      const betResult = engineEvents.bet_result;
-      if ((myBet && betResult.bet_id === myBet.bet_id) || 
-          (recentlyPlacedBet && betResult.bet_id === recentlyPlacedBet.bet_id)) {
-        setCashoutPending(false);
-        setRecentlyPlacedBet(null);
-        lastTempBetIdRef.current = null;
-        
-        // Если проигрыш, обновляем баланс немедленно
-        if (betResult.status === 'lose' || betResult.status === 'lost') {
-          // При проигрыше баланс уже был списан при ставке, но для синхронизации запрашиваем
-          setTimeout(() => {
-            loadBalances();
-            window.dispatchEvent(new CustomEvent('balanceUpdate'));
-          }, 100);
-        }
-      }
-    }
-  }, [engineEvents.bet_result, myBet, recentlyPlacedBet, loadBalances]);
-
   // Обработка события КРАША
   useEffect(() => {
     if (engineEvents.crash) {
@@ -234,14 +181,8 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       setRecentlyPlacedBet(null);
       lastTempBetIdRef.current = null;
       vibrateTriple();
-      
-      // При краше обновляем баланс
-      setTimeout(() => {
-        loadBalances();
-        window.dispatchEvent(new CustomEvent('balanceUpdate'));
-      }, 100);
     }
-  }, [engineEvents.crash, loadBalances]);
+  }, [engineEvents.crash]);
 
   // Обработка bet_ok
   useEffect(() => {
@@ -507,7 +448,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     }
   };
 
-  // --- ИСПРАВЛЕНО: МГНОВЕННОЕ ОБНОВЛЕНИЕ БАЛАНСА ПРИ КЭШАУТЕ (как при ставке) ---
+  // --- УПРОЩЕНО: ПРИ КЭШАУТЕ ПРОСТО ОБНОВЛЯЕМ БАЛАНС ---
   const handleTakeWinnings = async () => {
     const hasAnyActiveBet = myBet || recentlyPlacedBet;
     
@@ -524,8 +465,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     console.log('💰 Attempting cashout:');
     console.log('- canCashout:', canCashout);
     console.log('- roundStatus:', roundStatus);
-    console.log('- myBet:', myBet);
-    console.log('- recentlyPlacedBet:', recentlyPlacedBet);
     
     if (!canCashout) {
       showUiError('Cannot cashout at this moment');
@@ -537,22 +476,32 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     const betToCashout = myBet || recentlyPlacedBet;
     console.log('- Cashing out bet ID:', betToCashout?.bet_id);
     
-    const success = cashoutBet();
-    console.log('- Cashout success:', success);
+    // Отправляем запрос на кэшаут
+    cashoutBet();
     
-    if (!success) {
-      setCashoutPending(false);
-      showUiError('Failed to cashout');
-    } else {
-      // Мгновенно обновляем баланс (как при ставке, но с плюсом)
-      if (betToCashout && betToCashout.amount && multiplierNow > 1.0) {
-        const winAmount = betToCashout.amount * multiplierNow;
-        if (updateBalanceImmediately) {
-          updateBalanceImmediately(betToCashout.currency, winAmount);
-          console.log(`💰 Balance updated immediately: +${winAmount} ${betToCashout.currency}`);
-        }
+    // ПРОСТО ОБНОВЛЯЕМ БАЛАНС, не дожидаясь ответа
+    console.log('💰 Updating balance after cashout');
+    
+    // Обновляем баланс через API
+    try {
+      const balanceResponse = await usersApi.getBalance();
+      if (balanceResponse?.balances) {
+        setNewBalances(balanceResponse.balances);
+        window.dispatchEvent(new CustomEvent('balanceUpdate'));
+        console.log('✅ Balance updated after cashout');
       }
+    } catch (error) {
+      console.error('Error refreshing balance:', error);
+      // Если не получилось через API, пробуем через loadBalances
+      loadBalances();
+      window.dispatchEvent(new CustomEvent('balanceUpdate'));
     }
+    
+    // Сбрасываем состояние через небольшую задержку
+    setTimeout(() => {
+      setCashoutPending(false);
+      setRecentlyPlacedBet(null);
+    }, 500);
   };
 
   // UI Helpers
