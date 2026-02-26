@@ -12,6 +12,7 @@ import { Switch } from 'antd';
 import { useCrashGame } from '../hooks/useCrashGame';
 import { authApi } from '../utils/api';
 import { useBalance } from '../contexts/BalanceContext';
+import { usersApi } from '../utils/api';
 
 export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
   const [animationData, setAnimationData] = useState(null);
@@ -30,7 +31,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
   const [lastMultipliersHistory, setLastMultipliersHistory] = useState([]);
   const [recentlyPlacedBet, setRecentlyPlacedBet] = useState(null);
   const [uiErrorMessage, setUiErrorMessage] = useState(null);
-  const [lastStateRequest, setLastStateRequest] = useState(0);
   
   const currencyDropdownRef = useRef(null);
   const betInputRef = useRef(null);
@@ -66,6 +66,23 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     requestState,
     engineEvents
   } = useCrashGame();
+
+  // Слушаем событие обновления баланса от WebSocket
+  useEffect(() => {
+    const handleBalanceUpdateFromServer = (event) => {
+      console.log('💰 Balance update from server:', event.detail);
+      if (event.detail?.balances) {
+        setNewBalances(event.detail.balances);
+        window.dispatchEvent(new CustomEvent('balanceUpdate'));
+      }
+    };
+
+    window.addEventListener('balanceUpdateFromServer', handleBalanceUpdateFromServer);
+    
+    return () => {
+      window.removeEventListener('balanceUpdateFromServer', handleBalanceUpdateFromServer);
+    };
+  }, [setNewBalances]);
 
   // Отладка stage изменений
   useEffect(() => {
@@ -148,27 +165,30 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     loadInitialData();
   }, [loadBalances]);
 
-  // --- ОБРАБОТКА КЭШАУТА С МГНОВЕННЫМ ОБНОВЛЕНИЕМ БАЛАНСА ---
+  // --- МГНОВЕННОЕ ОБНОВЛЕНИЕ БАЛАНСА ПРИ КЭШАУТЕ ---
   useEffect(() => {
     if (engineEvents.cashout_ok) {
       console.log('💰 Cashout OK received');
       setCashoutPending(false);
       setRecentlyPlacedBet(null);
       
-      // Мгновенно обновляем баланс через setNewBalances (как в Plinko)
-      if (engineEvents.cashout_ok.balances) {
-        console.log('💰 Updating balances from cashout_ok:', engineEvents.cashout_ok.balances);
-        setNewBalances(engineEvents.cashout_ok.balances);
-        window.dispatchEvent(new CustomEvent('balanceUpdate'));
-      } else {
-        // Если баланс не пришел, запрашиваем
-        setTimeout(() => {
-          loadBalances();
-          window.dispatchEvent(new CustomEvent('balanceUpdate'));
-        }, 100);
-      }
+      // НЕМЕДЛЕННО запрашиваем баланс (как в Plinko)
+      const refreshBalance = async () => {
+        try {
+          const balanceResponse = await usersApi.getBalance();
+          if (balanceResponse?.balances) {
+            setNewBalances(balanceResponse.balances);
+            window.dispatchEvent(new CustomEvent('balanceUpdate'));
+            console.log('✅ Balance updated immediately after cashout');
+          }
+        } catch (error) {
+          console.error('Error refreshing balance:', error);
+        }
+      };
+      
+      refreshBalance();
     }
-  }, [engineEvents.cashout_ok, loadBalances, setNewBalances]);
+  }, [engineEvents.cashout_ok, setNewBalances]);
 
   // Обработка ошибок
   useEffect(() => {
@@ -179,7 +199,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     }
   }, [engineEvents.error]);
 
-  // --- ОБРАБОТКА РЕЗУЛЬТАТА СТАВКИ С МГНОВЕННЫМ ОБНОВЛЕНИЕМ БАЛАНСА ---
+  // --- МГНОВЕННОЕ ОБНОВЛЕНИЕ БАЛАНСА ПРИ РЕЗУЛЬТАТЕ СТАВКИ (для проигрыша) ---
   useEffect(() => {
     if (engineEvents.bet_result) {
       const betResult = engineEvents.bet_result;
@@ -189,16 +209,26 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
         setRecentlyPlacedBet(null);
         lastTempBetIdRef.current = null;
         
-        // Для выигрыша баланс обновится через cashout_ok, для проигрыша - запрашиваем
-        if (betResult.status === 'lose') {
-          setTimeout(() => {
-            loadBalances();
-            window.dispatchEvent(new CustomEvent('balanceUpdate'));
-          }, 100);
+        // Если проигрыш, обновляем баланс немедленно
+        if (betResult.status === 'lose' || betResult.status === 'lost') {
+          const refreshBalance = async () => {
+            try {
+              const balanceResponse = await usersApi.getBalance();
+              if (balanceResponse?.balances) {
+                setNewBalances(balanceResponse.balances);
+                window.dispatchEvent(new CustomEvent('balanceUpdate'));
+                console.log('✅ Balance updated after loss');
+              }
+            } catch (error) {
+              console.error('Error refreshing balance:', error);
+            }
+          };
+          
+          refreshBalance();
         }
       }
     }
-  }, [engineEvents.bet_result, myBet, recentlyPlacedBet, loadBalances]);
+  }, [engineEvents.bet_result, myBet, recentlyPlacedBet, setNewBalances]);
 
   // Обработка события КРАША
   useEffect(() => {
@@ -207,8 +237,23 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       setRecentlyPlacedBet(null);
       lastTempBetIdRef.current = null;
       vibrateTriple();
+      
+      // При краше тоже обновляем баланс (для проигравших)
+      const refreshBalance = async () => {
+        try {
+          const balanceResponse = await usersApi.getBalance();
+          if (balanceResponse?.balances) {
+            setNewBalances(balanceResponse.balances);
+            window.dispatchEvent(new CustomEvent('balanceUpdate'));
+          }
+        } catch (error) {
+          console.error('Error refreshing balance:', error);
+        }
+      };
+      
+      refreshBalance();
     }
-  }, [engineEvents.crash]);
+  }, [engineEvents.crash, setNewBalances]);
 
   // Обработка bet_ok
   useEffect(() => {
@@ -405,7 +450,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     if (payoutMultiplier > 1.2) setPayoutMultiplier((prev) => parseFloat((prev - 0.1).toFixed(1)));
   };
 
-  // --- ОБРАБОТКА СТАВКИ С МГНОВЕННЫМ ОБНОВЛЕНИЕМ БАЛАНСА (как в Plinko) ---
+  // --- МГНОВЕННОЕ ОБНОВЛЕНИЕ БАЛАНСА ПРИ СТАВКЕ ---
   const handlePlayBet = async () => {
     if (!betAmount || parseFloat(betAmount) <= 0) {
       showUiError('Please enter a valid bet amount');
@@ -427,7 +472,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     const success = placeBet(selectedCurrency, betAmountNum, autoPayoutEnabled ? payoutMultiplier : null);
     
     if (success) {
-      // Мгновенно обновляем баланс через updateBalanceImmediately (как в Plinko)
+      // Мгновенно обновляем баланс (как в Plinko)
       if (updateBalanceImmediately) {
         updateBalanceImmediately(selectedCurrency, -betAmountNum);
       }
@@ -455,11 +500,11 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       setRecentlyPlacedBet(tempBet);
       closeBetModal();
       
-      // Запрашиваем баланс для синхронизации (как в Plinko)
+      // Дополнительно запрашиваем баланс для синхронизации
       setTimeout(() => {
         loadBalances();
         window.dispatchEvent(new CustomEvent('balanceUpdate'));
-      }, 500);
+      }, 100);
       
       setTimeout(() => {
         setRecentlyPlacedBet(prev => {
@@ -473,7 +518,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     }
   };
 
-  // --- ОБРАБОТКА КЭШАУТА С МГНОВЕННЫМ ОБНОВЛЕНИЕМ БАЛАНСА (как в Plinko) ---
+  // --- МГНОВЕННОЕ ОБНОВЛЕНИЕ БАЛАНСА ПРИ КЭШАУТЕ ---
   const handleTakeWinnings = async () => {
     const hasAnyActiveBet = myBet || recentlyPlacedBet;
     
@@ -487,6 +532,12 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       return;
     }
     
+    console.log('💰 Attempting cashout:');
+    console.log('- canCashout:', canCashout);
+    console.log('- roundStatus:', roundStatus);
+    console.log('- myBet:', myBet);
+    console.log('- recentlyPlacedBet:', recentlyPlacedBet);
+    
     if (!canCashout) {
       showUiError('Cannot cashout at this moment');
       return;
@@ -495,16 +546,20 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     setCashoutPending(true);
     
     const betToCashout = myBet || recentlyPlacedBet;
+    console.log('- Cashing out bet ID:', betToCashout?.bet_id);
+    
     const success = cashoutBet();
+    console.log('- Cashout success:', success);
     
     if (!success) {
       setCashoutPending(false);
     } else {
-      // Оптимистичное обновление баланса (как в Plinko)
+      // Оптимистичное обновление баланса
       if (betToCashout && betToCashout.amount && multiplierNow > 1.0) {
         const winAmount = betToCashout.amount * multiplierNow;
         if (updateBalanceImmediately) {
           updateBalanceImmediately(betToCashout.currency, winAmount);
+          console.log(`💰 Balance optimistically updated: +${winAmount} ${betToCashout.currency}`);
         }
       }
     }
