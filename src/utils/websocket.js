@@ -10,9 +10,9 @@ class CrashWebSocket {
     this.token = null;
     this.pingInterval = null;
     this.shouldReconnect = true;
+    this.pendingCommands = []; // Очередь команд на случай переподключения
   }
 
-  // Подключение к WebSocket
   async connect() {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -44,8 +44,11 @@ class CrashWebSocket {
           this.reconnectAttempts = 0;
           this.shouldReconnect = true;
           
-          // Настраиваем ping/pong интервал
           this.setupPingInterval();
+          
+          // Отправляем накопившиеся команды
+          this.pendingCommands.forEach(cmd => this.sendCommand(cmd));
+          this.pendingCommands = [];
           
           resolve();
         };
@@ -70,7 +73,6 @@ class CrashWebSocket {
           this.connectionPromise = null;
           this.clearPingInterval();
           
-          // Пытаемся переподключиться, если не было явного закрытия
           if (this.shouldReconnect && !event.wasClean && this.reconnectAttempts < this.maxReconnectAttempts) {
             const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts);
             console.log(`🔄 Attempting to reconnect in ${delay}ms (${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`);
@@ -85,7 +87,6 @@ class CrashWebSocket {
 
         this.socket.onerror = (error) => {
           console.error('❌ WebSocket error:', error);
-          // Не reject здесь, так как onclose будет вызван следом
         };
 
       } catch (error) {
@@ -100,7 +101,6 @@ class CrashWebSocket {
 
   setupPingInterval() {
     this.clearPingInterval();
-    // Отправляем ping каждые 30 секунд для поддержания соединения
     this.pingInterval = setInterval(() => {
       if (this.isReady()) {
         try {
@@ -127,7 +127,8 @@ class CrashWebSocket {
 
   sendCommand(command) {
     if (!this.isReady()) {
-      console.error('❌ WebSocket not connected, cannot send command:', command);
+      console.log('📥 WebSocket not connected, queueing command:', command);
+      this.pendingCommands.push(command);
       return false;
     }
 
@@ -136,6 +137,7 @@ class CrashWebSocket {
         Object.entries(command).filter(([_, value]) => value !== null && value !== undefined)
       );
       const jsonCommand = JSON.stringify(cleanCommand);
+      console.log('📤 Sending command:', jsonCommand);
       this.socket.send(jsonCommand);
       return true;
     } catch (error) {
@@ -162,7 +164,6 @@ class CrashWebSocket {
   }
 
   handleMessage(data) {
-    // Обработка pong (если нужно)
     if (data.type === 'pong') {
       return;
     }
@@ -204,7 +205,7 @@ class CrashWebSocket {
       command.bet_id = parseInt(betId);
     }
     
-    console.log('📤 Cashing out:', command);
+    console.log('📤 Cashing out with command:', command);
     return this.sendCommand(command);
   }
 
@@ -212,6 +213,7 @@ class CrashWebSocket {
     console.log('🔌 Disconnecting WebSocket by user');
     this.shouldReconnect = false;
     this.clearPingInterval();
+    this.pendingCommands = [];
     
     if (this.socket) {
       this.socket.close(1000, 'User disconnected');

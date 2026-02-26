@@ -67,6 +67,11 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     engineEvents
   } = useCrashGame();
 
+  // Отладка stage изменений
+  useEffect(() => {
+    console.log('🎯 Stage changed to:', stage, 'roundStatus:', roundStatus);
+  }, [stage, roundStatus]);
+
   // Сбрасываем локальный флаг при смене раунда
   useEffect(() => {
     if (currentRoundId) {
@@ -148,6 +153,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
   // Обработка кэшаута
   useEffect(() => {
     if (engineEvents.cashout_ok) {
+      console.log('💰 Cashout OK received');
       setCashoutPending(false);
       setRecentlyPlacedBet(null);
       setTimeout(() => {
@@ -156,6 +162,15 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       }, 300);
     }
   }, [engineEvents.cashout_ok, loadBalances]);
+
+  // Обработка ошибок
+  useEffect(() => {
+    if (engineEvents.error) {
+      console.error('❌ Game error:', engineEvents.error);
+      showUiError(engineEvents.error.error || 'Unknown error');
+      setCashoutPending(false);
+    }
+  }, [engineEvents.error]);
 
   // Обработка результата ставки
   useEffect(() => {
@@ -177,6 +192,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
   // Обработка события КРАША
   useEffect(() => {
     if (engineEvents.crash) {
+      console.log('💥 Crash detected in component');
       setRecentlyPlacedBet(null);
       lastTempBetIdRef.current = null;
       vibrateTriple();
@@ -187,34 +203,41 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
   useEffect(() => {
     if (engineEvents.bet_ok && engineEvents.bet_ok.bet) {
       const bet = engineEvents.bet_ok.bet;
-      // Убираем временную ставку
       setRecentlyPlacedBet(null);
       lastTempBetIdRef.current = null;
     }
   }, [engineEvents.bet_ok]);
 
-  // Управление Lottie плеером для взрыва
+  // Управление Lottie плеером для взрыва - УЛУЧШЕНО
   useEffect(() => {
+    console.log('Explosion effect - stage:', stage, 'ref:', explosionAnimationRef.current);
+    
     if (stage === 'explosion' && explosionAnimationRef.current) {
-      explosionAnimationRef.current.setSpeed(1);
-      explosionAnimationRef.current.goToAndPlay(0, true);
+      console.log('💥 Playing explosion animation now');
+      // Небольшая задержка для гарантии, что компонент отрисовался
+      setTimeout(() => {
+        if (explosionAnimationRef.current) {
+          explosionAnimationRef.current.setSpeed(1.2);
+          explosionAnimationRef.current.goToAndPlay(0, true);
+        }
+      }, 50);
     }
   }, [stage]);
 
-  // --- ЛОГИКА ЗАВЕРШЕНИЯ ВЗРЫВА ---
+  // --- УЛУЧШЕНО: ЛОГИКА ЗАВЕРШЕНИЯ ВЗРЫВА ---
   const handleExplosionComplete = () => {
-    console.log('💥 Animation completed. Waiting 500ms before clearing...');
+    console.log('💥 Explosion animation completed');
     
+    // Не очищаем сразу, даем время на отображение финального кадра
     setTimeout(() => {
-      console.log('🧹 Switching to Timer');
+      console.log('⏱️ Switching to Timer');
       setStage('timer');
       
       // Запрашиваем state для синхронизации
       setTimeout(() => {
         requestState();
       }, 100);
-      
-    }, 500); 
+    }, 300);
   };
 
   // Вибрация
@@ -262,6 +285,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
           const exResponse = await fetch('/assets/MainPage/ex1.tgs');
           const exCompressed = await exResponse.arrayBuffer();
           setExAnimationData(JSON.parse(pako.inflate(exCompressed, { to: 'string' })));
+          console.log('✅ Explosion animation loaded');
         } catch (exError) {
           console.log('ex.tgs not found, using rocket as fallback');
           setExAnimationData(JSON.parse(pako.inflate(rocketCompressed, { to: 'string' })));
@@ -442,6 +466,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     }
   };
 
+  // --- УЛУЧШЕНО: Обработка cashout с отладкой ---
   const handleTakeWinnings = async () => {
     const hasAnyActiveBet = myBet || recentlyPlacedBet;
     
@@ -455,25 +480,35 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       return;
     }
     
-    // Проверяем можно ли кэшаутить
+    console.log('💰 Attempting cashout:');
+    console.log('- canCashout:', canCashout);
+    console.log('- roundStatus:', roundStatus);
+    console.log('- myBet:', myBet);
+    console.log('- recentlyPlacedBet:', recentlyPlacedBet);
+    
     if (!canCashout) {
       showUiError('Cannot cashout at this moment');
       return;
     }
     
     setCashoutPending(true);
+    
+    // Используем реальную ставку если есть, иначе временную
+    const betToCashout = myBet || recentlyPlacedBet;
+    console.log('- Cashing out bet ID:', betToCashout?.bet_id);
+    
     const success = cashoutBet();
+    console.log('- Cashout success:', success);
     
     if (!success) {
       showUiError('Failed to cashout. Please try again.');
       setCashoutPending(false);
     } else {
       // Оптимистичное обновление баланса
-      const bet = myBet || recentlyPlacedBet;
-      if (bet && bet.amount && multiplierNow > 1.0) {
-        const winAmount = bet.amount * multiplierNow;
+      if (betToCashout && betToCashout.amount && multiplierNow > 1.0) {
+        const winAmount = betToCashout.amount * multiplierNow;
         if (updateBalanceImmediately) {
-          updateBalanceImmediately(bet.currency, winAmount);
+          updateBalanceImmediately(betToCashout.currency, winAmount);
         }
       }
     }
@@ -641,7 +676,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
                   )}
                   
                   {stage === 'rocket' && animationData && (
-                    <div className="animation-container">
+                    <div className="animation-container" key="rocket-animation">
                       <Lottie 
                         animationData={animationData} 
                         loop={true} 
@@ -652,17 +687,24 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
                     </div>
                   )}
                   
+                  {/* УЛУЧШЕНО: Добавлен key для принудительного пересоздания компонента */}
                   {stage === 'explosion' && exAnimationData && (
-                    <div className="explosion-container">
+                    <div className="explosion-container" key={`explosion-${Date.now()}`}>
                       <Lottie 
                         animationData={exAnimationData} 
                         loop={false} 
                         autoplay={true} 
                         className="explosion-animation" 
                         speed={1.2}
-                        lottieRef={(ref) => { explosionAnimationRef.current = ref; }}
+                        lottieRef={(ref) => { 
+                          console.log('💥 Explosion ref set:', ref ? 'valid' : 'null');
+                          explosionAnimationRef.current = ref;
+                          if (ref) {
+                            ref.setSpeed(1.2);
+                            ref.goToAndPlay(0, true);
+                          }
+                        }}
                         onComplete={handleExplosionComplete}
-                        onLoopComplete={handleExplosionComplete}
                       />
                     </div>
                   )}
