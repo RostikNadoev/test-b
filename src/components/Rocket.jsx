@@ -30,6 +30,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
   const [lastMultipliersHistory, setLastMultipliersHistory] = useState([]);
   const [recentlyPlacedBet, setRecentlyPlacedBet] = useState(null);
   const [uiErrorMessage, setUiErrorMessage] = useState(null);
+  const [lastStateRequest, setLastStateRequest] = useState(0);
   
   const currencyDropdownRef = useRef(null);
   const betInputRef = useRef(null);
@@ -38,37 +39,90 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
   const lastTempBetIdRef = useRef(null);
   const uiErrorTimeoutRef = useRef(null);
   const hasPlacedBetThisRoundRef = useRef(false);
+  const inactivityTimerRef = useRef(null);
   
   const { balances, checkBalance, loadBalances, updateBalanceImmediately } = useBalance();
 
   const {
     multiplierNow,
     roundStatus,
-    timeLeft,
+    secondsToStart,
+    secondsToBetsClose,
+    bettingLocked,
     wsConnected,
     bets: participants,
+    myBet,
     placeBet,
     cashoutBet,
     canBet,
     canCashout,
-    isCrashGameActive,
-    engineEvents,
     stage,
     setStage, 
-    myActiveBet,
     lastMultipliers,
     crashMultiplier,
     getHistoryFromBackend,
     clearBetsOnCrash,
-    currentRoundId
+    currentRoundId,
+    requestState,
+    engineEvents
   } = useCrashGame();
 
   // Сбрасываем локальный флаг при смене раунда
   useEffect(() => {
     if (currentRoundId) {
       hasPlacedBetThisRoundRef.current = false;
+      console.log('🔄 Round changed to:', currentRoundId);
     }
   }, [currentRoundId]);
+
+  // Мониторинг отсутствия событий (для запроса state)
+  useEffect(() => {
+    const resetInactivityTimer = () => {
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+      }
+      
+      // Если нет событий 5 секунд, запрашиваем state
+      inactivityTimerRef.current = setTimeout(() => {
+        if (wsConnected && stage !== 'explosion') {
+          console.log('⚠️ No events for 5 seconds, requesting state...');
+          requestState();
+        }
+      }, 5000);
+    };
+
+    // Сбрасываем таймер при любом событии
+    const events = ['tick', 'timer', 'status', 'crash', 'bet_placed', 'bet_result'];
+    events.forEach(event => {
+      if (engineEvents[event]) {
+        resetInactivityTimer();
+      }
+    });
+
+    resetInactivityTimer();
+
+    return () => {
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+      }
+    };
+  }, [engineEvents, wsConnected, stage, requestState]);
+
+  // Запрос state при возвращении из фона
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && wsConnected) {
+        console.log('👀 App returned from background, requesting state...');
+        requestState();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [wsConnected, requestState]);
 
   const showUiError = (message, duration = 3000) => {
     setUiErrorMessage(message);
@@ -107,7 +161,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
   useEffect(() => {
     if (engineEvents.bet_result) {
       const betResult = engineEvents.bet_result;
-      if ((myActiveBet && betResult.bet_id === myActiveBet.bet_id) || 
+      if ((myBet && betResult.bet_id === myBet.bet_id) || 
           (recentlyPlacedBet && betResult.bet_id === recentlyPlacedBet.bet_id)) {
         setCashoutPending(false);
         setRecentlyPlacedBet(null);
@@ -118,9 +172,9 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
         }, 300);
       }
     }
-  }, [engineEvents.bet_result, myActiveBet, recentlyPlacedBet, loadBalances]);
+  }, [engineEvents.bet_result, myBet, recentlyPlacedBet, loadBalances]);
 
-  // Обработка события КРАША (только вибрация)
+  // Обработка события КРАША
   useEffect(() => {
     if (engineEvents.crash) {
       setRecentlyPlacedBet(null);
@@ -128,6 +182,16 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       vibrateTriple();
     }
   }, [engineEvents.crash]);
+
+  // Обработка bet_ok
+  useEffect(() => {
+    if (engineEvents.bet_ok && engineEvents.bet_ok.bet) {
+      const bet = engineEvents.bet_ok.bet;
+      // Убираем временную ставку
+      setRecentlyPlacedBet(null);
+      lastTempBetIdRef.current = null;
+    }
+  }, [engineEvents.bet_ok]);
 
   // Управление Lottie плеером для взрыва
   useEffect(() => {
@@ -137,17 +201,18 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     }
   }, [stage]);
 
-  // --- ЛОГИКА ЗАВЕРШЕНИЯ ВЗРЫВА (Исправление проблемы №1) ---
+  // --- ЛОГИКА ЗАВЕРШЕНИЯ ВЗРЫВА ---
   const handleExplosionComplete = () => {
     console.log('💥 Animation completed. Waiting 500ms before clearing...');
     
-    // Добавляем задержку 500мс (полсекунды) перед переключением
     setTimeout(() => {
-      console.log('🧹 Switching to Timer and Clearing bets');
+      console.log('🧹 Switching to Timer');
       setStage('timer');
       
-      // Очищаем таблицу ИМЕННО ЗДЕСЬ, сразу после задержки
-      if (clearBetsOnCrash) clearBetsOnCrash();
+      // Запрашиваем state для синхронизации
+      setTimeout(() => {
+        requestState();
+      }, 100);
       
     }, 500); 
   };
@@ -170,7 +235,11 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     };
     loadHistory();
     historyUpdateIntervalRef.current = setInterval(loadHistory, 5000);
-    return () => { if (historyUpdateIntervalRef.current) clearInterval(historyUpdateIntervalRef.current); };
+    return () => { 
+      if (historyUpdateIntervalRef.current) {
+        clearInterval(historyUpdateIntervalRef.current);
+      }
+    };
   }, [getHistoryFromBackend]);
 
   useEffect(() => {
@@ -239,21 +308,26 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       showUiError('Connecting to server...');
       return;
     }
-    const hasAnyActiveBet = myActiveBet || recentlyPlacedBet;
+    
+    const hasAnyActiveBet = myBet || recentlyPlacedBet;
     if (hasAnyActiveBet) {
       handleTakeWinnings();
       return;
     }
     
-    // canBet теперь корректно обновляется после взрыва
     if (!canBet) {
       if (stage === 'rocket' || stage === 'explosion') {
         showUiError('Wait for next round!');
+      } else if (bettingLocked) {
+        showUiError('Betting is locked for this round');
+      } else if (secondsToBetsClose !== null && secondsToBetsClose <= 0) {
+        showUiError('Betting closed for this round');
       } else {
         showUiError('Betting closed for this round.');
       }
       return;
     }
+    
     setIsBetModalOpen(true);
     setIsModalClosing(false);
     setIsDropdownOpen(false);
@@ -287,7 +361,8 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
 
   const formatTime = (seconds) => {
     if (seconds === undefined || seconds === null || isNaN(seconds)) return '15';
-    return seconds.toString().padStart(2, '0');
+    const secs = Math.max(0, Math.floor(seconds));
+    return secs.toString().padStart(2, '0');
   };
 
   const increaseMultiplier = () => {
@@ -303,32 +378,58 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       showUiError('Please enter a valid bet amount');
       return;
     }
+    
     const betAmountNum = parseFloat(betAmount);
+    
     if (!checkBalance(selectedCurrency, betAmountNum)) {
       showUiError(`Insufficient ${selectedCurrency.toUpperCase()} balance`);
       return;
     }
+    
+    // Проверяем можно ли ставить перед отправкой
+    if (!canBet) {
+      showUiError('Cannot place bet at this moment');
+      return;
+    }
+    
     const success = placeBet(selectedCurrency, betAmountNum, autoPayoutEnabled ? payoutMultiplier : null);
+    
     if (success) {
-      if (updateBalanceImmediately) updateBalanceImmediately(selectedCurrency, -betAmountNum);
+      if (updateBalanceImmediately) {
+        updateBalanceImmediately(selectedCurrency, -betAmountNum);
+      }
+      
       hasPlacedBetThisRoundRef.current = true;
+      
+      // Создаем временную ставку для UI
       const tempBet = {
         bet_id: Date.now(),
         id: Date.now(),
         user_id: userData?.id || 0,
         currency: selectedCurrency,
         amount: betAmountNum,
+        original_amount: betAmountNum,
+        current_amount: betAmountNum,
         status: 'placed',
         x: null,
-        user: userData ? { id: userData.id, username: userData.username, photo_url: userData.photo_url } : null
+        user: userData ? { 
+          id: userData.id, 
+          username: userData.username, 
+          photo_url: userData.photo_url 
+        } : null
       };
+      
       lastTempBetIdRef.current = tempBet.bet_id;
       setRecentlyPlacedBet(tempBet);
       closeBetModal();
+      
+      // Запрашиваем баланс через некоторое время
       setTimeout(() => {
         loadBalances();
         window.dispatchEvent(new CustomEvent('balanceUpdate'));
       }, 100);
+      
+      // Таймаут для удаления временной ставки, если не пришло подтверждение
       setTimeout(() => {
         setRecentlyPlacedBet(prev => {
           if (!prev) return null;
@@ -342,25 +443,38 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
   };
 
   const handleTakeWinnings = async () => {
-    const hasAnyActiveBet = myActiveBet || recentlyPlacedBet;
+    const hasAnyActiveBet = myBet || recentlyPlacedBet;
+    
     if (!hasAnyActiveBet) {
       showUiError('No active bet found!');
       return;
     }
+    
     if (cashoutPending) {
       showUiError('Cashout already in progress!');
       return;
     }
+    
+    // Проверяем можно ли кэшаутить
+    if (!canCashout) {
+      showUiError('Cannot cashout at this moment');
+      return;
+    }
+    
     setCashoutPending(true);
     const success = cashoutBet();
+    
     if (!success) {
       showUiError('Failed to cashout. Please try again.');
       setCashoutPending(false);
     } else {
-      const bet = myActiveBet || recentlyPlacedBet;
+      // Оптимистичное обновление баланса
+      const bet = myBet || recentlyPlacedBet;
       if (bet && bet.amount && multiplierNow > 1.0) {
         const winAmount = bet.amount * multiplierNow;
-        if (updateBalanceImmediately) updateBalanceImmediately(bet.currency, winAmount);
+        if (updateBalanceImmediately) {
+          updateBalanceImmediately(bet.currency, winAmount);
+        }
       }
     }
   };
@@ -373,11 +487,33 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
 
   const getParticipantAvatar = (participant) => {
     if (participant.user?.photo_url) {
-      return <img src={participant.user.photo_url} alt="User" className="participant-avatar-img" onError={(e) => { e.target.style.display = 'none'; e.target.parentNode.style.backgroundColor = getAvatarColor(participant.user_id); }} />;
+      return (
+        <img 
+          src={participant.user.photo_url} 
+          alt="User" 
+          className="participant-avatar-img" 
+          onError={(e) => { 
+            e.target.style.display = 'none'; 
+            e.target.parentNode.style.backgroundColor = getAvatarColor(participant.user_id); 
+          }} 
+        />
+      );
     }
+    
     if (userData && participant.user_id === userData.id && userData.photo_url) {
-      return <img src={userData.photo_url} alt="User" className="participant-avatar-img" onError={(e) => { e.target.style.display = 'none'; e.target.parentNode.style.backgroundColor = getAvatarColor(participant.user_id); }} />;
+      return (
+        <img 
+          src={userData.photo_url} 
+          alt="User" 
+          className="participant-avatar-img" 
+          onError={(e) => { 
+            e.target.style.display = 'none'; 
+            e.target.parentNode.style.backgroundColor = getAvatarColor(participant.user_id); 
+          }} 
+        />
+      );
     }
+    
     return null;
   };
 
@@ -388,51 +524,78 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
   };
 
   const getDisplayMultiplier = () => {
-    if (stage === 'explosion' && crashMultiplier) return `x${crashMultiplier.toFixed(2)}`;
-    if (stage === 'timer' && roundStatus === 'betting') return 'Waiting...';
-    if (!wsConnected || !isCrashGameActive) return 'x1.00';
+    if (stage === 'explosion' && crashMultiplier) {
+      return `x${crashMultiplier.toFixed(2)}`;
+    }
+    if (stage === 'timer') {
+      if (roundStatus === 'betting') return 'Place bets';
+      if (roundStatus === 'countdown') return 'Starting...';
+      return 'Waiting...';
+    }
+    if (!wsConnected) return 'Connecting...';
     return `x${(multiplierNow || 1.0).toFixed(2)}`;
   };
 
   const getButtonText = () => {
-    const hasAnyActiveBet = myActiveBet || recentlyPlacedBet;
-    if (hasAnyActiveBet) return cashoutPending ? 'CASHING OUT...' : 'TAKE WINNINGS';
+    const hasAnyActiveBet = myBet || recentlyPlacedBet;
+    if (hasAnyActiveBet) {
+      return cashoutPending ? 'CASHING OUT...' : 'TAKE WINNINGS';
+    }
     return 'MAKE A BET';
   };
 
   const handleMainButtonClick = () => {
-    const hasAnyActiveBet = myActiveBet || recentlyPlacedBet;
-    if (hasAnyActiveBet) handleTakeWinnings();
-    else handleMakeBet();
+    const hasAnyActiveBet = myBet || recentlyPlacedBet;
+    if (hasAnyActiveBet) {
+      handleTakeWinnings();
+    } else {
+      handleMakeBet();
+    }
   };
 
   const isMainButtonActive = () => {
-    const hasAnyActiveBet = myActiveBet || recentlyPlacedBet;
+    const hasAnyActiveBet = myBet || recentlyPlacedBet;
+    
     if (hasAnyActiveBet) {
-      if (myActiveBet?.status === 'win') return false;
-      return (canCashout || (multiplierNow > 1.0 && hasAnyActiveBet)) && !cashoutPending;
+      if (myBet?.status === 'win' || myBet?.status === 'lose') return false;
+      return canCashout && !cashoutPending;
     }
-    // Кнопка активна, если canBet true (который обновляется сразу после взрыва)
+    
     return canBet;
   };
 
   const getButtonClass = () => {
     const baseClass = 'make-bet-button';
-    const hasAnyActiveBet = myActiveBet || recentlyPlacedBet;
-    if (!isMainButtonActive()) return `${baseClass} disabled`;
-    if (hasAnyActiveBet) return cashoutPending ? `${baseClass} cashout-button pending` : `${baseClass} cashout-button`;
+    const hasAnyActiveBet = myBet || recentlyPlacedBet;
+    
+    if (!isMainButtonActive()) {
+      return `${baseClass} disabled`;
+    }
+    
+    if (hasAnyActiveBet) {
+      return cashoutPending ? `${baseClass} cashout-button pending` : `${baseClass} cashout-button`;
+    }
+    
     return baseClass;
   };
 
-  const getDisplayMultipliers = () => lastMultipliersHistory.length > 0 ? lastMultipliersHistory : (lastMultipliers || []);
+  const getDisplayMultipliers = () => {
+    return lastMultipliersHistory.length > 0 ? lastMultipliersHistory : (lastMultipliers || []);
+  };
 
   const getCurrentBetAmount = (participant) => {
-    // ВАЖНО: При перезагрузке статус 'win' теперь корректно обрабатывается здесь
-    if (participant.status === 'win' && participant.x) return (participant.amount * participant.x).toFixed(2);
-    if (participant.status === 'placed') return (participant.amount * multiplierNow).toFixed(2);
-    if (participant.status === 'lose') return (participant.amount * participant.x).toFixed(2);
-    // Fallback для выигранных ставок без multiplier (если вдруг)
-    if (participant.status === 'win' && participant.current_amount) return participant.current_amount.toFixed(2);
+    if (participant.status === 'win' && participant.x) {
+      return (participant.amount * participant.x).toFixed(2);
+    }
+    if (participant.status === 'placed') {
+      return (participant.amount * multiplierNow).toFixed(2);
+    }
+    if (participant.status === 'lose' && participant.x) {
+      return (participant.amount * participant.x).toFixed(2);
+    }
+    if (participant.status === 'win' && participant.payout) {
+      return participant.payout.toFixed(2);
+    }
     
     return participant.amount.toFixed(2);
   };
@@ -440,9 +603,19 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
   const isMyBet = (participant) => {
     if (!userData) return false;
     if (participant.user_id === userData.id) return true;
+    
     const participantId = participant.bet_id ?? participant.id;
-    const myActiveBetId = myActiveBet?.bet_id ?? myActiveBet?.id;
-    return myActiveBetId && participantId === myActiveBetId;
+    const myBetId = myBet?.bet_id ?? myBet?.id;
+    const recentId = recentlyPlacedBet?.bet_id ?? recentlyPlacedBet?.id;
+    
+    return (myBetId && participantId === myBetId) || (recentId && participantId === recentId);
+  };
+
+  const getBetStatus = (participant) => {
+    if (participant.status === 'win') return 'win';
+    if (participant.status === 'lose') return 'lose';
+    if (participant.status === 'placed') return 'placed';
+    return 'placed';
   };
 
   return (
@@ -463,14 +636,22 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
                   {stage === 'timer' && (
                     <div className="timer-container">
                       <img src={timerImg} alt="Timer" className="timer-image" />
-                      <div className="timer-text">{formatTime(timeLeft)}</div>
+                      <div className="timer-text">{formatTime(secondsToStart)}</div>
                     </div>
                   )}
+                  
                   {stage === 'rocket' && animationData && (
                     <div className="animation-container">
-                      <Lottie animationData={animationData} loop={true} autoplay={true} className="raketa-animation" speed={1.5} />
+                      <Lottie 
+                        animationData={animationData} 
+                        loop={true} 
+                        autoplay={true} 
+                        className="raketa-animation" 
+                        speed={1.5} 
+                      />
                     </div>
                   )}
+                  
                   {stage === 'explosion' && exAnimationData && (
                     <div className="explosion-container">
                       <Lottie 
@@ -481,11 +662,11 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
                         speed={1.2}
                         lottieRef={(ref) => { explosionAnimationRef.current = ref; }}
                         onComplete={handleExplosionComplete}
-                        // Дублируем для надежности
                         onLoopComplete={handleExplosionComplete}
                       />
                     </div>
                   )}
+                  
                   {!animationData && !exAnimationData && !loading && (
                     <div className="error-message">Failed to load animation</div>
                   )}
@@ -496,7 +677,10 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
             <div className="last-multipliers-container">
               <div className="last-multipliers-scroll">
                 {getDisplayMultipliers().map((m, i) => (
-                  <span key={i} className={`last-multiplier-item ${i === 0 && engineEvents.crash ? 'new' : ''}`}>
+                  <span 
+                    key={i} 
+                    className={`last-multiplier-item ${i === 0 && engineEvents.crash ? 'new' : ''}`}
+                  >
                     x{m.toFixed(2)}
                   </span>
                 ))}
@@ -514,7 +698,9 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
                 <tbody className="participants-tbody">
                   {!wsConnected ? (
                     <tr className="participants-row">
-                      <td colSpan="2" style={{ textAlign: 'center', color: '#333', padding: '20px' }}>Connecting to server...</td>
+                      <td colSpan="2" style={{ textAlign: 'center', color: '#333', padding: '20px' }}>
+                        Connecting to server...
+                      </td>
                     </tr>
                   ) : participants.length > 0 ? (
                     participants.map((participant) => {
@@ -522,15 +708,17 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
                       const avatarColor = getAvatarColor(participant.user_id);
                       const avatarElement = getParticipantAvatar(participant);
                       const username = getParticipantUsername(participant);
-                      const betKey = participant.bet_id ?? participant.id ?? `temp-${participant.user_id}`;
+                      const betKey = participant.bet_id ?? participant.id ?? `temp-${participant.user_id}-${Date.now()}`;
                       const currentAmount = getCurrentBetAmount(participant);
+                      const betStatus = getBetStatus(participant);
                       
                       let multiplierColor = '';
                       let statusIcon = null;
-                      if (participant.status === 'win' && participant.x) {
+                      
+                      if (betStatus === 'win') {
                         multiplierColor = 'multiplier-green';
                         statusIcon = <span className="check-icon">✓</span>;
-                      } else if (participant.status === 'lose') {
+                      } else if (betStatus === 'lose') {
                         multiplierColor = 'multiplier-red';
                         statusIcon = <span className="cross-icon">✗</span>;
                       } else if (isMyBetFlag) {
@@ -540,21 +728,37 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
                       return (
                         <tr key={betKey} className={`participants-row ${isMyBetFlag ? 'my-bet-row' : ''}`}>
                           <td className="participant-bet-cell">
-                            <div className="participant-avatar" style={{ backgroundColor: avatarElement ? 'transparent' : avatarColor }}>
-                              {avatarElement || <span className="fallback">{username?.[0]?.toUpperCase() || 'U'}</span>}
+                            <div 
+                              className="participant-avatar" 
+                              style={{ backgroundColor: avatarElement ? 'transparent' : avatarColor }}
+                            >
+                              {avatarElement || (
+                                <span className="fallback">
+                                  {username?.[0]?.toUpperCase() || 'U'}
+                                </span>
+                              )}
                             </div>
                             <div className="participant-info">
-                              <div className="participant-nickname">{username} {isMyBetFlag}</div>
+                              <div className="participant-nickname">
+                                {username} {isMyBetFlag ? '(You)' : ''}
+                              </div>
                               <div className="participant-bet-currency">
-                                <img src={participant.currency === 'ton' ? tonSvg : starSvg} alt={participant.currency} className="currency-icon-small" style={{ marginTop: '-1px' }} />
+                                <img 
+                                  src={participant.currency === 'ton' ? tonSvg : starSvg} 
+                                  alt={participant.currency} 
+                                  className="currency-icon-small" 
+                                  style={{ marginTop: '-1px' }} 
+                                />
                                 <span className="participant-bet">{currentAmount}</span>
                               </div>
                             </div>
                           </td>
                           <td className="participant-winning-cell">
-                            {participant.status === 'placed' ? (
+                            {betStatus === 'placed' ? (
                               <span className="participant-multiplier">
-                                <span className={`live-multiplier ${isMyBetFlag ? 'my-multiplier' : ''}`}>x{multiplierNow.toFixed(2)}</span>
+                                <span className={`live-multiplier ${isMyBetFlag ? 'my-multiplier' : ''}`}>
+                                  x{multiplierNow.toFixed(2)}
+                                </span>
                               </span>
                             ) : (
                               <span className={`participant-multiplier ${multiplierColor}`}>
@@ -569,7 +773,13 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
                     <tr className="participants-row no-bets-row">
                       <td colSpan="2" className="no-bets-message">
                         {'No bets yet'.split('').map((char, index) => (
-                          <span key={index} className={char === ' ' ? 'space' : 'char'} style={char === ' ' ? { width: '0.3em' } : {}}>{char === ' ' ? '\u00A0' : char}</span>
+                          <span 
+                            key={index} 
+                            className={char === ' ' ? 'space' : 'char'} 
+                            style={char === ' ' ? { width: '0.3em' } : {}}
+                          >
+                            {char === ' ' ? '\u00A0' : char}
+                          </span>
                         ))}
                       </td>
                     </tr>
@@ -579,7 +789,11 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
             </div>
   
             <div className="make-bet-button-container">
-              <button className={getButtonClass()} onClick={handleMainButtonClick} disabled={!isMainButtonActive()}>
+              <button 
+                className={getButtonClass()} 
+                onClick={handleMainButtonClick} 
+                disabled={!isMainButtonActive()}
+              >
                 <span className="make-bet-text">{getButtonText()}</span>
               </button>
             </div>
@@ -594,52 +808,125 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       )}
   
       {isBetModalOpen && (
-        <div className={`bet-modal-overlay ${isModalClosing ? 'closing' : ''}`} onClick={closeBetModal}>
-          <div className={`bet-modal-content ${isModalClosing ? 'closing' : ''}`} onClick={(e) => e.stopPropagation()}>
+        <div 
+          className={`bet-modal-overlay ${isModalClosing ? 'closing' : ''}`} 
+          onClick={closeBetModal}
+        >
+          <div 
+            className={`bet-modal-content ${isModalClosing ? 'closing' : ''}`} 
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="bet-modal-top-section">
               <div className="bet-label">Your bet</div>
+              
               <div className="bet-input-container">
                 <div className="bet-input-wrapper">
-                  <span className={`bet-input-placeholder ${betAmount ? 'hidden' : ''}`}>Enter</span>
-                  <input ref={betInputRef} type="text" className="bet-input" value={betAmount} onChange={handleBetChange} placeholder="" inputMode="decimal" style={{ fontSize: '16px' }}/>
-                  <div className="currency-selector" onClick={toggleDropdown} ref={currencyDropdownRef}>
-                    <img src={selectedCurrency === 'ton' ? tonSvg : starSvg} alt={selectedCurrency} className="currency-icon" />
-                    <img src={isDropdownOpen ? switchSvg : switchbSvg} alt="switch" className="currency-switch" />
+                  <span className={`bet-input-placeholder ${betAmount ? 'hidden' : ''}`}>
+                    Enter
+                  </span>
+                  <input 
+                    ref={betInputRef} 
+                    type="text" 
+                    className="bet-input" 
+                    value={betAmount} 
+                    onChange={handleBetChange} 
+                    placeholder="" 
+                    inputMode="decimal" 
+                    style={{ fontSize: '16px' }}
+                  />
+                  
+                  <div 
+                    className="currency-selector" 
+                    onClick={toggleDropdown} 
+                    ref={currencyDropdownRef}
+                  >
+                    <img 
+                      src={selectedCurrency === 'ton' ? tonSvg : starSvg} 
+                      alt={selectedCurrency} 
+                      className="currency-icon" 
+                    />
+                    <img 
+                      src={isDropdownOpen ? switchSvg : switchbSvg} 
+                      alt="switch" 
+                      className="currency-switch" 
+                    />
+                    
                     {isDropdownOpen && (
                       <div className="currency-dropdown">
-                        <div className={`dropdown-item ${selectedCurrency === 'ton' ? 'selected' : ''}`} onClick={() => handleCurrencySelect('ton')}>TON</div>
-                        <div className={`dropdown-item ${selectedCurrency === 'stars' ? 'selected' : ''}`} onClick={() => handleCurrencySelect('stars')}>STARS</div>
+                        <div 
+                          className={`dropdown-item ${selectedCurrency === 'ton' ? 'selected' : ''}`} 
+                          onClick={() => handleCurrencySelect('ton')}
+                        >
+                          TON
+                        </div>
+                        <div 
+                          className={`dropdown-item ${selectedCurrency === 'stars' ? 'selected' : ''}`} 
+                          onClick={() => handleCurrencySelect('stars')}
+                        >
+                          STARS
+                        </div>
                       </div>
                     )}
                   </div>
                 </div>
               </div>
+              
               <div className="quick-bet-buttons">
                 {getQuickBetValues().map((value) => (
-                  <div key={value} className="quick-bet-button" onClick={() => handleQuickBet(value)}>
+                  <div 
+                    key={value} 
+                    className="quick-bet-button" 
+                    onClick={() => handleQuickBet(value)}
+                  >
                     <span className="quick-bet-value">{value}</span>
                   </div>
                 ))}
               </div>
+              
               <div className="auto-payout-section">
                 <div className="auto-payout-row">
                   <span className="auto-payout-label">Auto-payout</span>
-                  <Switch size="small" checked={autoPayoutEnabled} onChange={setAutoPayoutEnabled} />
+                  <Switch 
+                    size="small" 
+                    checked={autoPayoutEnabled} 
+                    onChange={setAutoPayoutEnabled} 
+                  />
                 </div>
+                
                 <div className={`multiplier-input-wrapper ${!autoPayoutEnabled ? 'disabled' : ''}`}>
-                  <div className={`multiplier-arrow left ${payoutMultiplier <= 1.2 ? 'disabled' : ''}`} onClick={payoutMultiplier > 1.2 ? decreaseMultiplier : undefined}>
+                  <div 
+                    className={`multiplier-arrow left ${payoutMultiplier <= 1.2 ? 'disabled' : ''}`} 
+                    onClick={payoutMultiplier > 1.2 ? decreaseMultiplier : undefined}
+                  >
                     <img src={switchrSvg} alt="left" />
                   </div>
+                  
                   <span className="multiplier-value">x{payoutMultiplier.toFixed(1)}</span>
-                  <div className="multiplier-arrow right" onClick={increaseMultiplier}>
+                  
+                  <div 
+                    className="multiplier-arrow right" 
+                    onClick={increaseMultiplier}
+                  >
                     <img src={switchrSvg} alt="right" />
                   </div>
                 </div>
               </div>
             </div>
+            
             <div className="modal-buttons-container">
-              <button className="play-button-balls" onClick={handlePlayBet} disabled={!betAmount || parseFloat(betAmount) <= 0}>PLAY</button>
-              <button className="close-modal-rocket-button" onClick={closeBetModal}>CLOSE</button>
+              <button 
+                className="play-button-balls" 
+                onClick={handlePlayBet} 
+                disabled={!betAmount || parseFloat(betAmount) <= 0}
+              >
+                PLAY
+              </button>
+              <button 
+                className="close-modal-rocket-button" 
+                onClick={closeBetModal}
+              >
+                CLOSE
+              </button>
             </div>
           </div>
         </div>

@@ -8,6 +8,8 @@ class CrashWebSocket {
     this.isConnected = false;
     this.connectionPromise = null;
     this.token = null;
+    this.pingInterval = null;
+    this.shouldReconnect = true;
   }
 
   // Подключение к WebSocket
@@ -40,15 +42,17 @@ class CrashWebSocket {
           console.log('✅ WebSocket connected successfully');
           this.isConnected = true;
           this.reconnectAttempts = 0;
+          this.shouldReconnect = true;
+          
+          // Настраиваем ping/pong интервал
+          this.setupPingInterval();
+          
           resolve();
         };
 
         this.socket.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            if (data.server_time_ms) {
-               // console.log(`⏱️ Sync: Server ${data.server_time_ms} vs Local ${Date.now()}`);
-            }
             this.handleMessage(data);
           } catch (error) {
             console.error('❌ Error parsing WebSocket message:', error, 'Raw:', event.data);
@@ -61,22 +65,27 @@ class CrashWebSocket {
             reason: event.reason,
             wasClean: event.wasClean
           });
+          
           this.isConnected = false;
           this.connectionPromise = null;
+          this.clearPingInterval();
           
-          if (!event.wasClean && this.reconnectAttempts < this.maxReconnectAttempts) {
+          // Пытаемся переподключиться, если не было явного закрытия
+          if (this.shouldReconnect && !event.wasClean && this.reconnectAttempts < this.maxReconnectAttempts) {
+            const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts);
+            console.log(`🔄 Attempting to reconnect in ${delay}ms (${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`);
+            
             setTimeout(() => {
-              console.log(`🔄 Attempting to reconnect (${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`);
               this.reconnect();
-            }, this.reconnectDelay * Math.pow(2, this.reconnectAttempts));
+            }, delay);
+            
             this.reconnectAttempts++;
           }
         };
 
         this.socket.onerror = (error) => {
           console.error('❌ WebSocket error:', error);
-          this.connectionPromise = null;
-          reject(error);
+          // Не reject здесь, так как onclose будет вызван следом
         };
 
       } catch (error) {
@@ -89,14 +98,35 @@ class CrashWebSocket {
     return this.connectionPromise;
   }
 
+  setupPingInterval() {
+    this.clearPingInterval();
+    // Отправляем ping каждые 30 секунд для поддержания соединения
+    this.pingInterval = setInterval(() => {
+      if (this.isReady()) {
+        try {
+          this.socket.send(JSON.stringify({ type: 'ping' }));
+        } catch (e) {
+          console.error('Failed to send ping:', e);
+        }
+      }
+    }, 30000);
+  }
+
+  clearPingInterval() {
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+      this.pingInterval = null;
+    }
+  }
+
   reconnect() {
-    if (this.token) {
+    if (this.token && this.shouldReconnect) {
       this.connect().catch(console.error);
     }
   }
 
   sendCommand(command) {
-    if (!this.isConnected || this.socket?.readyState !== WebSocket.OPEN) {
+    if (!this.isReady()) {
       console.error('❌ WebSocket not connected, cannot send command:', command);
       return false;
     }
@@ -132,15 +162,21 @@ class CrashWebSocket {
   }
 
   handleMessage(data) {
+    // Обработка pong (если нужно)
+    if (data.type === 'pong') {
+      return;
+    }
+    
     const handlers = this.messageHandlers.get(data.type) || [];
     handlers.forEach(handler => handler(data));
     
-    if (handlers.length === 0 && data.type !== 'tick') {
+    if (handlers.length === 0 && data.type !== 'tick' && data.type !== 'timer') {
       console.log('📨 Unhandled WebSocket message type:', data.type, data);
     }
   }
 
   requestState() {
+    console.log('📤 Requesting state...');
     return this.sendCommand({ type: 'state' });
   }
 
@@ -150,28 +186,41 @@ class CrashWebSocket {
       currency: currency.toLowerCase(),
       amount: parseFloat(amount)
     };
+    
     if (autoCashout && autoCashout >= 1.01) {
       command.auto_cashout = parseFloat(autoCashout);
     }
+    
+    console.log('📤 Placing bet:', command);
     return this.sendCommand(command);
   }
 
   cashout(betId) {
-    return this.sendCommand({
-      type: 'cashout',
-      bet_id: parseInt(betId)
-    });
+    const command = {
+      type: 'cashout'
+    };
+    
+    if (betId) {
+      command.bet_id = parseInt(betId);
+    }
+    
+    console.log('📤 Cashing out:', command);
+    return this.sendCommand(command);
   }
 
   disconnect() {
+    console.log('🔌 Disconnecting WebSocket by user');
+    this.shouldReconnect = false;
+    this.clearPingInterval();
+    
     if (this.socket) {
       this.socket.close(1000, 'User disconnected');
       this.socket = null;
-      this.isConnected = false;
-      this.connectionPromise = null;
-      this.messageHandlers.clear();
-      console.log('🔌 WebSocket disconnected by user');
     }
+    
+    this.isConnected = false;
+    this.connectionPromise = null;
+    this.messageHandlers.clear();
   }
 
   isReady() {
