@@ -8,11 +8,12 @@ export const useCrashGame = () => {
   const [multiplierNow, setMultiplierNow] = useState(1.0);
   const [roundStatus, setRoundStatus] = useState('waiting');
   
-  // --- Таймеры и время (ТОЛЬКО ОТ СЕРВЕРА) ---
+  // --- Таймеры и время ---
   const [secondsToStart, setSecondsToStart] = useState(15);
   const [secondsToBetsClose, setSecondsToBetsClose] = useState(null);
   const [bettingLocked, setBettingLocked] = useState(false);
   const [stage, setStage] = useState('timer');
+  const [serverTimeMs, setServerTimeMs] = useState(null);
   
   // Для синхронизации времени
   const [timeOffset, setTimeOffset] = useState(0);
@@ -45,7 +46,8 @@ export const useCrashGame = () => {
   const myBetRef = useRef(null);
   const stageRef = useRef('timer');
   const userIdRef = useRef(null);
-  const hasBetThisRoundRef = useRef(false);
+  const lastServerTimerRef = useRef(null); // Для отслеживания последнего серверного таймера
+  const timerAnimationRef = useRef(null); // Для анимации таймера
 
   // Синхронизация ref со стейтом
   useEffect(() => {
@@ -79,7 +81,12 @@ export const useCrashGame = () => {
     if (Math.abs(newOffset - timeOffsetRef.current) > 200) {
       timeOffsetRef.current = newOffset;
       setTimeOffset(newOffset);
+      setServerTimeMs(serverTimeMs);
     }
+  }, []);
+
+  const getServerTime = useCallback(() => {
+    return Date.now() + timeOffsetRef.current;
   }, []);
 
   // --- Форматирование ставок ---
@@ -127,12 +134,13 @@ export const useCrashGame = () => {
         setStage('timer');
         setCrashMultiplier(null);
         setMultiplierNow(1.0);
-        // Сбрасываем флаг ставки при новом раунде
-        hasBetThisRoundRef.current = false;
         break;
       case 'running':
         setStage('rocket');
         setMultiplierNow(1.0);
+        break;
+      case 'crashed':
+        // stage обновится из crash события
         break;
       default:
         setStage('timer');
@@ -162,9 +170,10 @@ export const useCrashGame = () => {
       setMultiplierNow(data.multiplier);
     }
 
-    // ТАЙМЕР ТОЛЬКО ОТ СЕРВЕРА
+    // Сохраняем серверное значение таймера
     if (data.seconds_to_start !== undefined) {
       setSecondsToStart(data.seconds_to_start);
+      lastServerTimerRef.current = data.seconds_to_start;
     }
     
     if (data.seconds_to_bets_close !== undefined) {
@@ -185,12 +194,46 @@ export const useCrashGame = () => {
       setMyBet(formatted);
       myBetRef.current = formatted;
       userIdRef.current = data.my_bet.user_id;
-      hasBetThisRoundRef.current = true;
     } else {
       setMyBet(null);
       myBetRef.current = null;
     }
   }, [syncTime, updateStageFromStatus, formatBet]);
+
+  // --- Исправленный таймер (только для плавной анимации) ---
+  useEffect(() => {
+    // Очищаем предыдущую анимацию
+    if (timerAnimationRef.current) {
+      clearInterval(timerAnimationRef.current);
+    }
+
+    // Запускаем только если есть что анимировать и мы в фазе таймера
+    if (secondsToStart > 0 && stage === 'timer') {
+      timerAnimationRef.current = setInterval(() => {
+        setSecondsToStart(prev => {
+          // Не уменьшаем ниже 0 и не уходим в минус
+          const newValue = Math.max(0, prev - 0.1);
+          
+          // Если новое значение сильно отличается от последнего серверного (> 0.5 сек),
+          // то корректируем (защита от рассинхрона)
+          if (lastServerTimerRef.current !== null && 
+              Math.abs(newValue - lastServerTimerRef.current) > 0.6) {
+            console.log('⏱️ Timer corrected from', newValue, 'to', lastServerTimerRef.current);
+            return lastServerTimerRef.current;
+          }
+          
+          return newValue;
+        });
+      }, 100);
+    }
+
+    return () => {
+      if (timerAnimationRef.current) {
+        clearInterval(timerAnimationRef.current);
+        timerAnimationRef.current = null;
+      }
+    };
+  }, [stage, secondsToStart]); // Убрали зависимость от secondsToStart для корректной работы
 
   // --- WebSocket инициализация ---
   const initializeWebSocket = useCallback(async () => {
@@ -199,6 +242,7 @@ export const useCrashGame = () => {
       setWsConnected(true);
 
       crashWebSocket.on('state', (data) => {
+        console.log('📦 State received', data);
         handleState(data);
       });
 
@@ -211,11 +255,9 @@ export const useCrashGame = () => {
           currentRoundIdRef.current = data.round_id;
         }
         
-        // ОЧИЩАЕМ ТАБЛИЦУ ПРИ НОВОМ РАУНДЕ
         setBets([]);
         setMyBet(null);
         myBetRef.current = null;
-        hasBetThisRoundRef.current = false;
         
         if (data.status) {
           setRoundStatus(data.status);
@@ -224,22 +266,26 @@ export const useCrashGame = () => {
         
         if (data.seconds_to_start !== undefined) {
           setSecondsToStart(data.seconds_to_start);
+          lastServerTimerRef.current = data.seconds_to_start;
         }
       });
 
       crashWebSocket.on('timer', (data) => {
         if (data.round_id && data.round_id !== currentRoundIdRef.current) {
+          console.log('⏱️ Ignoring timer for old round', data.round_id);
           return;
         }
         
         if (data.seconds_to_start !== undefined) {
-          // ТОЛЬКО СЕРВЕРНОЕ ЗНАЧЕНИЕ
+          // Сохраняем серверное значение
+          lastServerTimerRef.current = data.seconds_to_start;
           setSecondsToStart(data.seconds_to_start);
         }
       });
 
       crashWebSocket.on('status', (data) => {
         if (data.round_id && data.round_id !== currentRoundIdRef.current) {
+          console.log('🔄 Ignoring status for old round', data.round_id);
           return;
         }
         
@@ -251,6 +297,7 @@ export const useCrashGame = () => {
         }
         
         if (data.seconds_to_start !== undefined) {
+          lastServerTimerRef.current = data.seconds_to_start;
           setSecondsToStart(data.seconds_to_start);
         }
         
@@ -268,7 +315,6 @@ export const useCrashGame = () => {
           setMultiplierNow(data.multiplier);
           setEngineEvents(prev => ({ ...prev, tick: data }));
           
-          // Обновляем current_amount для активных ставок
           setBets(prev => prev.map(bet => {
             if (bet.status === 'placed') {
               return {
@@ -294,7 +340,6 @@ export const useCrashGame = () => {
         const bet = formatBet(data.bet);
         setMyBet(bet);
         myBetRef.current = bet;
-        hasBetThisRoundRef.current = true;
         
         setBets(prev => {
           const exists = prev.some(b => b.bet_id === bet.bet_id);
@@ -307,6 +352,7 @@ export const useCrashGame = () => {
 
       crashWebSocket.on('bet_placed', (data) => {
         if (data.round_id && data.round_id !== currentRoundIdRef.current) {
+          console.log('📊 Ignoring bet_placed for old round', data.round_id);
           return;
         }
         
@@ -325,7 +371,6 @@ export const useCrashGame = () => {
         if (data.bet.user_id === userIdRef.current) {
           setMyBet(bet);
           myBetRef.current = bet;
-          hasBetThisRoundRef.current = true;
         }
       });
 
@@ -342,18 +387,16 @@ export const useCrashGame = () => {
             b.bet_id === updated.bet_id ? updated : b
           ));
         }
-        
-        // Баланс обновится через bet_result
       });
 
       crashWebSocket.on('bet_result', (data) => {
         if (data.round_id && data.round_id !== currentRoundIdRef.current) {
+          console.log('🎲 Ignoring bet_result for old round', data.round_id);
           return;
         }
         
         setEngineEvents(prev => ({ ...prev, bet_result: data }));
         
-        // Обновляем ставку в таблице
         setBets(prev => prev.map(bet => {
           if (bet.bet_id === data.bet_id) {
             const updated = {
@@ -368,7 +411,6 @@ export const useCrashGame = () => {
           return bet;
         }));
         
-        // Если это моя ставка, обновляем myBet
         if (myBetRef.current?.bet_id === data.bet_id) {
           setMyBet(prev => prev ? {
             ...prev,
@@ -377,15 +419,12 @@ export const useCrashGame = () => {
             payout: data.payout,
             current_amount: data.payout || (prev.original_amount * data.x)
           } : null);
-          
-          if (data.status === 'win' || data.status === 'lose') {
-            hasBetThisRoundRef.current = false;
-          }
         }
       });
 
       crashWebSocket.on('crash', (data) => {
         if (data.round_id && data.round_id !== currentRoundIdRef.current) {
+          console.log('💥 Ignoring crash for old round', data.round_id);
           return;
         }
         
@@ -401,7 +440,6 @@ export const useCrashGame = () => {
         
         setLastMultipliers(prev => [mult, ...prev].slice(0, 10));
         
-        // Обновляем все активные ставки на lose
         setBets(prev => prev.map(bet => {
           if (bet.status === 'placed') {
             return {
@@ -421,7 +459,6 @@ export const useCrashGame = () => {
             x: mult,
             current_amount: prev.original_amount * mult
           } : null);
-          hasBetThisRoundRef.current = false;
         }
       });
 
@@ -448,7 +485,6 @@ export const useCrashGame = () => {
     };
   }, [initializeWebSocket]);
 
-  // Периодический запрос state для синхронизации
   useEffect(() => {
     const stateInterval = setInterval(() => {
       if (wsConnected && crashWebSocket.isReady()) {
@@ -464,7 +500,6 @@ export const useCrashGame = () => {
   const canPlaceBet = useCallback(() => {
     if (!wsConnected) return false;
     if (myBetRef.current) return false;
-    if (hasBetThisRoundRef.current) return false;
     if (roundStatus !== 'betting') return false;
     if (bettingLocked) return false;
     if (secondsToBetsClose !== null && secondsToBetsClose <= 0) return false;
@@ -473,11 +508,24 @@ export const useCrashGame = () => {
   }, [wsConnected, roundStatus, bettingLocked, secondsToBetsClose]);
 
   const canPlaceCashout = useCallback(() => {
-    if (!wsConnected) return false;
-    if (!myBetRef.current) return false;
-    if (myBetRef.current.status !== 'placed') return false;
-    if (roundStatus !== 'running') return false;
+    if (!wsConnected) {
+      console.log('Cashout: not connected');
+      return false;
+    }
+    if (!myBetRef.current) {
+      console.log('Cashout: no active bet');
+      return false;
+    }
+    if (myBetRef.current.status !== 'placed') {
+      console.log('Cashout: bet not in placed status', myBetRef.current.status);
+      return false;
+    }
+    if (roundStatus !== 'running') {
+      console.log('Cashout: round not running', roundStatus);
+      return false;
+    }
     
+    console.log('Cashout: allowed');
     return true;
   }, [wsConnected, roundStatus]);
 
@@ -487,16 +535,26 @@ export const useCrashGame = () => {
     const success = crashWebSocket.placeBet(currency, amount, autoCashout);
     
     if (success) {
-      hasBetThisRoundRef.current = true;
+      console.log('Bet placed successfully');
+    } else {
+      console.log('Failed to place bet');
     }
     
     return success;
   }, [canPlaceBet]);
 
   const cashoutBet = useCallback(() => {
-    if (!canPlaceCashout()) return false;
-    if (!myBetRef.current) return false;
+    if (!canPlaceCashout()) {
+      console.log('Cashout validation failed');
+      return false;
+    }
     
+    if (!myBetRef.current) {
+      console.log('No bet to cashout');
+      return false;
+    }
+    
+    console.log('Cashing out bet ID:', myBetRef.current.bet_id);
     return crashWebSocket.cashout(myBetRef.current.bet_id);
   }, [canPlaceCashout]);
 
@@ -508,10 +566,6 @@ export const useCrashGame = () => {
 
   const clearBetsOnCrash = useCallback(() => {
     console.log('🧹 Clearing table after explosion');
-    setBets([]);
-    setMyBet(null);
-    myBetRef.current = null;
-    hasBetThisRoundRef.current = false;
   }, []);
 
   const getHistoryFromBackend = useCallback(async () => {
