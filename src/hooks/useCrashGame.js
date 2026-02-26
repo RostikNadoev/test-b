@@ -140,7 +140,7 @@ export const useCrashGame = () => {
         setMultiplierNow(1.0);
         break;
       case 'crashed':
-        // НЕ меняем stage здесь - это делает обработчик crash
+        // stage обновится из crash события
         break;
       default:
         setStage('timer');
@@ -339,8 +339,6 @@ export const useCrashGame = () => {
           }
           return [bet, ...prev];
         });
-        
-        setEngineEvents(prev => ({ ...prev, bet_ok: data }));
       });
 
       // BET_PLACED - ставка появилась в таблице (всем)
@@ -426,7 +424,7 @@ export const useCrashGame = () => {
         }
       });
 
-      // CRASH - раунд упал - СРАЗУ МЕНЯЕМ НА ВЗРЫВ!
+      // CRASH - раунд упал
       crashWebSocket.on('crash', (data) => {
         // ВАЖНО: проверяем round_id
         if (data.round_id && data.round_id !== currentRoundIdRef.current) {
@@ -434,19 +432,14 @@ export const useCrashGame = () => {
           return;
         }
         
-        console.log('💥 Crash event received - IMMEDIATELY switching to explosion!', data);
+        console.log('💥 Crash event:', data);
+        setEngineEvents(prev => ({ ...prev, crash: data }));
         
-        // СРАЗУ переключаем на взрыв - никаких задержек!
+        setRoundStatus('crashed');
         setStage('explosion');
         
         const mult = data.crash_mult || 1.0;
         setCrashMultiplier(mult);
-        
-        // Обновляем статус раунда
-        setRoundStatus('crashed');
-        
-        // Сохраняем событие
-        setEngineEvents(prev => ({ ...prev, crash: data }));
         
         // Добавляем в историю
         setLastMultipliers(prev => [mult, ...prev].slice(0, 10));
