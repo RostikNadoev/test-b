@@ -46,6 +46,9 @@ export const useCrashGame = () => {
   const myBetRef = useRef(null);
   const stageRef = useRef('timer');
   const userIdRef = useRef(null);
+  
+  // Коллбэк для обновления баланса извне
+  const [onBalanceUpdate, setOnBalanceUpdate] = useState(null);
 
   // Синхронизация ref со стейтом
   useEffect(() => {
@@ -198,91 +201,208 @@ export const useCrashGame = () => {
   }, [syncTime, updateStageFromStatus, formatBet]);
 
   // --- ТАЙМЕР ТОЛЬКО ОТ СЕРВЕРА (УБРАНА ЛОКАЛЬНАЯ АНИМАЦИЯ) ---
-  // Больше нет интервала для плавного уменьшения таймера
-  // Таймер обновляется только через события timer и state от сервера
 
   // --- WebSocket инициализация ---
-  const initializeWebSocket = useCallback(async () => {
+  const initializeWebSocket = useCallback(() => {
     try {
-      await crashWebSocket.connect();
-      setWsConnected(true);
+      crashWebSocket.connect().then(() => {
+        setWsConnected(true);
 
-      crashWebSocket.on('state', (data) => {
-        console.log('📦 State received', data);
-        handleState(data);
-      });
+        crashWebSocket.on('state', (data) => {
+          handleState(data);
+        });
 
-      crashWebSocket.on('round', (data) => {
-        console.log('🔄 New round', data);
-        setEngineEvents(prev => ({ ...prev, round: data }));
-        
-        if (data.round_id) {
-          setCurrentRoundId(data.round_id);
-          currentRoundIdRef.current = data.round_id;
-        }
-        
-        setBets([]);
-        setMyBet(null);
-        myBetRef.current = null;
-        
-        if (data.status) {
-          setRoundStatus(data.status);
-          updateStageFromStatus(data.status);
-        }
-        
-        if (data.seconds_to_start !== undefined) {
-          setSecondsToStart(data.seconds_to_start);
-        }
-      });
+        crashWebSocket.on('round', (data) => {
+          console.log('🔄 New round', data);
+          setEngineEvents(prev => ({ ...prev, round: data }));
+          
+          if (data.round_id) {
+            setCurrentRoundId(data.round_id);
+            currentRoundIdRef.current = data.round_id;
+          }
+          
+          setBets([]);
+          setMyBet(null);
+          myBetRef.current = null;
+          
+          if (data.status) {
+            setRoundStatus(data.status);
+            updateStageFromStatus(data.status);
+          }
+          
+          if (data.seconds_to_start !== undefined) {
+            setSecondsToStart(data.seconds_to_start);
+          }
+        });
 
-      crashWebSocket.on('timer', (data) => {
-        if (data.round_id && data.round_id !== currentRoundIdRef.current) {
-          console.log('⏱️ Ignoring timer for old round', data.round_id);
-          return;
-        }
-        
-        if (data.seconds_to_start !== undefined) {
-          // ТОЛЬКО СЕРВЕРНОЕ ЗНАЧЕНИЕ - никакой локальной анимации
-          setSecondsToStart(data.seconds_to_start);
-        }
-      });
+        crashWebSocket.on('timer', (data) => {
+          if (data.round_id && data.round_id !== currentRoundIdRef.current) {
+            return;
+          }
+          
+          if (data.seconds_to_start !== undefined) {
+            setSecondsToStart(data.seconds_to_start);
+          }
+        });
 
-      crashWebSocket.on('status', (data) => {
-        if (data.round_id && data.round_id !== currentRoundIdRef.current) {
-          console.log('🔄 Ignoring status for old round', data.round_id);
-          return;
-        }
-        
-        setEngineEvents(prev => ({ ...prev, status: data }));
-        
-        if (data.status) {
-          setRoundStatus(data.status);
-          updateStageFromStatus(data.status);
-        }
-        
-        if (data.seconds_to_start !== undefined) {
-          setSecondsToStart(data.seconds_to_start);
-        }
-        
-        if (data.betting_allowed !== undefined) {
-          setBettingLocked(!data.betting_allowed);
-        }
-      });
+        crashWebSocket.on('status', (data) => {
+          if (data.round_id && data.round_id !== currentRoundIdRef.current) {
+            return;
+          }
+          
+          setEngineEvents(prev => ({ ...prev, status: data }));
+          
+          if (data.status) {
+            setRoundStatus(data.status);
+            updateStageFromStatus(data.status);
+          }
+          
+          if (data.seconds_to_start !== undefined) {
+            setSecondsToStart(data.seconds_to_start);
+          }
+          
+          if (data.betting_allowed !== undefined) {
+            setBettingLocked(!data.betting_allowed);
+          }
+        });
 
-      crashWebSocket.on('tick', (data) => {
-        if (data.round_id && data.round_id !== currentRoundIdRef.current) {
-          return;
-        }
-        
-        if (data.multiplier) {
-          setMultiplierNow(data.multiplier);
-          setEngineEvents(prev => ({ ...prev, tick: data }));
+        crashWebSocket.on('tick', (data) => {
+          if (data.round_id && data.round_id !== currentRoundIdRef.current) {
+            return;
+          }
+          
+          if (data.multiplier) {
+            setMultiplierNow(data.multiplier);
+            setEngineEvents(prev => ({ ...prev, tick: data }));
+            
+            setBets(prev => prev.map(bet => {
+              if (bet.status === 'placed') {
+                return {
+                  ...bet,
+                  current_amount: bet.original_amount * data.multiplier
+                };
+              }
+              return bet;
+            }));
+            
+            if (myBetRef.current?.status === 'placed') {
+              setMyBet(prev => prev ? {
+                ...prev,
+                current_amount: prev.original_amount * data.multiplier
+              } : null);
+            }
+          }
+        });
+
+        crashWebSocket.on('bet_ok', (data) => {
+          if (data.server_time_ms) syncTime(data.server_time_ms);
+          
+          const bet = formatBet(data.bet);
+          setMyBet(bet);
+          myBetRef.current = bet;
+          
+          setBets(prev => {
+            const exists = prev.some(b => b.bet_id === bet.bet_id);
+            if (exists) {
+              return prev.map(b => b.bet_id === bet.bet_id ? bet : b);
+            }
+            return [bet, ...prev];
+          });
+        });
+
+        crashWebSocket.on('bet_placed', (data) => {
+          if (data.round_id && data.round_id !== currentRoundIdRef.current) {
+            return;
+          }
+          
+          setEngineEvents(prev => ({ ...prev, bet_placed: data }));
+          
+          const bet = formatBet(data.bet);
+          
+          setBets(prev => {
+            const exists = prev.some(b => b.bet_id === bet.bet_id);
+            if (exists) {
+              return prev.map(b => b.bet_id === bet.bet_id ? bet : b);
+            }
+            return [bet, ...prev];
+          });
+          
+          if (data.bet.user_id === userIdRef.current) {
+            setMyBet(bet);
+            myBetRef.current = bet;
+          }
+        });
+
+        crashWebSocket.on('cashout_ok', (data) => {
+          console.log('💰 Cashout OK:', data);
+          setEngineEvents(prev => ({ ...prev, cashout_ok: data }));
+          
+          if (data.bet) {
+            const updated = formatBet(data.bet);
+            setMyBet(updated);
+            myBetRef.current = updated;
+            
+            setBets(prev => prev.map(b => 
+              b.bet_id === updated.bet_id ? updated : b
+            ));
+          }
+        });
+
+        crashWebSocket.on('bet_result', (data) => {
+          if (data.round_id && data.round_id !== currentRoundIdRef.current) {
+            return;
+          }
+          
+          setEngineEvents(prev => ({ ...prev, bet_result: data }));
+          
+          setBets(prev => prev.map(bet => {
+            if (bet.bet_id === data.bet_id) {
+              const updated = {
+                ...bet,
+                status: data.status,
+                x: data.x,
+                payout: data.payout,
+                current_amount: data.payout || (bet.original_amount * data.x)
+              };
+              return updated;
+            }
+            return bet;
+          }));
+          
+          if (myBetRef.current?.bet_id === data.bet_id) {
+            setMyBet(prev => prev ? {
+              ...prev,
+              status: data.status,
+              x: data.x,
+              payout: data.payout,
+              current_amount: data.payout || (prev.original_amount * data.x)
+            } : null);
+          }
+        });
+
+        crashWebSocket.on('crash', (data) => {
+          if (data.round_id && data.round_id !== currentRoundIdRef.current) {
+            return;
+          }
+          
+          console.log('💥 Crash event:', data);
+          setEngineEvents(prev => ({ ...prev, crash: data }));
+          
+          setRoundStatus('crashed');
+          setStage('explosion');
+          
+          const mult = data.crash_mult || 1.0;
+          setCrashMultiplier(mult);
+          
+          setLastMultipliers(prev => [mult, ...prev].slice(0, 10));
           
           setBets(prev => prev.map(bet => {
             if (bet.status === 'placed') {
               return {
                 ...bet,
-                current_amount: bet.original_amount * data.multiplier
+                status: 'lose',
+                x: mult,
+                current_amount: bet.original_amount * mult
               };
             }
             return bet;
@@ -291,148 +411,22 @@ export const useCrashGame = () => {
           if (myBetRef.current?.status === 'placed') {
             setMyBet(prev => prev ? {
               ...prev,
-              current_amount: prev.original_amount * data.multiplier
-            } : null);
-          }
-        }
-      });
-
-      crashWebSocket.on('bet_ok', (data) => {
-        if (data.server_time_ms) syncTime(data.server_time_ms);
-        
-        const bet = formatBet(data.bet);
-        setMyBet(bet);
-        myBetRef.current = bet;
-        
-        setBets(prev => {
-          const exists = prev.some(b => b.bet_id === bet.bet_id);
-          if (exists) {
-            return prev.map(b => b.bet_id === bet.bet_id ? bet : b);
-          }
-          return [bet, ...prev];
-        });
-      });
-
-      crashWebSocket.on('bet_placed', (data) => {
-        if (data.round_id && data.round_id !== currentRoundIdRef.current) {
-          console.log('📊 Ignoring bet_placed for old round', data.round_id);
-          return;
-        }
-        
-        setEngineEvents(prev => ({ ...prev, bet_placed: data }));
-        
-        const bet = formatBet(data.bet);
-        
-        setBets(prev => {
-          const exists = prev.some(b => b.bet_id === bet.bet_id);
-          if (exists) {
-            return prev.map(b => b.bet_id === bet.bet_id ? bet : b);
-          }
-          return [bet, ...prev];
-        });
-        
-        if (data.bet.user_id === userIdRef.current) {
-          setMyBet(bet);
-          myBetRef.current = bet;
-        }
-      });
-
-      crashWebSocket.on('cashout_ok', (data) => {
-        console.log('💰 Cashout OK:', data);
-        setEngineEvents(prev => ({ ...prev, cashout_ok: data }));
-        
-        if (data.bet) {
-          const updated = formatBet(data.bet);
-          setMyBet(updated);
-          myBetRef.current = updated;
-          
-          setBets(prev => prev.map(b => 
-            b.bet_id === updated.bet_id ? updated : b
-          ));
-        }
-      });
-
-      crashWebSocket.on('bet_result', (data) => {
-        if (data.round_id && data.round_id !== currentRoundIdRef.current) {
-          console.log('🎲 Ignoring bet_result for old round', data.round_id);
-          return;
-        }
-        
-        setEngineEvents(prev => ({ ...prev, bet_result: data }));
-        
-        setBets(prev => prev.map(bet => {
-          if (bet.bet_id === data.bet_id) {
-            const updated = {
-              ...bet,
-              status: data.status,
-              x: data.x,
-              payout: data.payout,
-              current_amount: data.payout || (bet.original_amount * data.x)
-            };
-            return updated;
-          }
-          return bet;
-        }));
-        
-        if (myBetRef.current?.bet_id === data.bet_id) {
-          setMyBet(prev => prev ? {
-            ...prev,
-            status: data.status,
-            x: data.x,
-            payout: data.payout,
-            current_amount: data.payout || (prev.original_amount * data.x)
-          } : null);
-        }
-      });
-
-      crashWebSocket.on('crash', (data) => {
-        if (data.round_id && data.round_id !== currentRoundIdRef.current) {
-          console.log('💥 Ignoring crash for old round', data.round_id);
-          return;
-        }
-        
-        console.log('💥 Crash event:', data);
-        setEngineEvents(prev => ({ ...prev, crash: data }));
-        
-        setRoundStatus('crashed');
-        setStage('explosion');
-        
-        const mult = data.crash_mult || 1.0;
-        setCrashMultiplier(mult);
-        
-        setLastMultipliers(prev => [mult, ...prev].slice(0, 10));
-        
-        setBets(prev => prev.map(bet => {
-          if (bet.status === 'placed') {
-            return {
-              ...bet,
               status: 'lose',
               x: mult,
-              current_amount: bet.original_amount * mult
-            };
+              current_amount: prev.original_amount * mult
+            } : null);
           }
-          return bet;
-        }));
-        
-        if (myBetRef.current?.status === 'placed') {
-          setMyBet(prev => prev ? {
-            ...prev,
-            status: 'lose',
-            x: mult,
-            current_amount: prev.original_amount * mult
-          } : null);
-        }
+        });
+
+        crashWebSocket.on('error', (data) => {
+          console.error('❌ WebSocket error:', data.error);
+          setEngineEvents(prev => ({ ...prev, error: data }));
+        });
+
+        setTimeout(() => {
+          crashWebSocket.requestState();
+        }, 100);
       });
-
-      crashWebSocket.on('error', (data) => {
-        console.error('❌ WebSocket error:', data.error);
-        setEngineEvents(prev => ({ ...prev, error: data }));
-      });
-
-      setTimeout(() => {
-        crashWebSocket.requestState();
-      }, 100);
-
     } catch (e) {
       console.error('WebSocket Init Error', e);
       setWsConnected(false);
@@ -471,23 +465,18 @@ export const useCrashGame = () => {
 
   const canPlaceCashout = useCallback(() => {
     if (!wsConnected) {
-      console.log('Cashout: not connected');
       return false;
     }
     if (!myBetRef.current) {
-      console.log('Cashout: no active bet');
       return false;
     }
     if (myBetRef.current.status !== 'placed') {
-      console.log('Cashout: bet not in placed status', myBetRef.current.status);
       return false;
     }
     if (roundStatus !== 'running') {
-      console.log('Cashout: round not running', roundStatus);
       return false;
     }
     
-    console.log('Cashout: allowed');
     return true;
   }, [wsConnected, roundStatus]);
 
