@@ -87,7 +87,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
         clearTimeout(inactivityTimerRef.current);
       }
       
-      // Если нет событий 5 секунд, запрашиваем state
       inactivityTimerRef.current = setTimeout(() => {
         if (wsConnected && stage !== 'explosion') {
           console.log('⚠️ No events for 5 seconds, requesting state...');
@@ -96,7 +95,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       }, 5000);
     };
 
-    // Сбрасываем таймер при любом событии
     const events = ['tick', 'timer', 'status', 'crash', 'bet_placed', 'bet_result'];
     events.forEach(event => {
       if (engineEvents[event]) {
@@ -208,13 +206,12 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     }
   }, [engineEvents.bet_ok]);
 
-  // Управление Lottie плеером для взрыва - УЛУЧШЕНО
+  // Управление Lottie плеером для взрыва
   useEffect(() => {
     console.log('Explosion effect - stage:', stage, 'ref:', explosionAnimationRef.current);
     
     if (stage === 'explosion' && explosionAnimationRef.current) {
       console.log('💥 Playing explosion animation now');
-      // Небольшая задержка для гарантии, что компонент отрисовался
       setTimeout(() => {
         if (explosionAnimationRef.current) {
           explosionAnimationRef.current.setSpeed(1.2);
@@ -224,16 +221,13 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     }
   }, [stage]);
 
-  // --- УЛУЧШЕНО: ЛОГИКА ЗАВЕРШЕНИЯ ВЗРЫВА ---
   const handleExplosionComplete = () => {
     console.log('💥 Explosion animation completed');
     
-    // Не очищаем сразу, даем время на отображение финального кадра
     setTimeout(() => {
       console.log('⏱️ Switching to Timer');
       setStage('timer');
       
-      // Запрашиваем state для синхронизации
       setTimeout(() => {
         requestState();
       }, 100);
@@ -383,9 +377,11 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
   
   const getQuickBetValues = () => selectedCurrency === 'ton' ? ['1', '5', '10', '25'] : ['50', '100', '250', '500'];
 
+  // Функция форматирования времени - просто отображает серверное значение без изменений
   const formatTime = (seconds) => {
     if (seconds === undefined || seconds === null || isNaN(seconds)) return '15';
-    const secs = Math.max(0, Math.floor(seconds));
+    // Просто берем целую часть, без дробной
+    const secs = Math.floor(seconds);
     return secs.toString().padStart(2, '0');
   };
 
@@ -410,7 +406,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       return;
     }
     
-    // Проверяем можно ли ставить перед отправкой
     if (!canBet) {
       showUiError('Cannot place bet at this moment');
       return;
@@ -425,7 +420,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       
       hasPlacedBetThisRoundRef.current = true;
       
-      // Создаем временную ставку для UI
       const tempBet = {
         bet_id: Date.now(),
         id: Date.now(),
@@ -447,13 +441,11 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       setRecentlyPlacedBet(tempBet);
       closeBetModal();
       
-      // Запрашиваем баланс через некоторое время
       setTimeout(() => {
         loadBalances();
         window.dispatchEvent(new CustomEvent('balanceUpdate'));
       }, 100);
       
-      // Таймаут для удаления временной ставки, если не пришло подтверждение
       setTimeout(() => {
         setRecentlyPlacedBet(prev => {
           if (!prev) return null;
@@ -466,7 +458,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     }
   };
 
-  // --- УЛУЧШЕНО: Обработка cashout с отладкой ---
   const handleTakeWinnings = async () => {
     const hasAnyActiveBet = myBet || recentlyPlacedBet;
     
@@ -493,7 +484,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     
     setCashoutPending(true);
     
-    // Используем реальную ставку если есть, иначе временную
     const betToCashout = myBet || recentlyPlacedBet;
     console.log('- Cashing out bet ID:', betToCashout?.bet_id);
     
@@ -501,10 +491,8 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     console.log('- Cashout success:', success);
     
     if (!success) {
-      showUiError('Failed to cashout. Please try again.');
       setCashoutPending(false);
     } else {
-      // Оптимистичное обновление баланса
       if (betToCashout && betToCashout.amount && multiplierNow > 1.0) {
         const winAmount = betToCashout.amount * multiplierNow;
         if (updateBalanceImmediately) {
@@ -671,6 +659,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
                   {stage === 'timer' && (
                     <div className="timer-container">
                       <img src={timerImg} alt="Timer" className="timer-image" />
+                      {/* ТАЙМЕР ТОЛЬКО ОТ СЕРВЕРА - никакой локальной анимации */}
                       <div className="timer-text">{formatTime(secondsToStart)}</div>
                     </div>
                   )}
@@ -687,7 +676,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
                     </div>
                   )}
                   
-                  {/* УЛУЧШЕНО: Добавлен key для принудительного пересоздания компонента */}
                   {stage === 'explosion' && exAnimationData && (
                     <div className="explosion-container" key={`explosion-${Date.now()}`}>
                       <Lottie 

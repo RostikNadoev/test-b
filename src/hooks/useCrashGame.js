@@ -46,8 +46,6 @@ export const useCrashGame = () => {
   const myBetRef = useRef(null);
   const stageRef = useRef('timer');
   const userIdRef = useRef(null);
-  const lastServerTimerRef = useRef(null); // Для отслеживания последнего серверного таймера
-  const timerAnimationRef = useRef(null); // Для анимации таймера
 
   // Синхронизация ref со стейтом
   useEffect(() => {
@@ -170,10 +168,9 @@ export const useCrashGame = () => {
       setMultiplierNow(data.multiplier);
     }
 
-    // Сохраняем серверное значение таймера
+    // ТАЙМЕР - ТОЛЬКО ОТ СЕРВЕРА
     if (data.seconds_to_start !== undefined) {
       setSecondsToStart(data.seconds_to_start);
-      lastServerTimerRef.current = data.seconds_to_start;
     }
     
     if (data.seconds_to_bets_close !== undefined) {
@@ -200,40 +197,9 @@ export const useCrashGame = () => {
     }
   }, [syncTime, updateStageFromStatus, formatBet]);
 
-  // --- Исправленный таймер (только для плавной анимации) ---
-  useEffect(() => {
-    // Очищаем предыдущую анимацию
-    if (timerAnimationRef.current) {
-      clearInterval(timerAnimationRef.current);
-    }
-
-    // Запускаем только если есть что анимировать и мы в фазе таймера
-    if (secondsToStart > 0 && stage === 'timer') {
-      timerAnimationRef.current = setInterval(() => {
-        setSecondsToStart(prev => {
-          // Не уменьшаем ниже 0 и не уходим в минус
-          const newValue = Math.max(0, prev - 0.1);
-          
-          // Если новое значение сильно отличается от последнего серверного (> 0.5 сек),
-          // то корректируем (защита от рассинхрона)
-          if (lastServerTimerRef.current !== null && 
-              Math.abs(newValue - lastServerTimerRef.current) > 0.6) {
-            console.log('⏱️ Timer corrected from', newValue, 'to', lastServerTimerRef.current);
-            return lastServerTimerRef.current;
-          }
-          
-          return newValue;
-        });
-      }, 100);
-    }
-
-    return () => {
-      if (timerAnimationRef.current) {
-        clearInterval(timerAnimationRef.current);
-        timerAnimationRef.current = null;
-      }
-    };
-  }, [stage, secondsToStart]); // Убрали зависимость от secondsToStart для корректной работы
+  // --- ТАЙМЕР ТОЛЬКО ОТ СЕРВЕРА (УБРАНА ЛОКАЛЬНАЯ АНИМАЦИЯ) ---
+  // Больше нет интервала для плавного уменьшения таймера
+  // Таймер обновляется только через события timer и state от сервера
 
   // --- WebSocket инициализация ---
   const initializeWebSocket = useCallback(async () => {
@@ -266,7 +232,6 @@ export const useCrashGame = () => {
         
         if (data.seconds_to_start !== undefined) {
           setSecondsToStart(data.seconds_to_start);
-          lastServerTimerRef.current = data.seconds_to_start;
         }
       });
 
@@ -277,8 +242,7 @@ export const useCrashGame = () => {
         }
         
         if (data.seconds_to_start !== undefined) {
-          // Сохраняем серверное значение
-          lastServerTimerRef.current = data.seconds_to_start;
+          // ТОЛЬКО СЕРВЕРНОЕ ЗНАЧЕНИЕ - никакой локальной анимации
           setSecondsToStart(data.seconds_to_start);
         }
       });
@@ -297,7 +261,6 @@ export const useCrashGame = () => {
         }
         
         if (data.seconds_to_start !== undefined) {
-          lastServerTimerRef.current = data.seconds_to_start;
           setSecondsToStart(data.seconds_to_start);
         }
         
@@ -432,7 +395,6 @@ export const useCrashGame = () => {
         setEngineEvents(prev => ({ ...prev, crash: data }));
         
         setRoundStatus('crashed');
-        // НЕМЕДЛЕННО переключаем на explosion
         setStage('explosion');
         
         const mult = data.crash_mult || 1.0;
