@@ -8,11 +8,9 @@ class CrashWebSocket {
     this.isConnected = false;
     this.connectionPromise = null;
     this.token = null;
-    this.pingInterval = null;
-    this.shouldReconnect = true;
-    this.pendingCommands = []; // Очередь команд на случай переподключения
   }
 
+  // Подключение к WebSocket
   async connect() {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -42,20 +40,15 @@ class CrashWebSocket {
           console.log('✅ WebSocket connected successfully');
           this.isConnected = true;
           this.reconnectAttempts = 0;
-          this.shouldReconnect = true;
-          
-          this.setupPingInterval();
-          
-          // Отправляем накопившиеся команды
-          this.pendingCommands.forEach(cmd => this.sendCommand(cmd));
-          this.pendingCommands = [];
-          
           resolve();
         };
 
         this.socket.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
+            if (data.server_time_ms) {
+               // console.log(`⏱️ Sync: Server ${data.server_time_ms} vs Local ${Date.now()}`);
+            }
             this.handleMessage(data);
           } catch (error) {
             console.error('❌ Error parsing WebSocket message:', error, 'Raw:', event.data);
@@ -68,25 +61,22 @@ class CrashWebSocket {
             reason: event.reason,
             wasClean: event.wasClean
           });
-          
           this.isConnected = false;
           this.connectionPromise = null;
-          this.clearPingInterval();
           
-          if (this.shouldReconnect && !event.wasClean && this.reconnectAttempts < this.maxReconnectAttempts) {
-            const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts);
-            console.log(`🔄 Attempting to reconnect in ${delay}ms (${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`);
-            
+          if (!event.wasClean && this.reconnectAttempts < this.maxReconnectAttempts) {
             setTimeout(() => {
+              console.log(`🔄 Attempting to reconnect (${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`);
               this.reconnect();
-            }, delay);
-            
+            }, this.reconnectDelay * Math.pow(2, this.reconnectAttempts));
             this.reconnectAttempts++;
           }
         };
 
         this.socket.onerror = (error) => {
           console.error('❌ WebSocket error:', error);
+          this.connectionPromise = null;
+          reject(error);
         };
 
       } catch (error) {
@@ -99,36 +89,15 @@ class CrashWebSocket {
     return this.connectionPromise;
   }
 
-  setupPingInterval() {
-    this.clearPingInterval();
-    this.pingInterval = setInterval(() => {
-      if (this.isReady()) {
-        try {
-          this.socket.send(JSON.stringify({ type: 'ping' }));
-        } catch (e) {
-          console.error('Failed to send ping:', e);
-        }
-      }
-    }, 30000);
-  }
-
-  clearPingInterval() {
-    if (this.pingInterval) {
-      clearInterval(this.pingInterval);
-      this.pingInterval = null;
-    }
-  }
-
   reconnect() {
-    if (this.token && this.shouldReconnect) {
+    if (this.token) {
       this.connect().catch(console.error);
     }
   }
 
   sendCommand(command) {
-    if (!this.isReady()) {
-      console.log('📥 WebSocket not connected, queueing command:', command);
-      this.pendingCommands.push(command);
+    if (!this.isConnected || this.socket?.readyState !== WebSocket.OPEN) {
+      console.error('❌ WebSocket not connected, cannot send command:', command);
       return false;
     }
 
@@ -137,7 +106,6 @@ class CrashWebSocket {
         Object.entries(command).filter(([_, value]) => value !== null && value !== undefined)
       );
       const jsonCommand = JSON.stringify(cleanCommand);
-      console.log('📤 Sending command:', jsonCommand);
       this.socket.send(jsonCommand);
       return true;
     } catch (error) {
@@ -164,20 +132,15 @@ class CrashWebSocket {
   }
 
   handleMessage(data) {
-    if (data.type === 'pong') {
-      return;
-    }
-    
     const handlers = this.messageHandlers.get(data.type) || [];
     handlers.forEach(handler => handler(data));
     
-    if (handlers.length === 0 && data.type !== 'tick' && data.type !== 'timer') {
+    if (handlers.length === 0 && data.type !== 'tick') {
       console.log('📨 Unhandled WebSocket message type:', data.type, data);
     }
   }
 
   requestState() {
-    console.log('📤 Requesting state...');
     return this.sendCommand({ type: 'state' });
   }
 
@@ -187,42 +150,28 @@ class CrashWebSocket {
       currency: currency.toLowerCase(),
       amount: parseFloat(amount)
     };
-    
     if (autoCashout && autoCashout >= 1.01) {
       command.auto_cashout = parseFloat(autoCashout);
     }
-    
-    console.log('📤 Placing bet:', command);
     return this.sendCommand(command);
   }
 
   cashout(betId) {
-    const command = {
-      type: 'cashout'
-    };
-    
-    if (betId) {
-      command.bet_id = parseInt(betId);
-    }
-    
-    console.log('📤 Cashing out with command:', command);
-    return this.sendCommand(command);
+    return this.sendCommand({
+      type: 'cashout',
+      bet_id: parseInt(betId)
+    });
   }
 
   disconnect() {
-    console.log('🔌 Disconnecting WebSocket by user');
-    this.shouldReconnect = false;
-    this.clearPingInterval();
-    this.pendingCommands = [];
-    
     if (this.socket) {
       this.socket.close(1000, 'User disconnected');
       this.socket = null;
+      this.isConnected = false;
+      this.connectionPromise = null;
+      this.messageHandlers.clear();
+      console.log('🔌 WebSocket disconnected by user');
     }
-    
-    this.isConnected = false;
-    this.connectionPromise = null;
-    this.messageHandlers.clear();
   }
 
   isReady() {
