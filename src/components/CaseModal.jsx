@@ -25,6 +25,34 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
   const { isDemoMode } = useDemo();
   const { balances, checkBalance, loadBalances } = useBalance();
 
+  // Функция для получения класса заголовка в зависимости от ID кейса
+  const getTitleClass = () => {
+    const caseId = caseItem.id;
+    switch(caseId) {
+      case 1: return 'modal-title modal-title-case1';
+      case 2: return 'modal-title modal-title-case2';
+      case 3: return 'modal-title modal-title-case3';
+      case 4: return 'modal-title modal-title-case4';
+      case 5: return 'modal-title modal-title-case5';
+      case 6: return 'modal-title modal-title-case6';
+      default: return 'modal-title';
+    }
+  };
+
+  // Функция для получения класса подписи WHAT'S INSIDE
+  const getLabelClass = () => {
+    const caseId = caseItem.id;
+    switch(caseId) {
+      case 1: return 'modal-items-label modal-label-case1';
+      case 2: return 'modal-items-label modal-label-case2';
+      case 3: return 'modal-items-label modal-label-case3';
+      case 4: return 'modal-items-label modal-label-case4';
+      case 5: return 'modal-items-label modal-label-case5';
+      case 6: return 'modal-items-label modal-label-case6';
+      default: return 'modal-items-label';
+    }
+  };
+
   // Функция для получения фона рамки в зависимости от ID кейса
   const getFrameBackground = () => {
     const caseId = caseItem.id;
@@ -340,20 +368,22 @@ const formatPrice = (priceStr) => {
     return 'modal-stars-button-case1';
   };
 
+  const titleClass = getTitleClass();
+  const labelClass = getLabelClass();
   const tonButtonClass = getTonButtonClass();
   const starsButtonClass = getStarsButtonClass();
   const frameBackground = getFrameBackground();
 
- return (
+  return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-container">
         <div className="case-modal" onClick={(e) => e.stopPropagation()} data-case-id={caseItem.id}>
           <button className="modal-close" onClick={onClose}>×</button>
           
-          <h2 className="modal-title">{caseData?.name || caseItem.name}</h2>
+          <h2 className={titleClass}>{caseData?.name || caseItem.name}</h2>
           
           <div className="modal-items-section">
-            <div className="modal-items-label">WHAT'S INSIDE?</div>
+            <div className={labelClass}>WHAT'S INSIDE?</div>
             
             {isLoading ? (
               <div className="modal-loading-items">
@@ -399,7 +429,7 @@ const formatPrice = (priceStr) => {
                 // Для первого кейса одна полупрозрачная матовая серая кнопка
                 <div 
                   className={`modal-button modal-free-button ${isProcessing ? 'modal-button-disabled' : ''}`}
-                  onClick={handleTonClick} // или handleStarClick, в зависимости от логики
+                  onClick={handleTonClick}
                 >
                   <span className="modal-button-text">
                     {isProcessing ? (

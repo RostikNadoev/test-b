@@ -559,3 +559,77 @@
   line-height: 1.5;
 }
 
+/* Цветные заголовки для каждого кейса */
+.modal-title {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  margin: 4px 0 12px 0;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  padding-right: 20px;
+}
+
+.modal-title-case1 {
+  color: #ffffff; /* Светло-серый/голубоватый */
+}
+
+.modal-title-case2 {
+  color: #95dcf8; /* Ярко-голубой */
+}
+
+.modal-title-case3 {
+  color: #f1aedd; /* Розоватый */
+}
+
+.modal-title-case4 {
+  color: #742EA3; /* Фиолетовый */
+}
+
+.modal-title-case5 {
+  color: rgb(182, 127, 72); /* Оранжевый */
+}
+
+.modal-title-case6 {
+  color: #3ab993; /* Зеленый */
+}
+
+/* Цветные подписи WHAT'S INSIDE (более бледные) */
+.modal-items-label {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  text-align: center;
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+
+.modal-label-case1 {
+  color: rgba(195, 208, 219, 0.9); /* Полупрозрачный светло-серый */
+  -webkit-text-stroke: 0.3px rgba(153, 174, 194, 0.2);
+}
+
+.modal-label-case2 {
+  color: rgba(149, 220, 248, 0.8); /* Полупрозрачный голубой */
+  -webkit-text-stroke: 0.3px rgba(46, 185, 255, 0.2);
+}
+
+.modal-label-case3 {
+  color: rgba(241, 174, 221, 0.8); /* Полупрозрачный розовый */
+  -webkit-text-stroke: 0.3px rgba(216, 166, 174, 0.2);
+}
+
+.modal-label-case4 {
+  color: rgba(116, 46, 163, 0.6); /* Полупрозрачный фиолетовый */
+  -webkit-text-stroke: 0.3px rgba(116, 46, 163, 0.2);
+}
+
+.modal-label-case5 {
+  color: rgba(172, 122, 72, 0.7); /* Полупрозрачный оранжевый */
+  -webkit-text-stroke: 0.3px rgba(247, 158, 67, 0.2);
+}
+
+.modal-label-case6 {
+  color: rgba(52, 190, 149, 0.6); /* Полупрозрачный зеленый */
+  -webkit-text-stroke: 0.3px rgba(32, 146, 112, 0.2);
+}
