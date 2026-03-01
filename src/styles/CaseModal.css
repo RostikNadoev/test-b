@@ -527,3 +527,35 @@
   text-overflow: ellipsis;
   flex-shrink: 0;
 }
+
+/* Полупрозрачная матовая серая кнопка для FREE в модалке */
+.modal-free-button {
+  background: rgba(128, 128, 128, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  width: 170px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.2s;
+  padding: 0 12px;
+}
+
+.modal-free-value {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: clamp(17px, 4.3vw, 19px);
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.5);
+  text-stroke: 1px rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 1px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  line-height: 1.5;
+}
+

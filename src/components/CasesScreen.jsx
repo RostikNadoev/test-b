@@ -118,20 +118,28 @@ export default function CasesScreen({ onNavigate }) {
                     className={getCaseImageClass(caseItem.id)}
                   />
                   
-                  <div className="case-prices">
-                    <div className="price-box ton-box">
-                      <img src={tonIcon} alt="TON" className="price-icon" />
-                      <span className="price-value ton-value">
-                        {caseItem.price?.ton || caseItem.price_ton || '0'}
-                      </span>
+                  {caseItem.id === 1 ? (
+                    // Для первого кейса одна кнопка FREE
+                    <div className="case-price-single free-box">
+                      <span className="price-value free-value">FREE</span>
                     </div>
-                    <div className="price-box stars-box">
-                      <img src={starsIcon} alt="STARS" className="price-icon" />
-                      <span className="price-value stars-value">
-                        {caseItem.price?.stars || caseItem.price_stars || '0'}
-                      </span>
+                  ) : (
+                    // Для остальных кейсов две кнопки
+                    <div className="case-prices">
+                      <div className="price-box ton-box">
+                        <img src={tonIcon} alt="TON" className="price-icon" />
+                        <span className="price-value ton-value">
+                          {caseItem.price?.ton || caseItem.price_ton || '0'}
+                        </span>
+                      </div>
+                      <div className="price-box stars-box">
+                        <img src={starsIcon} alt="STARS" className="price-icon" />
+                        <span className="price-value stars-value">
+                          {caseItem.price?.stars || caseItem.price_stars || '0'}
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               ))}
             </div>

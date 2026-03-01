@@ -344,7 +344,7 @@ const formatPrice = (priceStr) => {
   const starsButtonClass = getStarsButtonClass();
   const frameBackground = getFrameBackground();
 
-  return (
+ return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-container">
         <div className="case-modal" onClick={(e) => e.stopPropagation()} data-case-id={caseItem.id}>
@@ -395,41 +395,60 @@ const formatPrice = (priceStr) => {
           
           <div className="modal-footer">
             <div className="modal-button-container">
-              <div 
-                className={`modal-button modal-ton-button ${tonButtonClass} ${isProcessing ? 'modal-button-disabled' : ''}`}
-                onClick={handleTonClick}
-              >
-                <span className="modal-button-text">
-                  {isProcessing ? (
-                    <span className="modal-processing-text">Wait...</span>
-                  ) : (
-                    <>
-                      <img src={tonIcon} alt="TON" className="modal-ton-icon" />
-                      <span className="modal-button-number">
-                        {caseData?.price_ton || '2'}
-                      </span>
-                    </>
-                  )}
-                </span>
-              </div>
-              
-              <div 
-                className={`modal-button modal-stars-button ${starsButtonClass} ${isProcessing ? 'modal-button-disabled' : ''}`}
-                onClick={handleStarClick}
-              >
-                <span className="modal-button-text">
-                  {isProcessing ? (
-                    <span className="modal-processing-text">Wait...</span>
-                  ) : (
-                    <>
-                      <img src={starsIcon} alt="STARS" className="modal-stars-icon" />
-                      <span className="modal-button-number">
-                        {caseData?.price_stars || '200'}
-                      </span>
-                    </>
-                  )}
-                </span>
-              </div>
+              {caseItem.id === 1 ? (
+                // Для первого кейса одна полупрозрачная матовая серая кнопка
+                <div 
+                  className={`modal-button modal-free-button ${isProcessing ? 'modal-button-disabled' : ''}`}
+                  onClick={handleTonClick} // или handleStarClick, в зависимости от логики
+                >
+                  <span className="modal-button-text">
+                    {isProcessing ? (
+                      <span className="modal-processing-text">Wait...</span>
+                    ) : (
+                      <span className="modal-free-value">FREE</span>
+                    )}
+                  </span>
+                </div>
+              ) : (
+                // Для остальных кейсов две кнопки
+                <>
+                  <div 
+                    className={`modal-button modal-ton-button ${tonButtonClass} ${isProcessing ? 'modal-button-disabled' : ''}`}
+                    onClick={handleTonClick}
+                  >
+                    <span className="modal-button-text">
+                      {isProcessing ? (
+                        <span className="modal-processing-text">Wait...</span>
+                      ) : (
+                        <>
+                          <img src={tonIcon} alt="TON" className="modal-ton-icon" />
+                          <span className="modal-button-number">
+                            {caseData?.price_ton || '2'}
+                          </span>
+                        </>
+                      )}
+                    </span>
+                  </div>
+                  
+                  <div 
+                    className={`modal-button modal-stars-button ${starsButtonClass} ${isProcessing ? 'modal-button-disabled' : ''}`}
+                    onClick={handleStarClick}
+                  >
+                    <span className="modal-button-text">
+                      {isProcessing ? (
+                        <span className="modal-processing-text">Wait...</span>
+                      ) : (
+                        <>
+                          <img src={starsIcon} alt="STARS" className="modal-stars-icon" />
+                          <span className="modal-button-number">
+                            {caseData?.price_stars || '200'}
+                          </span>
+                        </>
+                      )}
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
