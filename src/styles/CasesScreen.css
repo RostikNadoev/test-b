@@ -1,4 +1,3 @@
-/* styles/CasesScreen.css */
 * {
   margin: 0;
   padding: 0;
@@ -27,7 +26,7 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px 10px 30px 10px; /* Отступы слева/справа 10px, снизу 30px */
+  padding: 20px 10px 30px 10px;
   box-sizing: border-box;
   overflow-y: auto;
   overflow-x: hidden;
@@ -38,7 +37,7 @@ html, body {
 .cases-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 15px 10px; /* Уменьшил gap для адаптивности */
+  gap: 15px 10px;
   width: 100%;
   max-width: 480px;
   justify-items: center;
@@ -50,17 +49,17 @@ html, body {
   flex-direction: column;
   align-items: center;
   width: 100%;
-  max-width: 180px; /* Максимальная ширина */
-  min-width: 140px; /* Минимальная ширина */
+  max-width: 180px;
+  min-width: 140px;
   cursor: pointer;
 }
 
 .case-title {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
-  font-size: clamp(12px, 4.7vw, 16px); /* Адаптивный размер */
+  font-size: clamp(12px, 4.7vw, 16px);
   color: #335E8933;
-  -webkit-text-stroke: 1px white; /* Уменьшил обводку */
+  -webkit-text-stroke: 1px white;
   text-stroke: 1px white;
   margin: 0 0 -33px 0;
   text-align: center;
@@ -70,24 +69,186 @@ html, body {
   text-overflow: ellipsis;
   max-width: 100%;
   padding: 5px 5px;
+  z-index: 2;
+  position: relative;
 }
 
+/* Базовые стили для всех изображений кейсов */
 .case-image {
   width: 100%;
-  max-width: 250px;
-  min-width: 205px; /* Минимальная ширина */
   height: auto;
-  aspect-ratio: 1 / 1; /* Сохраняем пропорции */
   object-fit: contain;
-  margin-bottom: -20px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Индивидуальные размеры для каждого кейса */
+.case-image-1 {
+  max-width: 160px;
+  min-width: 160px;
+  margin-bottom: 10px;
+  margin-top: 25px;
+  filter: drop-shadow(0 0 16px #99AEC2) drop-shadow(0 0 20px #99AEC2);
+}
+
+.case-image-2 {
+  max-width: 170px;
+  min-width: 170px;
+  margin-bottom: 10px;
+  margin-top: 23px;
+  transform: scale(0.95);
+  filter: drop-shadow(0 0 16px #2EB9FF) drop-shadow(0 0 20px #2EB9FF);
+}
+
+.case-image-3 {
+  max-width: 170px;
+  min-width: 170px;
+  margin-bottom: 10px;
+  margin-top: 25px;
+  filter: drop-shadow(0 0 16px #D8A6AE) drop-shadow(0 0 20px #D8A6AE);
+}
+
+.case-image-4 {
+  max-width: 165px;
+  min-width: 165px;
+  margin-bottom: 10px;
+  margin-top: 30px;
+  transform: scale(1.05);
+  filter: drop-shadow(0 0 16px #742EA3) drop-shadow(0 0 20px #742EA3);
+}
+
+.case-image-5 {
+  max-width: 165px;
+  min-width: 165px;
+  margin-bottom: 10px;
+  margin-top: 30px;
+  filter: drop-shadow(0 0 16px #F79E43) drop-shadow(0 0 20px #F79E43);
+}
+
+.case-image-6 {
+  max-width: 165px;
+  min-width: 165px;
+  margin-bottom: 10px;
+  margin-top: 30px;
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 16px #209270) drop-shadow(0 0 20px #209270);
+}
+
+
+@media (max-width: 400px){
+  .case-image-1 {
+  max-width: 150px;
+  min-width: 150px;
+  margin-bottom: 10px;
+  margin-top: 25px;
+  filter: drop-shadow(0 0 16px #99AEC2) drop-shadow(0 0 20px #99AEC2);
+}
+
+.case-image-2 {
+  max-width: 160px;
+  min-width: 160px;
+  margin-bottom: 10px;
+  margin-top: 23px;
+  transform: scale(0.95);
+  filter: drop-shadow(0 0 16px #2EB9FF) drop-shadow(0 0 20px #2EB9FF);
+}
+
+.case-image-3 {
+  max-width: 160px;
+  min-width: 160px;
+  margin-bottom: 10px;
+  margin-top: 25px;
+  filter: drop-shadow(0 0 16px #D8A6AE) drop-shadow(0 0 20px #D8A6AE);
+}
+
+.case-image-4 {
+  max-width: 155px;
+  min-width: 155px;
+  margin-bottom: 10px;
+  margin-top: 30px;
+  transform: scale(1.05);
+  filter: drop-shadow(0 0 16px #742EA3) drop-shadow(0 0 20px #742EA3);
+}
+
+.case-image-5 {
+  max-width: 155px;
+  min-width: 155px;
+  margin-bottom: 10px;
+  margin-top: 30px;
+  filter: drop-shadow(0 0 16px #F79E43) drop-shadow(0 0 20px #F79E43);
+}
+
+.case-image-6 {
+  max-width: 155px;
+  min-width: 155px;
+  margin-bottom: 10px;
+  margin-top: 30px;
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 16px #209270) drop-shadow(0 0 20px #209270);
+}
+}
+
+@media (max-width: 380px){
+  .case-image-1 {
+  max-width: 140px;
+  min-width: 140px;
+  margin-bottom: 10px;
+  margin-top: 25px;
+  filter: drop-shadow(0 0 16px #99AEC2) drop-shadow(0 0 20px #99AEC2);
+}
+
+.case-image-2 {
+  max-width: 150px;
+  min-width: 150px;
+  margin-bottom: 10px;
+  margin-top: 23px;
+  transform: scale(0.95);
+  filter: drop-shadow(0 0 16px #2EB9FF) drop-shadow(0 0 20px #2EB9FF);
+}
+
+.case-image-3 {
+  max-width: 150px;
+  min-width: 150px;
+  margin-bottom: 10px;
+  margin-top: 25px;
+  filter: drop-shadow(0 0 16px #D8A6AE) drop-shadow(0 0 20px #D8A6AE);
+}
+
+.case-image-4 {
+  max-width: 145px;
+  min-width: 145px;
+  margin-bottom: 10px;
+  margin-top: 30px;
+  transform: scale(1.05);
+  filter: drop-shadow(0 0 16px #742EA3) drop-shadow(0 0 20px #742EA3);
+}
+
+.case-image-5 {
+  max-width: 145px;
+  min-width: 145px;
+  margin-bottom: 10px;
+  margin-top: 30px;
+  filter: drop-shadow(0 0 16px #F79E43) drop-shadow(0 0 20px #F79E43);
+}
+
+.case-image-6 {
+  max-width: 145px;
+  min-width: 145px;
+  margin-bottom: 10px;
+  margin-top: 30px;
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 16px #209270) drop-shadow(0 0 20px #209270);
+}
 }
 
 .case-prices {
   display: flex;
-  gap: clamp(5px, 2vw, 10px); /* Адаптивный gap */
+  gap: clamp(5px, 2vw, 10px);
   width: 100%;
   justify-content: center;
-  flex-wrap: wrap; /* На случай если не помещаются */
+  flex-wrap: wrap;
+  z-index: 3;
+  position: relative;
 }
 
 .price-box {
@@ -95,8 +256,8 @@ html, body {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  width: clamp(50px, 18vw, 70px); /* Адаптивная ширина */
-  height: clamp(27px, 9.3vw, 32px); /* Адаптивная высота */
+  width: clamp(50px, 18vw, 70px);
+  height: clamp(27px, 9.3vw, 32px);
   border: 2px solid #CDE2FB;
   border-radius: 10px;
   box-sizing: border-box;
@@ -117,22 +278,22 @@ html, body {
 
 .ton-box .price-icon {
   width: auto;
-  height: 57%; /* Занимает 80% высоты родителя */
+  height: 57%;
   max-height: clamp(18px, 5.5vw, 24px);
   margin-bottom: 2px;
 }
 
 .stars-box .price-icon {
   width: auto;
-  height: 70%; /* Чуть меньше для stars */
+  height: 70%;
   max-height: clamp(16px, 5vw, 22px);
 }
 
 .price-value {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
-  font-size: clamp(11px, 3.2vw, 13px); /* Адаптивный размер */
-  -webkit-text-stroke: 1px white; /* Уменьшил обводку */
+  font-size: clamp(11px, 3.2vw, 13px);
+  -webkit-text-stroke: 1px white;
   text-stroke: 1px white;
   white-space: nowrap;
 }
@@ -161,3 +322,24 @@ html, body {
   scrollbar-width: none;
 }
 
+.cases-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 10px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

@@ -76,12 +76,6 @@ import gameCard2 from './assets/MainPage/ttmb.png';
 import gameCard3 from './assets/MainPage/cases.png';
 
 // Cases
-import firstCase from './assets/MainPage/cases/firstcasee.png';
-import secondCase from './assets/MainPage/cases/secondcasee.png';
-import thirdCase from './assets/MainPage/cases/thirdcasee.png';
-import fourthCase from './assets/MainPage/cases/fourthcasee.png';
-import fifthCase from './assets/MainPage/cases/fifthcasee.png';
-import sixthCase from './assets/MainPage/cases/esixthcase.png';
 import casesBack from './assets/Plinko/Back.png';
 import rocketback1 from './assets/Rocket/rocketback.png';
 
@@ -548,13 +542,7 @@ export default function App() {
     timerImg,
     gameCard1,
     gameCard2,
-    gameCard3,
-    firstCase,
-    secondCase,
-    thirdCase,
-    fourthCase,
-    fifthCase,
-    sixthCase
+    gameCard3
   ];
 
   // Функция загрузки и анимации
