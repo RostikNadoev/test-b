@@ -35,6 +35,9 @@ export default function UpgradeScreen({ onNavigate }) {
   const [showWinModal, setShowWinModal] = useState(false);
 
   const vibRef = useRef(null);
+  const spinStartTimeRef = useRef(null);
+  const lastVibTimeRef = useRef(null);
+  const animationFrameRef = useRef(null);
 
   const winChance = useMemo(() => {
     if (!myItem || !targetItem) return 0;
@@ -49,6 +52,7 @@ export default function UpgradeScreen({ onNavigate }) {
   useEffect(() => {
     return () => {
       if (vibRef.current) clearInterval(vibRef.current);
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     };
   }, []);
 
@@ -59,6 +63,39 @@ export default function UpgradeScreen({ onNavigate }) {
       else if (type === 'notification') tg.HapticFeedback.notificationOccurred('success');
       else tg.HapticFeedback.impactOccurred('medium');
     }
+  };
+
+  // Функция для умной вибрации на основе скорости вращения
+  const startSmartVibration = () => {
+    spinStartTimeRef.current = Date.now();
+    lastVibTimeRef.current = Date.now();
+    
+    const totalSpinDuration = 4500; // Общее время вращения (4.5 секунды)
+    const minInterval = 50; // Минимальный интервал (быстрое вращение) - 50ms
+    const maxInterval = 300; // Максимальный интервал (медленное вращение) - 300ms
+    
+    const updateVibration = () => {
+      if (!isSpinning) return;
+      
+      const currentTime = Date.now();
+      const elapsed = currentTime - spinStartTimeRef.current;
+      const progress = Math.min(elapsed / totalSpinDuration, 1);
+      
+      // Интервал увеличивается по мере замедления (прогресс от 0 до 1)
+      // Используем easing функцию для более естественного замедления
+      const easedProgress = progress * progress; // Квадратичное замедление
+      const currentInterval = minInterval + (maxInterval - minInterval) * easedProgress;
+      
+      // Проверяем, пора ли вибрировать
+      if (currentTime - lastVibTimeRef.current >= currentInterval) {
+        triggerVibration('impact');
+        lastVibTimeRef.current = currentTime;
+      }
+      
+      animationFrameRef.current = requestAnimationFrame(updateVibration);
+    };
+    
+    animationFrameRef.current = requestAnimationFrame(updateVibration);
   };
 
   const openModal = (type) => {
@@ -95,10 +132,9 @@ export default function UpgradeScreen({ onNavigate }) {
     if (!myItem || !targetItem || isSpinning) return;
 
     setIsSpinning(true);
-
-    vibRef.current = setInterval(() => {
-      triggerVibration('impact');
-    }, 150);
+    
+    // Запускаем умную вибрацию
+    startSmartVibration();
 
     const roll = Math.random() * 100;
     const isWin = roll < winChance;
@@ -118,9 +154,10 @@ export default function UpgradeScreen({ onNavigate }) {
     setArrowRotation(targetRotation);
 
     setTimeout(() => {
-      if (vibRef.current) {
-        clearInterval(vibRef.current);
-        vibRef.current = null;
+      // Останавливаем умную вибрацию
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
       }
 
       triggerVibration(isWin ? 'notification' : 'impact');
