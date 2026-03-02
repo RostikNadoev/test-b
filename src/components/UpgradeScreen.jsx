@@ -59,7 +59,7 @@ export default function UpgradeScreen({ onNavigate }) {
   };
 
   const openModal = (type) => {
-    if (isSpinning || isReturning) return;
+    if (isSpinning) return;
     setIsClosing(false);
     setActiveModal(type);
   };
@@ -89,7 +89,7 @@ export default function UpgradeScreen({ onNavigate }) {
   };
 
   const handleSpin = () => {
-    if (!myItem || !targetItem || isSpinning || isReturning) return;
+    if (!myItem || !targetItem || isSpinning) return;
 
     setIsSpinning(true);
     setIsReturning(false);
@@ -120,32 +120,29 @@ export default function UpgradeScreen({ onNavigate }) {
         vibRef.current = null;
       }
 
-      setIsSpinning(false);
       triggerVibration(isWin ? 'notification' : 'impact');
 
       setTimeout(() => {
 
-  setIsReturning(true);
+        setIsReturning(true);
 
-  // Докручиваем по часовой до полного круга
-  const nextFullCircle = Math.ceil(targetRotation / 360) * 360;
-  setArrowRotation(nextFullCircle);
+        const nextFullCircle = Math.ceil(targetRotation / 360) * 360;
+        setArrowRotation(nextFullCircle);
 
-  setTimeout(() => {
+        setTimeout(() => {
 
-    // 🔥 КРИТИЧНО — выключаем transition
-    setIsReturning(false);
+          setIsReturning(false);
+          setArrowRotation(0);
 
-    // Мгновенно сбрасываем в 0 (без анимации назад)
-    setArrowRotation(0);
+          setMyItem(null);
+          setTargetItem(null);
 
-    // Сбрасываем игру
-    setMyItem(null);
-    setTargetItem(null);
+          // Кнопка активируется только тут
+          setIsSpinning(false);
 
-  }, 1500);
+        }, 1500);
 
-}, 1000);
+      }, 1000);
 
     }, 4500);
   };
@@ -168,8 +165,12 @@ export default function UpgradeScreen({ onNavigate }) {
               <svg className="upgrade-wheel-svg" width="280" height="280" viewBox="0 0 280 280">
                 <circle cx="140" cy="140" r={radius} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="20" />
                 <circle
-                  cx="140" cy="140" r={radius} fill="none"
-                  stroke="url(#upgradeGradient)" strokeWidth="20"
+                  cx="140"
+                  cy="140"
+                  r={radius}
+                  fill="none"
+                  stroke="url(#upgradeGradient)"
+                  strokeWidth="20"
                   strokeDasharray={strokeDasharray}
                   transform="rotate(-90 140 140)"
                   strokeLinecap="round"
@@ -213,7 +214,10 @@ export default function UpgradeScreen({ onNavigate }) {
               <img src={switchr} alt="divider" className="upgrade-switch-icon" />
             </div>
 
-            <div className={`upgrade-item-slot ${!myItem ? 'disabled' : ''}`} onClick={() => myItem && openModal('target')}>
+            <div
+              className={`upgrade-item-slot ${!myItem ? 'disabled' : ''}`}
+              onClick={() => myItem && openModal('target')}
+            >
               <div className="slot-title">Target Item</div>
               <div className={`slot-frame ${targetItem ? 'has-item' : ''}`}>
                 {targetItem ? (
@@ -228,7 +232,7 @@ export default function UpgradeScreen({ onNavigate }) {
 
           <button
             className="upgrade-action-button"
-            disabled={!myItem || !targetItem || isSpinning || isReturning}
+            disabled={!myItem || !targetItem || isSpinning}
             onClick={handleSpin}
           >
             {isSpinning ? 'UPGRADING...' : 'UPGRADE'}
@@ -249,10 +253,15 @@ export default function UpgradeScreen({ onNavigate }) {
 
             <div className="upgrade-inventory-grid">
               {(activeModal === 'my' ? MOCK_MY_INVENTORY : availableTargets).map((item) => (
-                <div key={item.id} className="upgrade-inventory-item" onClick={() => handleSelectItem(item, activeModal)}>
+                <div
+                  key={item.id}
+                  className="upgrade-inventory-item"
+                  onClick={() => handleSelectItem(item, activeModal)}
+                >
                   <img src={item.img} alt="item" className="inventory-item-img" />
                   <div className="inventory-item-price">
-                    {item.price} <img src={tonIcon} alt="ton" className="ton-icon-small" />
+                    {item.price}
+                    <img src={tonIcon} alt="ton" className="ton-icon-small" />
                   </div>
                 </div>
               ))}
