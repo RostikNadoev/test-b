@@ -1047,33 +1047,44 @@
 }
 
 /* --- Стили для секции с играми --- */
+/* --- Стили для секции с играми --- */
 .games-section {
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
+  will-change: transform;
 }
 
-/* --- Стили для обертки дополнительных кнопок с анимацией --- */
+/* --- Стили для обертки дополнительных кнопок с более плавной анимацией --- */
 .extra-buttons-wrapper {
   max-height: 0;
   opacity: 0;
   overflow: hidden;
-  transition: max-height 0.5s ease-in-out, opacity 0.4s ease-in-out;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding-top: 10px;
   margin-bottom: -10px;
+  
+  /* Более плавные transition с увеличенной длительностью */
+  transition: max-height 0.8s cubic-bezier(0.25, 0.1, 0.15, 1),
+              opacity 0.5s cubic-bezier(0.25, 0.1, 0.15, 1);
+  
+  /* Аппаратное ускорение */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  will-change: max-height, opacity;
 }
 
 .extra-buttons-wrapper.visible {
-  max-height: 300px; /* Достаточно для двух квадратных кнопок */
+  max-height: 350px;
   opacity: 1;
 }
 
-/* --- Стили для кнопки Show More / Hide --- */
+/* --- Стили для кнопки Show More / Hide с более плавной анимацией --- */
 .toggle-buttons-button {
   width: 437px;
   height: 50px;
@@ -1087,16 +1098,23 @@
   cursor: pointer;
   margin-top: 0px;
   margin-bottom: 5px;
-  transition: all 0.3s ease;
+  
+  /* Более плавный transition для margin-top */
+  transition: margin-top 0.6s cubic-bezier(0.25, 0.1, 0.15, 1);
   
   /* Для мобильных устройств */
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  
+  /* Аппаратное ускорение */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: margin-top;
 }
 
 /* Кнопка в состоянии "pushed-down" - когда дополнительные кнопки видны */
 .toggle-buttons-button.pushed-down {
-  margin-top: 15px; /* Увеличиваем отступ сверху, создавая эффект, что кнопка уехала вниз */
+  margin-top: 15px;
 }
 
 .toggle-buttons-button:active {
@@ -1133,7 +1151,7 @@
   transform: translateY(-1px);
 }
 
-/* Обновленные стили для ряда с квадратными кнопками */
+/* --- Стили для квадратных кнопок с аппаратным ускорением --- */
 .square-buttons-row {
   display: flex;
   flex-direction: row;
@@ -1141,6 +1159,9 @@
   gap: 20px;
   width: 100%;
   margin-top: 0px;
+  
+  /* Аппаратное ускорение для дочерних элементов */
+  transform: translateZ(0);
 }
 
 .square-button {
@@ -1149,6 +1170,10 @@
   aspect-ratio: 1 / 1;
   border-radius: 12px;
   overflow: hidden;
+  
+  /* Аппаратное ускорение */
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .square-image {
@@ -1156,6 +1181,10 @@
   height: 100%;
   object-fit: cover;
   border-radius: 12px;
+  
+  /* Аппаратное ускорение */
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 /* Адаптивные стили для кнопки Show More */
@@ -1173,6 +1202,10 @@
   .toggle-buttons-arrow {
     font-size: 18px;
   }
+  
+  .extra-buttons-wrapper.visible {
+    max-height: 320px;
+  }
 }
 
 @media (max-width: 375px) {
@@ -1187,5 +1220,21 @@
   
   .toggle-buttons-arrow {
     font-size: 17px;
+  }
+  
+  .extra-buttons-wrapper.visible {
+    max-height: 300px;
+  }
+}
+
+/* Оптимизация для мобильных устройств с более плавными переходами */
+@media (hover: none) and (pointer: coarse) {
+  .extra-buttons-wrapper {
+    transition: max-height 0.9s cubic-bezier(0.25, 0.1, 0.15, 1),
+                opacity 0.4s cubic-bezier(0.25, 0.1, 0.15, 1);
+  }
+  
+  .toggle-buttons-button {
+    transition: margin-top 0.5s cubic-bezier(0.25, 0.1, 0.15, 1);
   }
 }

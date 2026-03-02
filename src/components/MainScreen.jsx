@@ -24,6 +24,7 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
   const [isToastHiding, setIsToastHiding] = useState(false);
   const [error, setError] = useState(null);
   const [showExtraButtons, setShowExtraButtons] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   // Загружаем реферальные данные при монтировании
   useEffect(() => {
@@ -202,7 +203,24 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
   };
 
   const toggleExtraButtons = () => {
-    setShowExtraButtons(!showExtraButtons);
+    if (isAnimating) return; // Блокируем повторные нажатия во время анимации
+    
+    setIsAnimating(true);
+    
+    if (showExtraButtons) {
+      // Закрываем
+      setShowExtraButtons(false);
+      // Даем время на анимацию закрытия
+      setTimeout(() => {
+        setIsAnimating(false);
+      }, 400);
+    } else {
+      // Открываем
+      setShowExtraButtons(true);
+      setTimeout(() => {
+        setIsAnimating(false);
+      }, 400);
+    }
   };
 
   const openInfoModal = () => {
