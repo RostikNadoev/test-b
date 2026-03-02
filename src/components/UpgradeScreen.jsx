@@ -32,6 +32,7 @@ export default function UpgradeScreen({ onNavigate }) {
   const [isSpinning, setIsSpinning] = useState(false);
   const [isReturning, setIsReturning] = useState(false);
   const [arrowRotation, setArrowRotation] = useState(0);
+  const [showWinModal, setShowWinModal] = useState(false);
 
   const vibRef = useRef(null);
 
@@ -46,7 +47,9 @@ export default function UpgradeScreen({ onNavigate }) {
   const strokeDasharray = `${(winChance / 100) * circumference} ${circumference}`;
 
   useEffect(() => {
-    return () => { if (vibRef.current) clearInterval(vibRef.current); };
+    return () => {
+      if (vibRef.current) clearInterval(vibRef.current);
+    };
   }, []);
 
   const triggerVibration = (type = 'light') => {
@@ -92,7 +95,6 @@ export default function UpgradeScreen({ onNavigate }) {
     if (!myItem || !targetItem || isSpinning) return;
 
     setIsSpinning(true);
-    setIsReturning(false);
 
     vibRef.current = setInterval(() => {
       triggerVibration('impact');
@@ -102,11 +104,12 @@ export default function UpgradeScreen({ onNavigate }) {
     const isWin = roll < winChance;
     const coloredDegrees = (winChance / 100) * 360;
 
-    let finalAngle = 0;
+    let finalAngle;
     if (isWin) {
       finalAngle = 2 + Math.random() * (coloredDegrees - 4);
     } else {
-      finalAngle = coloredDegrees + 2 + Math.random() * (360 - coloredDegrees - 4);
+      finalAngle =
+        coloredDegrees + 2 + Math.random() * (360 - coloredDegrees - 4);
     }
 
     const rotations = 360 * 6;
@@ -122,38 +125,44 @@ export default function UpgradeScreen({ onNavigate }) {
 
       triggerVibration(isWin ? 'notification' : 'impact');
 
-      setTimeout(() => {
+      if (isWin) {
+        setShowWinModal(true);
+      }
 
+      setTimeout(() => {
         setIsReturning(true);
 
-        const nextFullCircle = Math.ceil(targetRotation / 360) * 360;
+        const nextFullCircle =
+          Math.ceil(targetRotation / 360) * 360;
+
         setArrowRotation(nextFullCircle);
 
         setTimeout(() => {
-
           setIsReturning(false);
           setArrowRotation(0);
 
+          setShowWinModal(false);
+
           setMyItem(null);
           setTargetItem(null);
-
-          // Кнопка активируется только тут
           setIsSpinning(false);
-
         }, 1500);
-
       }, 1000);
-
     }, 4500);
   };
 
   const availableTargets = useMemo(() => {
     if (!myItem) return [];
-    return MOCK_TARGET_ITEMS.filter(item => item.price > myItem.price);
+    return MOCK_TARGET_ITEMS.filter(
+      (item) => item.price > myItem.price
+    );
   }, [myItem]);
 
   return (
-    <div className="upgrade-screen" style={{ backgroundImage: `url(${rocketBack})` }}>
+    <div
+      className="upgrade-screen"
+      style={{ backgroundImage: `url(${rocketBack})` }}
+    >
       <div className="upgrade-header-wrapper">
         <Header onNavigate={onNavigate} variant="upgrade" />
       </div>
@@ -162,8 +171,20 @@ export default function UpgradeScreen({ onNavigate }) {
         <div className="upgrade-container">
           <div className="upgrade-wheel-section">
             <div className="upgrade-wheel-wrapper">
-              <svg className="upgrade-wheel-svg" width="280" height="280" viewBox="0 0 280 280">
-                <circle cx="140" cy="140" r={radius} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="20" />
+              <svg
+                className="upgrade-wheel-svg"
+                width="280"
+                height="280"
+                viewBox="0 0 280 280"
+              >
+                <circle
+                  cx="140"
+                  cy="140"
+                  r={radius}
+                  fill="none"
+                  stroke="rgba(255,255,255,0.05)"
+                  strokeWidth="20"
+                />
                 <circle
                   cx="140"
                   cy="140"
@@ -176,7 +197,7 @@ export default function UpgradeScreen({ onNavigate }) {
                   strokeLinecap="round"
                 />
                 <defs>
-                  <linearGradient id="upgradeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <linearGradient id="upgradeGradient">
                     <stop offset="0%" stopColor="#f1bf28" />
                     <stop offset="100%" stopColor="#db7900" />
                   </linearGradient>
@@ -184,55 +205,104 @@ export default function UpgradeScreen({ onNavigate }) {
               </svg>
 
               <div className="upgrade-chance-display">
-                <span className="chance-value">{winChance.toFixed(2)}</span>
+                <span className="chance-value">
+                  {winChance.toFixed(2)}
+                </span>
                 <span className="chance-symbol">%</span>
               </div>
 
               <div
-                className={`upgrade-arrow-container ${isSpinning ? 'is-spinning' : ''} ${isReturning ? 'is-returning' : ''}`}
+                className={`upgrade-arrow-container ${
+                  isSpinning ? 'is-spinning' : ''
+                } ${isReturning ? 'is-returning' : ''}`}
                 style={{ transform: `rotate(${arrowRotation}deg)` }}
               >
-                <img src={arrow} alt="Arrow" className="upgrade-arrow" />
+                <img
+                  src={arrow}
+                  alt="Arrow"
+                  className="upgrade-arrow"
+                />
               </div>
             </div>
           </div>
 
           <div className="upgrade-items-selection">
-            <div className="upgrade-item-slot" onClick={() => openModal('my')}>
+            <div
+              className="upgrade-item-slot"
+              onClick={() => openModal('my')}
+            >
               <div className="slot-title">Your Item</div>
-              <div className={`slot-frame ${myItem ? 'has-item' : ''}`}>
+              <div
+                className={`slot-frame ${
+                  myItem ? 'has-item' : ''
+                }`}
+              >
                 {myItem ? (
                   <>
-                    <img src={myItem.img} alt="Mine" className="slot-item-image" />
-                    <div className="slot-item-price">{myItem.price} TON</div>
+                    <img
+                      src={myItem.img}
+                      alt="Mine"
+                      className="slot-item-image"
+                    />
+                    <div className="slot-item-price">
+                      {myItem.price} TON
+                    </div>
                   </>
-                ) : <div className="slot-empty-text">+ Select</div>}
+                ) : (
+                  <div className="slot-empty-text">
+                    + Select
+                  </div>
+                )}
               </div>
             </div>
 
             <div className="upgrade-items-divider">
-              <img src={switchr} alt="divider" className="upgrade-switch-icon" />
+              <img
+                src={switchr}
+                alt="divider"
+                className="upgrade-switch-icon"
+              />
             </div>
 
             <div
-              className={`upgrade-item-slot ${!myItem ? 'disabled' : ''}`}
-              onClick={() => myItem && openModal('target')}
+              className={`upgrade-item-slot ${
+                !myItem ? 'disabled' : ''
+              }`}
+              onClick={() =>
+                myItem && openModal('target')
+              }
             >
               <div className="slot-title">Target Item</div>
-              <div className={`slot-frame ${targetItem ? 'has-item' : ''}`}>
+              <div
+                className={`slot-frame ${
+                  targetItem ? 'has-item' : ''
+                }`}
+              >
                 {targetItem ? (
                   <>
-                    <img src={targetItem.img} alt="Target" className="slot-item-image" />
-                    <div className="slot-item-price">{targetItem.price} TON</div>
+                    <img
+                      src={targetItem.img}
+                      alt="Target"
+                      className="slot-item-image"
+                    />
+                    <div className="slot-item-price">
+                      {targetItem.price} TON
+                    </div>
                   </>
-                ) : <div className="slot-empty-text">+ Select</div>}
+                ) : (
+                  <div className="slot-empty-text">
+                    + Select
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
           <button
             className="upgrade-action-button"
-            disabled={!myItem || !targetItem || isSpinning}
+            disabled={
+              !myItem || !targetItem || isSpinning
+            }
             onClick={handleSpin}
           >
             {isSpinning ? 'UPGRADING...' : 'UPGRADE'}
@@ -241,35 +311,82 @@ export default function UpgradeScreen({ onNavigate }) {
       </main>
 
       {activeModal && (
-        <div className="upgrade-modal-overlay" onClick={closeModal}>
+        <div
+          className="upgrade-modal-overlay"
+          onClick={closeModal}
+        >
           <div className="upgrade-modal-blur"></div>
           <div
-            className={`upgrade-modal-content ${isClosing ? 'closing' : ''}`}
+            className={`upgrade-modal-content ${
+              isClosing ? 'closing' : ''
+            }`}
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="upgrade-modal-title">
-              {activeModal === 'my' ? 'SELECT YOUR ITEM' : 'SELECT TARGET ITEM'}
+              {activeModal === 'my'
+                ? 'SELECT YOUR ITEM'
+                : 'SELECT TARGET ITEM'}
             </h2>
 
             <div className="upgrade-inventory-grid">
-              {(activeModal === 'my' ? MOCK_MY_INVENTORY : availableTargets).map((item) => (
+              {(activeModal === 'my'
+                ? MOCK_MY_INVENTORY
+                : availableTargets
+              ).map((item) => (
                 <div
                   key={item.id}
                   className="upgrade-inventory-item"
-                  onClick={() => handleSelectItem(item, activeModal)}
+                  onClick={() =>
+                    handleSelectItem(item, activeModal)
+                  }
                 >
-                  <img src={item.img} alt="item" className="inventory-item-img" />
+                  <img
+                    src={item.img}
+                    alt="item"
+                    className="inventory-item-img"
+                  />
                   <div className="inventory-item-price">
-                    {item.price}
-                    <img src={tonIcon} alt="ton" className="ton-icon-small" />
+                    {item.price}{' '}
+                    <img
+                      src={tonIcon}
+                      alt="ton"
+                      className="ton-icon-small"
+                    />
                   </div>
                 </div>
               ))}
             </div>
 
-            <button className="upgrade-modal-close-btn" onClick={closeModal}>
-              <img src={modalCloseIcon} alt="Close" className="upgrade-modal-close-icon" />
+            <button
+              className="upgrade-modal-close-btn"
+              onClick={closeModal}
+            >
+              <img
+                src={modalCloseIcon}
+                alt="Close"
+                className="upgrade-modal-close-icon"
+              />
             </button>
+          </div>
+        </div>
+      )}
+
+      {showWinModal && (
+        <div className="win-modal-overlay">
+          <div className="win-modal">
+            <h2 className="win-title">YOU WON!</h2>
+            {targetItem && (
+              <>
+                <img
+                  src={targetItem.img}
+                  alt="win"
+                  className="win-item-image"
+                />
+                <div className="win-price">
+                  {targetItem.price} TON
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

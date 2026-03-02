@@ -409,3 +409,75 @@
 #upgradeGradient stop:last-child {
   stop-color: #db7900;
 }
+
+/* === WIN MODAL === */
+
+.win-modal-overlay {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 3000;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.win-modal {
+  position: relative;
+  width: 260px;
+  padding: 30px 20px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #0B192C, #1A365D);
+  border: 2px solid #f1bf28;
+  box-shadow: 0 0 40px rgba(241,191,40,0.6);
+  text-align: center;
+  animation: popIn 0.4s cubic-bezier(.2,1.5,.5,1) forwards;
+}
+
+.win-glow {
+  position: absolute;
+  inset: -10px;
+  border-radius: 25px;
+  background: radial-gradient(circle, rgba(241,191,40,0.5) 0%, transparent 70%);
+  filter: blur(20px);
+  z-index: -1;
+}
+
+.win-title {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-size: 22px;
+  color: #f1bf28;
+  margin-bottom: 15px;
+  text-shadow: 0 0 15px rgba(241,191,40,0.8);
+}
+
+.win-item-image {
+  width: 100px;
+  margin: 10px 0;
+  animation: floatItem 2s ease-in-out infinite alternate;
+}
+
+.win-price {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-size: 16px;
+  color: white;
+  -webkit-text-stroke: 1px #35A3F2;
+  paint-order: stroke fill;
+}
+
+@keyframes popIn {
+  from { transform: scale(0.7); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes floatItem {
+  from { transform: translateY(-5px); }
+  to { transform: translateY(5px); }
+}
