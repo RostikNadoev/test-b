@@ -232,7 +232,7 @@
 
 /* === Кнопка апгрейда (Желтый градиент) === */
 .upgrade-action-button {
-  padding: 18px 40px;
+  padding: 18px 40px ;
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
   font-size: 20px;
@@ -244,20 +244,18 @@
   -webkit-tap-highlight-color: transparent;
   width: 100%;
   margin-top: 10px;
-  box-shadow: 0 6px 0 #b36300, 0 10px 20px rgba(0,0,0,0.3);
   transition: all 0.1s ease;
   text-transform: uppercase;
+  height: 60px;
 }
 
 .upgrade-action-button:active:not(:disabled) {
-  transform: translateY(6px);
   box-shadow: 0 0 0 #b36300, 0 4px 10px rgba(0,0,0,0.3);
 }
 
 .upgrade-action-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  transform: translateY(6px);
   box-shadow: none;
 }
 
@@ -480,4 +478,8 @@
 @keyframes floatItem {
   from { transform: translateY(-5px); }
   to { transform: translateY(5px); }
+}
+
+.upgrade-switch-icon {
+  margin-top: 20px;
 }
