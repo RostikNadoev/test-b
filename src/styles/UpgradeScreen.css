@@ -91,7 +91,7 @@
 .chance-value {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
-  font-size: 32px;
+  font-size: 28px;
   color: #fff;
   -webkit-text-stroke: 1.5px #35A3F2;
   paint-order: stroke fill;
@@ -400,4 +400,12 @@
 @keyframes modalSlideOut {
   from { transform: translateY(0); }
   to { transform: translateY(100%); }
+}
+
+#upgradeGradient stop:first-child {
+  stop-color: #f1bf28;
+}
+
+#upgradeGradient stop:last-child {
+  stop-color: #db7900;
 }

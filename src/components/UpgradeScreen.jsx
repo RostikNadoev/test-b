@@ -32,7 +32,7 @@ export default function UpgradeScreen({ onNavigate }) {
   const [isSpinning, setIsSpinning] = useState(false);
   const [isReturning, setIsReturning] = useState(false);
   const [arrowRotation, setArrowRotation] = useState(0);
-  
+
   const vibRef = useRef(null);
 
   const winChance = useMemo(() => {
@@ -66,7 +66,6 @@ export default function UpgradeScreen({ onNavigate }) {
 
   const closeModal = () => {
     setIsClosing(true);
-    // Даем время на анимацию закрытия
     setTimeout(() => {
       setActiveModal(null);
       setIsClosing(false);
@@ -74,17 +73,15 @@ export default function UpgradeScreen({ onNavigate }) {
   };
 
   const handleSelectItem = (item, type) => {
-    // Сначала запускаем анимацию закрытия
     setIsClosing(true);
-    
-    // НЕМЕДЛЕННО обновляем выбранный предмет (без задержки)
+
     if (type === 'my') {
       setMyItem(item);
+      setTargetItem(null);
     } else {
       setTargetItem(item);
     }
-    
-    // Закрываем модалку после анимации
+
     setTimeout(() => {
       setActiveModal(null);
       setIsClosing(false);
@@ -93,7 +90,7 @@ export default function UpgradeScreen({ onNavigate }) {
 
   const handleSpin = () => {
     if (!myItem || !targetItem || isSpinning || isReturning) return;
-    
+
     setIsSpinning(true);
     setIsReturning(false);
 
@@ -104,77 +101,93 @@ export default function UpgradeScreen({ onNavigate }) {
     const roll = Math.random() * 100;
     const isWin = roll < winChance;
     const coloredDegrees = (winChance / 100) * 360;
-    
+
     let finalAngle = 0;
     if (isWin) {
       finalAngle = 2 + Math.random() * (coloredDegrees - 4);
     } else {
       finalAngle = coloredDegrees + 2 + Math.random() * (360 - coloredDegrees - 4);
     }
-    
+
     const rotations = 360 * 6;
     const targetRotation = rotations + finalAngle;
-    
+
     setArrowRotation(targetRotation);
-    
+
     setTimeout(() => {
       if (vibRef.current) {
         clearInterval(vibRef.current);
         vibRef.current = null;
       }
-      
+
       setIsSpinning(false);
       triggerVibration(isWin ? 'notification' : 'impact');
-      
+
       setTimeout(() => {
-        setIsReturning(true);
-        const nextFullCircle = Math.ceil(targetRotation / 360) * 360;
-        setArrowRotation(nextFullCircle);
 
-        if (!isWin) setMyItem(null);
+  setIsReturning(true);
 
-        setTimeout(() => {
-          setIsReturning(false);
-          setArrowRotation(0);
-        }, 1500);
-      }, 1000);
+  // Докручиваем по часовой до полного круга
+  const nextFullCircle = Math.ceil(targetRotation / 360) * 360;
+  setArrowRotation(nextFullCircle);
+
+  setTimeout(() => {
+
+    // 🔥 КРИТИЧНО — выключаем transition
+    setIsReturning(false);
+
+    // Мгновенно сбрасываем в 0 (без анимации назад)
+    setArrowRotation(0);
+
+    // Сбрасываем игру
+    setMyItem(null);
+    setTargetItem(null);
+
+  }, 1500);
+
+}, 1000);
 
     }, 4500);
   };
+
+  const availableTargets = useMemo(() => {
+    if (!myItem) return [];
+    return MOCK_TARGET_ITEMS.filter(item => item.price > myItem.price);
+  }, [myItem]);
 
   return (
     <div className="upgrade-screen" style={{ backgroundImage: `url(${rocketBack})` }}>
       <div className="upgrade-header-wrapper">
         <Header onNavigate={onNavigate} variant="upgrade" />
       </div>
-      
+
       <main className="upgrade-content">
         <div className="upgrade-container">
           <div className="upgrade-wheel-section">
             <div className="upgrade-wheel-wrapper">
               <svg className="upgrade-wheel-svg" width="280" height="280" viewBox="0 0 280 280">
                 <circle cx="140" cy="140" r={radius} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="20" />
-                <circle 
-                  cx="140" cy="140" r={radius} fill="none" 
-                  stroke="url(#upgradeGradient)" strokeWidth="20" 
+                <circle
+                  cx="140" cy="140" r={radius} fill="none"
+                  stroke="url(#upgradeGradient)" strokeWidth="20"
                   strokeDasharray={strokeDasharray}
                   transform="rotate(-90 140 140)"
                   strokeLinecap="round"
                 />
                 <defs>
                   <linearGradient id="upgradeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#35A3F2" />
-                    <stop offset="100%" stopColor="#37BDF3" />
+                    <stop offset="0%" stopColor="#f1bf28" />
+                    <stop offset="100%" stopColor="#db7900" />
                   </linearGradient>
                 </defs>
               </svg>
 
               <div className="upgrade-chance-display">
-                <span className="chance-value">{(winChance).toFixed(2)}</span>
+                <span className="chance-value">{winChance.toFixed(2)}</span>
                 <span className="chance-symbol">%</span>
               </div>
 
-              <div 
+              <div
                 className={`upgrade-arrow-container ${isSpinning ? 'is-spinning' : ''} ${isReturning ? 'is-returning' : ''}`}
                 style={{ transform: `rotate(${arrowRotation}deg)` }}
               >
@@ -197,7 +210,7 @@ export default function UpgradeScreen({ onNavigate }) {
             </div>
 
             <div className="upgrade-items-divider">
-                <img src={switchr} alt="divider" className="upgrade-switch-icon" />
+              <img src={switchr} alt="divider" className="upgrade-switch-icon" />
             </div>
 
             <div className={`upgrade-item-slot ${!myItem ? 'disabled' : ''}`} onClick={() => myItem && openModal('target')}>
@@ -213,8 +226,8 @@ export default function UpgradeScreen({ onNavigate }) {
             </div>
           </div>
 
-          <button 
-            className="upgrade-action-button" 
+          <button
+            className="upgrade-action-button"
             disabled={!myItem || !targetItem || isSpinning || isReturning}
             onClick={handleSpin}
           >
@@ -226,15 +239,16 @@ export default function UpgradeScreen({ onNavigate }) {
       {activeModal && (
         <div className="upgrade-modal-overlay" onClick={closeModal}>
           <div className="upgrade-modal-blur"></div>
-          <div 
-            className={`upgrade-modal-content ${isClosing ? 'closing' : ''}`} 
+          <div
+            className={`upgrade-modal-content ${isClosing ? 'closing' : ''}`}
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="upgrade-modal-title">
               {activeModal === 'my' ? 'SELECT YOUR ITEM' : 'SELECT TARGET ITEM'}
             </h2>
+
             <div className="upgrade-inventory-grid">
-              {(activeModal === 'my' ? MOCK_MY_INVENTORY : MOCK_TARGET_ITEMS).map((item) => (
+              {(activeModal === 'my' ? MOCK_MY_INVENTORY : availableTargets).map((item) => (
                 <div key={item.id} className="upgrade-inventory-item" onClick={() => handleSelectItem(item, activeModal)}>
                   <img src={item.img} alt="item" className="inventory-item-img" />
                   <div className="inventory-item-price">
@@ -243,6 +257,7 @@ export default function UpgradeScreen({ onNavigate }) {
                 </div>
               ))}
             </div>
+
             <button className="upgrade-modal-close-btn" onClick={closeModal}>
               <img src={modalCloseIcon} alt="Close" className="upgrade-modal-close-icon" />
             </button>
