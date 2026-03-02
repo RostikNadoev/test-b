@@ -34,10 +34,9 @@ export default function UpgradeScreen({ onNavigate }) {
   const [arrowRotation, setArrowRotation] = useState(0);
   const [showWinModal, setShowWinModal] = useState(false);
 
-  const vibRef = useRef(null);
+  const vibIntervalRef = useRef(null);
   const spinStartTimeRef = useRef(null);
   const lastVibTimeRef = useRef(null);
-  const animationFrameRef = useRef(null);
 
   const winChance = useMemo(() => {
     if (!myItem || !targetItem) return 0;
@@ -51,51 +50,69 @@ export default function UpgradeScreen({ onNavigate }) {
 
   useEffect(() => {
     return () => {
-      if (vibRef.current) clearInterval(vibRef.current);
-      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+      if (vibIntervalRef.current) {
+        clearInterval(vibIntervalRef.current);
+        vibIntervalRef.current = null;
+      }
     };
   }, []);
 
   const triggerVibration = (type = 'light') => {
-    const tg = window.Telegram?.WebApp;
-    if (tg && tg.HapticFeedback) {
-      if (type === 'impact') tg.HapticFeedback.impactOccurred('light');
-      else if (type === 'notification') tg.HapticFeedback.notificationOccurred('success');
-      else tg.HapticFeedback.impactOccurred('medium');
+    try {
+      const tg = window.Telegram?.WebApp;
+      if (tg && tg.HapticFeedback) {
+        if (type === 'impact') {
+          tg.HapticFeedback.impactOccurred('light');
+        } else if (type === 'notification') {
+          tg.HapticFeedback.notificationOccurred('success');
+        } else {
+          tg.HapticFeedback.impactOccurred('medium');
+        }
+      }
+    } catch (e) {
+      console.log('Vibration error:', e);
     }
   };
 
-  // Функция для умной вибрации на основе скорости вращения
+  // Функция для умной вибрации с изменяющимся интервалом
   const startSmartVibration = () => {
-    spinStartTimeRef.current = Date.now();
-    lastVibTimeRef.current = Date.now();
+    // Очищаем предыдущий интервал если есть
+    if (vibIntervalRef.current) {
+      clearInterval(vibIntervalRef.current);
+      vibIntervalRef.current = null;
+    }
+
+    const totalDuration = 4500; // 4.5 секунды вращения
+    const startTime = Date.now();
     
-    const totalSpinDuration = 4500; // Общее время вращения (4.5 секунды)
-    const minInterval = 50; // Минимальный интервал (быстрое вращение) - 50ms
-    const maxInterval = 300; // Максимальный интервал (медленное вращение) - 300ms
+    // Начинаем с частой вибрации
+    let currentInterval = 50; // стартовый интервал 50ms
     
-    const updateVibration = () => {
-      if (!isSpinning) return;
+    const scheduleVibration = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / totalDuration, 1);
       
-      const currentTime = Date.now();
-      const elapsed = currentTime - spinStartTimeRef.current;
-      const progress = Math.min(elapsed / totalSpinDuration, 1);
+      // Плавно увеличиваем интервал по мере замедления (от 50ms до 300ms)
+      // Используем кубическую функцию для более заметного замедления в конце
+      const easedProgress = Math.pow(progress, 1.5);
+      currentInterval = 50 + (250 * easedProgress); // от 50 до 300ms
       
-      // Интервал увеличивается по мере замедления (прогресс от 0 до 1)
-      // Используем easing функцию для более естественного замедления
-      const easedProgress = progress * progress; // Квадратичное замедление
-      const currentInterval = minInterval + (maxInterval - minInterval) * easedProgress;
+      // Вызываем вибрацию
+      triggerVibration('impact');
       
-      // Проверяем, пора ли вибрировать
-      if (currentTime - lastVibTimeRef.current >= currentInterval) {
-        triggerVibration('impact');
-        lastVibTimeRef.current = currentTime;
+      // Планируем следующую вибрацию с новым интервалом
+      if (elapsed < totalDuration - 100) { // Останавливаем чуть раньше
+        vibIntervalRef.current = setTimeout(scheduleVibration, currentInterval);
+      } else {
+        // Финальная вибрация при остановке
+        setTimeout(() => {
+          triggerVibration('impact');
+        }, 100);
       }
-      
-      animationFrameRef.current = requestAnimationFrame(updateVibration);
     };
     
-    animationFrameRef.current = requestAnimationFrame(updateVibration);
+    // Запускаем первую вибрацию
+    scheduleVibration();
   };
 
   const openModal = (type) => {
@@ -133,8 +150,10 @@ export default function UpgradeScreen({ onNavigate }) {
 
     setIsSpinning(true);
     
-    // Запускаем умную вибрацию
-    startSmartVibration();
+    // Запускаем вибрацию с изменяющейся частотой
+    setTimeout(() => {
+      startSmartVibration();
+    }, 50); // Небольшая задержка для синхронизации с анимацией
 
     const roll = Math.random() * 100;
     const isWin = roll < winChance;
@@ -144,8 +163,7 @@ export default function UpgradeScreen({ onNavigate }) {
     if (isWin) {
       finalAngle = 2 + Math.random() * (coloredDegrees - 4);
     } else {
-      finalAngle =
-        coloredDegrees + 2 + Math.random() * (360 - coloredDegrees - 4);
+      finalAngle = coloredDegrees + 2 + Math.random() * (360 - coloredDegrees - 4);
     }
 
     const rotations = 360 * 6;
@@ -153,33 +171,31 @@ export default function UpgradeScreen({ onNavigate }) {
 
     setArrowRotation(targetRotation);
 
+    // Останавливаем вибрацию через 4.5 секунды
     setTimeout(() => {
-      // Останавливаем умную вибрацию
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-        animationFrameRef.current = null;
+      if (vibIntervalRef.current) {
+        clearTimeout(vibIntervalRef.current);
+        vibIntervalRef.current = null;
       }
 
+      // Финальная вибрация (успех или неудача)
       triggerVibration(isWin ? 'notification' : 'impact');
 
       if (isWin) {
         setShowWinModal(true);
       }
 
+      // Возврат стрелки в исходное положение
       setTimeout(() => {
         setIsReturning(true);
 
-        const nextFullCircle =
-          Math.ceil(targetRotation / 360) * 360;
-
+        const nextFullCircle = Math.ceil(targetRotation / 360) * 360;
         setArrowRotation(nextFullCircle);
 
         setTimeout(() => {
           setIsReturning(false);
           setArrowRotation(0);
-
           setShowWinModal(false);
-
           setMyItem(null);
           setTargetItem(null);
           setIsSpinning(false);
