@@ -31,31 +31,17 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
     loadReferralData();
   }, []);
 
-  // Отслеживаем изменения referralData
-  useEffect(() => {
-    if (referralData) {
-      console.log('✅ Referral data loaded:', referralData);
-      console.log('🔑 referral_code:', referralData.referral_code);
-      console.log('🔗 referral_link:', referralData.referral_link);
-    }
-  }, [referralData]);
-
   const loadReferralData = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      console.log('📥 Loading referral data...');
       
       const data = await referralsApi.getMyReferralInfo();
-      console.log('✅ Referral data loaded:', data);
-      
       setReferralData(data);
     } catch (error) {
-      console.error('❌ Failed to load referral data:', error);
       setError('Failed to load referral data');
       
       // Для тестирования используем мок-данные если API недоступен
-      console.log('📦 Using mock data for testing');
       setReferralData({
         invited_count: 10,
         accrual_date_utc: "2026-02-27T00:05:00Z",
@@ -69,8 +55,6 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
   };
 
   const handleImageButtonClick = (buttonNumber) => {
-    console.log(`🎯 Image button ${buttonNumber} clicked`);
-    
     if (buttonNumber === 1) {
       onNavigate('rocket');
     } else if (buttonNumber === 2) {
@@ -86,7 +70,7 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
 
   // Форматирование даты из UTC в формат DD.MM.YYYY
   const formatNextPayoutDate = (utcDateString) => {
-    if (!utcDateString) return '25.08.2026'; // fallback
+    if (!utcDateString) return '25.08.2026';
     
     const date = new Date(utcDateString);
     const day = date.getUTCDate().toString().padStart(2, '0');
@@ -100,7 +84,6 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
   const formatDueAmount = (amount) => {
     if (amount === undefined || amount === null) return '0.0 ton';
     
-    // Преобразуем в число и форматируем с одним знаком после запятой
     const num = Number(amount);
     if (isNaN(num)) return '0.0 ton';
     
@@ -109,13 +92,11 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
 
   // Функция для получения реферальной ссылки
   const getReferralLink = () => {
-    // Проверяем разные возможные пути получения кода
     let referralCode = null;
     
     if (referralData?.referral_code) {
       referralCode = referralData.referral_code;
     } else if (referralData?.referral_link) {
-      // Если пришла полная ссылка, извлекаем код из неё
       const link = referralData.referral_link;
       const match = link.match(/[?&]start=([^&]+)/);
       if (match) {
@@ -123,104 +104,61 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
       }
     }
     
-    console.log('🔗 Getting referral link, code:', referralCode);
-    
     if (!referralCode) {
-      console.error('❌ No referral code available');
       return null;
     }
     
-    // Используем параметр start (не startapp) как в документации
-    const link = `https://t.me/${BOT_USERNAME}?start=${referralCode}`;
-    console.log('✅ Generated link:', link);
-    return link;
+    return `https://t.me/${BOT_USERNAME}?start=${referralCode}`;
   };
 
-  // Обработчик для кнопки INVITE (открыть окно выбора чатов Telegram)
+  // Обработчик для кнопки INVITE
   const handleInviteClick = () => {
-    console.log('👆 Invite button clicked');
-    
     const link = getReferralLink();
-    if (!link) {
-      console.error('❌ No referral link available');
-      return;
-    }
+    if (!link) return;
 
-    console.log('📤 Sharing referral link:', link);
-    
-    // Текст сообщения с ссылкой
     const message = `Join me on Bounce! Play games, open cases, and win!\n\n${link}`;
     
-    // Используем Telegram WebApp API для открытия окна отправки сообщения
     if (window.Telegram?.WebApp) {
-      console.log('📱 Using Telegram WebApp API');
-      
-      // Формируем URL для шаринга
       const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('Join me on Bounce!')}`;
-      
-      // Открываем окно отправки сообщения
       window.Telegram.WebApp.openTelegramLink(shareUrl);
     } else {
-      console.log('🌐 Using fallback for browser');
-      // Fallback для браузера
       window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('Join me on Bounce!')}`, '_blank');
     }
   };
 
   // Обработчик для кнопки копирования ссылки
   const handleLinkClick = async () => {
-    console.log('👆 Link button clicked');
-    
     const link = getReferralLink();
-    if (!link) {
-      console.error('❌ No referral link available');
-      return;
-    }
+    if (!link) return;
 
     try {
-      console.log('📋 Copying link to clipboard:', link);
-      
-      // Копируем ссылку в буфер обмена
       await navigator.clipboard.writeText(link);
-      console.log('✅ Link copied successfully');
       
-      // Показываем тост "Link copied"
       setShowCopyToast(true);
       setIsToastHiding(false);
       
-      // Скрываем тост через 2 секунды с анимацией
       setTimeout(() => {
         setIsToastHiding(true);
-        // Полностью скрываем после завершения анимации
         setTimeout(() => {
           setShowCopyToast(false);
           setIsToastHiding(false);
         }, 300);
       }, 1300);
     } catch (error) {
-      console.error('❌ Failed to copy link:', error);
+      console.error('Failed to copy link:', error);
     }
   };
 
   const toggleExtraButtons = () => {
-    if (isAnimating) return; // Блокируем повторные нажатия во время анимации
+    if (isAnimating) return;
     
     setIsAnimating(true);
+    setShowExtraButtons(!showExtraButtons);
     
-    if (showExtraButtons) {
-      // Закрываем
-      setShowExtraButtons(false);
-      // Даем время на анимацию закрытия
-      setTimeout(() => {
-        setIsAnimating(false);
-      }, 400);
-    } else {
-      // Открываем
-      setShowExtraButtons(true);
-      setTimeout(() => {
-        setIsAnimating(false);
-      }, 400);
-    }
+    // Даем время на анимацию
+    setTimeout(() => {
+      setIsAnimating(false);
+    }, 400);
   };
 
   const openInfoModal = () => {
@@ -269,7 +207,7 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
           />
         </div>
 
-        {/* Третья кнопка (plinko дубль) - оставляем как было */}
+        {/* Третья кнопка (plinko дубль) */}
         <div 
           className="banner-image-button"
           onClick={() => handleImageButtonClick(5)}
@@ -285,10 +223,10 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
 
         {/* Контейнер для дополнительных кнопок и кнопки Show More */}
         <div className="games-section">
-          {/* Дополнительные кнопки (две квадратные - изначально скрыты) */}
+          {/* Дополнительные кнопки */}
           <div className={`extra-buttons-wrapper ${showExtraButtons ? 'visible' : ''}`}>
             <div className="square-buttons-row">
-              {/* Третья кнопка (luckyballs) - квадратная */}
+              {/* Третья кнопка (luckyballs) */}
               <div 
                 className="banner-image-button square-button"
                 onClick={() => handleImageButtonClick(3)}
@@ -302,7 +240,7 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
                 />
               </div>
 
-              {/* Четвертая кнопка (cases) - квадратная */}
+              {/* Четвертая кнопка (cases) */}
               <div 
                 className="banner-image-button square-button"
                 onClick={() => handleImageButtonClick(4)}
@@ -318,7 +256,7 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
             </div>
           </div>
 
-          {/* Кнопка Show More / Hide - она двигается вниз когда появляются кнопки над ней */}
+          {/* Кнопка Show More / Hide */}
           <div 
             className={`toggle-buttons-button ${showExtraButtons ? 'pushed-down' : ''}`}
             onClick={toggleExtraButtons}
@@ -341,11 +279,11 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
                 <span className="referral-highlight">10%</span> <br />of their top-ups!
               </div>
         
-              {/* Верхний ряд с надписями (дата и Invited) */}
+              {/* Верхний ряд с надписями */}
               <div className="referral-stats-header">
                 <div className="inf_date_container">
                   <span className="referral-date-label">
-                    You’ll get{' '}
+                    You'll get{' '}
                     <span className="referral-date-value">
                       {isLoading ? 'Loading...' : formatNextPayoutDate(referralData?.accrual_date_utc)}
                     </span>
@@ -411,14 +349,14 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
             <div className="inf_close_btn" onClick={closeInfoModal}>×</div>
             
             <div className="inf_content">
-              {/* Первый пункт - выплата на внутриигровой баланс */}
+              {/* Первый пункт */}
               <div className="inf_item">
                 <span className="inf_text">
                   <strong>Default payment</strong> is to the in-game balance
                 </span>
               </div>
 
-              {/* Второй пункт - с иконкой замка про TON кошелек */}
+              {/* Второй пункт с иконкой замка */}
               <div className="inf_item_with_icon">
                 <img src={lockIcon} alt="" className="inf_icon" />
                 <span className="inf_text_with_icon">
@@ -430,7 +368,7 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
         </div>
       )}
 
-      {/* Toast уведомление "Link copied" */}
+      {/* Toast уведомление */}
       {showCopyToast && (
         <div className={`toast_notification ${isToastHiding ? 'hide' : ''}`}>
           <span className="toast_icon">✓</span>

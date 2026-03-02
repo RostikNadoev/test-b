@@ -1,13 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Header from './Header';
 import rocketBack from '../assets/Plinko/Back.png';
 import arrow from '../assets/SpinPage/arrow.png';
 import cardton1 from '../assets/MainPage/chest1/ton.png';
 import modalCloseIcon from '../assets/Profile/close.png';
 import tonIcon from '../assets/MainPage/ton.svg';
+import switchr from '../assets/Rocket/switchr.svg';
 import '../styles/UpgradeScreen.css';
 
-// Расширенный инвентарь пользователя (от дешевых до очень дорогих)
 const MOCK_MY_INVENTORY = [
   { id: 1, name: 'Small Chest', price: 10, img: cardton1 },
   { id: 2, name: 'Medium Chest', price: 50, img: cardton1 },
@@ -15,20 +15,13 @@ const MOCK_MY_INVENTORY = [
   { id: 4, name: 'Silver Chest', price: 250, img: cardton1 },
   { id: 5, name: 'Gold Chest', price: 500, img: cardton1 },
   { id: 6, name: 'Diamond Chest', price: 1000, img: cardton1 },
-  { id: 7, name: 'Elite Chest', price: 2500, img: cardton1 },
-  { id: 8, name: 'Master Chest', price: 5000, img: cardton1 },
 ];
 
-// Расширенный список целей (чтобы было во что "апгрейдиться")
 const MOCK_TARGET_ITEMS = [
   { id: 101, name: 'Rare Item', price: 100, img: cardton1 },
   { id: 102, name: 'Epic Item', price: 500, img: cardton1 },
   { id: 103, name: 'Legendary Item', price: 1500, img: cardton1 },
   { id: 104, name: 'Mythic Item', price: 3000, img: cardton1 },
-  { id: 105, name: 'Divine Item', price: 6000, img: cardton1 },
-  { id: 106, name: 'Immortal Item', price: 10000, img: cardton1 },
-  { id: 107, name: 'Godly Item', price: 25000, img: cardton1 },
-  { id: 108, name: 'Cosmic Item', price: 50000, img: cardton1 },
 ];
 
 export default function UpgradeScreen({ onNavigate }) {
@@ -37,8 +30,10 @@ export default function UpgradeScreen({ onNavigate }) {
   const [activeModal, setActiveModal] = useState(null);
   const [isClosing, setIsClosing] = useState(false);
   const [isSpinning, setIsSpinning] = useState(false);
-  const [isReturning, setIsReturning] = useState(false); // Для плавного возврата
+  const [isReturning, setIsReturning] = useState(false);
   const [arrowRotation, setArrowRotation] = useState(0);
+  
+  const vibRef = useRef(null);
 
   const winChance = useMemo(() => {
     if (!myItem || !targetItem) return 0;
@@ -50,30 +45,50 @@ export default function UpgradeScreen({ onNavigate }) {
   const circumference = 2 * Math.PI * radius;
   const strokeDasharray = `${(winChance / 100) * circumference} ${circumference}`;
 
-  // Функция вибрации для Telegram
+  useEffect(() => {
+    return () => { if (vibRef.current) clearInterval(vibRef.current); };
+  }, []);
+
   const triggerVibration = (type = 'light') => {
     const tg = window.Telegram?.WebApp;
     if (tg && tg.HapticFeedback) {
-      if (type === 'impact') tg.HapticFeedback.impactOccurred('heavy');
-      else tg.HapticFeedback.notificationOccurred(type);
+      if (type === 'impact') tg.HapticFeedback.impactOccurred('light');
+      else if (type === 'notification') tg.HapticFeedback.notificationOccurred('success');
+      else tg.HapticFeedback.impactOccurred('medium');
     }
   };
 
   const openModal = (type) => {
     if (isSpinning || isReturning) return;
-    setActiveModal(type);
     setIsClosing(false);
+    setActiveModal(type);
   };
 
   const closeModal = () => {
     setIsClosing(true);
-    setTimeout(() => setActiveModal(null), 300);
+    // Даем время на анимацию закрытия
+    setTimeout(() => {
+      setActiveModal(null);
+      setIsClosing(false);
+    }, 300);
   };
 
   const handleSelectItem = (item, type) => {
-    if (type === 'my') setMyItem(item);
-    else setTargetItem(item);
-    closeModal();
+    // Сначала запускаем анимацию закрытия
+    setIsClosing(true);
+    
+    // НЕМЕДЛЕННО обновляем выбранный предмет (без задержки)
+    if (type === 'my') {
+      setMyItem(item);
+    } else {
+      setTargetItem(item);
+    }
+    
+    // Закрываем модалку после анимации
+    setTimeout(() => {
+      setActiveModal(null);
+      setIsClosing(false);
+    }, 300);
   };
 
   const handleSpin = () => {
@@ -81,66 +96,54 @@ export default function UpgradeScreen({ onNavigate }) {
     
     setIsSpinning(true);
     setIsReturning(false);
-    triggerVibration('impact');
 
-    // Имитация пульсации вибрации во время кручения
-    const vibInterval = setInterval(() => triggerVibration('light'), 800);
-    
+    vibRef.current = setInterval(() => {
+      triggerVibration('impact');
+    }, 150);
+
     const roll = Math.random() * 100;
     const isWin = roll < winChance;
     const coloredDegrees = (winChance / 100) * 360;
     
     let finalAngle = 0;
     if (isWin) {
-      finalAngle = 5 + Math.random() * Math.max(0, coloredDegrees - 10);
+      finalAngle = 2 + Math.random() * (coloredDegrees - 4);
     } else {
-      finalAngle = coloredDegrees + 5 + Math.random() * Math.max(0, 360 - coloredDegrees - 10);
+      finalAngle = coloredDegrees + 2 + Math.random() * (360 - coloredDegrees - 4);
     }
     
-    console.log(`=========================`);
-    console.log(`🚀 UPGRADE REQUESTED`);
-    console.log(`Шанс: ${winChance.toFixed(2)}% | Выпало: ${roll.toFixed(2)}`);
-    console.log(`Результат: ${isWin ? '✅ WIN' : '❌ LOSE'}`);
-    console.log(`Целевой градус: ${finalAngle.toFixed(2)}°`);
-    console.log(`=========================`);
-    
-    const currentRotMod = arrowRotation % 360;
-    const rotationsToAdd = 360 * 7; 
-    let targetRotation = arrowRotation + rotationsToAdd + finalAngle - currentRotMod;
+    const rotations = 360 * 6;
+    const targetRotation = rotations + finalAngle;
     
     setArrowRotation(targetRotation);
     
     setTimeout(() => {
-      clearInterval(vibInterval);
+      if (vibRef.current) {
+        clearInterval(vibRef.current);
+        vibRef.current = null;
+      }
+      
       setIsSpinning(false);
-      triggerVibration(isWin ? 'success' : 'error');
+      triggerVibration(isWin ? 'notification' : 'impact');
       
       setTimeout(() => {
-        
-        
-        // Плавный возврат на 0
         setIsReturning(true);
-        // Докручиваем до полного круга, чтобы визуально встала на 12 часов
-        setArrowRotation(prev => prev + (360 - (prev % 360)));
-        
+        const nextFullCircle = Math.ceil(targetRotation / 360) * 360;
+        setArrowRotation(nextFullCircle);
+
         if (!isWin) setMyItem(null);
 
-        // После завершения анимации возврата (1.5с) сбрасываем стейты
         setTimeout(() => {
           setIsReturning(false);
           setArrowRotation(0);
-        }, 4500);
+        }, 1500);
+      }, 1000);
 
-      }, 100);
-
-    }, 4500); // чуть дольше, как просили
+    }, 4500);
   };
 
   return (
-    <div 
-      className="upgrade-screen"
-      style={{ backgroundImage: `url(${rocketBack})`, backgroundSize: 'cover' }}
-    >
+    <div className="upgrade-screen" style={{ backgroundImage: `url(${rocketBack})` }}>
       <div className="upgrade-header-wrapper">
         <Header onNavigate={onNavigate} variant="upgrade" />
       </div>
@@ -150,18 +153,18 @@ export default function UpgradeScreen({ onNavigate }) {
           <div className="upgrade-wheel-section">
             <div className="upgrade-wheel-wrapper">
               <svg className="upgrade-wheel-svg" width="280" height="280" viewBox="0 0 280 280">
-                <circle cx="140" cy="140" r={radius} fill="none" stroke="rgba(53, 163, 242, 0.2)" strokeWidth="20" />
+                <circle cx="140" cy="140" r={radius} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="20" />
                 <circle 
                   cx="140" cy="140" r={radius} fill="none" 
-                  stroke="url(#yellowGradient)" strokeWidth="20" 
+                  stroke="url(#upgradeGradient)" strokeWidth="20" 
                   strokeDasharray={strokeDasharray}
                   transform="rotate(-90 140 140)"
                   strokeLinecap="round"
                 />
                 <defs>
-                  <linearGradient id="yellowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#f1bf28" />
-                    <stop offset="100%" stopColor="#db7900" />
+                  <linearGradient id="upgradeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#35A3F2" />
+                    <stop offset="100%" stopColor="#37BDF3" />
                   </linearGradient>
                 </defs>
               </svg>
@@ -193,7 +196,9 @@ export default function UpgradeScreen({ onNavigate }) {
               </div>
             </div>
 
-            <div className="upgrade-items-divider">➡</div>
+            <div className="upgrade-items-divider">
+                <img src={switchr} alt="divider" className="upgrade-switch-icon" />
+            </div>
 
             <div className={`upgrade-item-slot ${!myItem ? 'disabled' : ''}`} onClick={() => myItem && openModal('target')}>
               <div className="slot-title">Target Item</div>
@@ -221,7 +226,10 @@ export default function UpgradeScreen({ onNavigate }) {
       {activeModal && (
         <div className="upgrade-modal-overlay" onClick={closeModal}>
           <div className="upgrade-modal-blur"></div>
-          <div className={`upgrade-modal-content ${isClosing ? 'closing' : ''}`} onClick={(e) => e.stopPropagation()}>
+          <div 
+            className={`upgrade-modal-content ${isClosing ? 'closing' : ''}`} 
+            onClick={(e) => e.stopPropagation()}
+          >
             <h2 className="upgrade-modal-title">
               {activeModal === 'my' ? 'SELECT YOUR ITEM' : 'SELECT TARGET ITEM'}
             </h2>
