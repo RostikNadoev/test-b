@@ -23,6 +23,7 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
   const [showCopyToast, setShowCopyToast] = useState(false);
   const [isToastHiding, setIsToastHiding] = useState(false);
   const [error, setError] = useState(null);
+  const [showExtraButtons, setShowExtraButtons] = useState(false);
 
   // Загружаем реферальные данные при монтировании
   useEffect(() => {
@@ -77,6 +78,8 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
       onNavigate('luckyballs');
     } else if (buttonNumber === 4) {
       onNavigate('cases');
+    } else if (buttonNumber === 5) {
+      onNavigate('upgrade');
     }
   };
 
@@ -198,6 +201,10 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
     }
   };
 
+  const toggleExtraButtons = () => {
+    setShowExtraButtons(!showExtraButtons);
+  };
+
   const openInfoModal = () => {
     setIsInfoModalOpen(true);
   };
@@ -244,34 +251,66 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
           />
         </div>
 
-        {/* Контейнер для двух квадратных кнопок рядом */}
-        <div className="square-buttons-row">
-          {/* Третья кнопка (luckyballs) - квадратная */}
-          <div 
-            className="banner-image-button square-button"
-            onClick={() => handleImageButtonClick(3)}
-            style={{ cursor: 'pointer' }}
-          >
-            <img 
-              src={gameCard1} 
-              alt="Lucky Balls Game" 
-              className="banner-image square-image"
-              loading="lazy"
-            />
+        {/* Третья кнопка (plinko дубль) - оставляем как было */}
+        <div 
+          className="banner-image-button"
+          onClick={() => handleImageButtonClick(5)}
+          style={{ cursor: 'pointer' }}
+        >
+          <img 
+            src={gameCard4} 
+            alt="Plinko Game" 
+            className="banner-image"
+            loading="lazy"
+          />
+        </div>
+
+        {/* Контейнер для дополнительных кнопок и кнопки Show More */}
+        <div className="games-section">
+          {/* Дополнительные кнопки (две квадратные - изначально скрыты) */}
+          <div className={`extra-buttons-wrapper ${showExtraButtons ? 'visible' : ''}`}>
+            <div className="square-buttons-row">
+              {/* Третья кнопка (luckyballs) - квадратная */}
+              <div 
+                className="banner-image-button square-button"
+                onClick={() => handleImageButtonClick(3)}
+                style={{ cursor: 'pointer' }}
+              >
+                <img 
+                  src={gameCard1} 
+                  alt="Lucky Balls Game" 
+                  className="banner-image square-image"
+                  loading="lazy"
+                />
+              </div>
+
+              {/* Четвертая кнопка (cases) - квадратная */}
+              <div 
+                className="banner-image-button square-button"
+                onClick={() => handleImageButtonClick(4)}
+                style={{ cursor: 'pointer' }}
+              >
+                <img 
+                  src={gameCard3} 
+                  alt="Cases Game" 
+                  className="banner-image square-image"
+                  loading="lazy"
+                />
+              </div>
+            </div>
           </div>
 
-          {/* Четвертая кнопка (cases) - квадратная */}
+          {/* Кнопка Show More / Hide - она двигается вниз когда появляются кнопки над ней */}
           <div 
-            className="banner-image-button square-button"
-            onClick={() => handleImageButtonClick(4)}
-            style={{ cursor: 'pointer' }}
+            className={`toggle-buttons-button ${showExtraButtons ? 'pushed-down' : ''}`}
+            onClick={toggleExtraButtons}
           >
-            <img 
-              src={gameCard3} 
-              alt="Cases Game" 
-              className="banner-image square-image"
-              loading="lazy"
-            />
+            <span className="toggle-buttons-text">
+              {showExtraButtons ? 'HIDE' : 'MORE GAMES'}
+            </span>
+            <span className="toggle-buttons-arrow">
+              {showExtraButtons ? '▲' : '▼'}
+            </span>
           </div>
         </div>
 
