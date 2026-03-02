@@ -38,12 +38,12 @@ export default function Header({ onNavigate, variant = 'default' }) {
   const shouldAutoCloseRef = useRef(false);
 
   // Определяем класс для варианта header
-  const headerClass = variant === 'cases' || variant === 'plinko' || variant === 'spin'
+  const headerClass = variant === 'cases' || variant === 'plinko' || variant === 'spin' || variant === 'upgrade'
     ? 'header-outer header-special' 
     : 'header-outer';
 
   // Определяем какую иконку использовать для кнопки добавления баланса
-  const addBalanceIcon = variant === 'cases' || variant === 'plinko' || variant === 'spin'
+  const addBalanceIcon = variant === 'cases' || variant === 'plinko' || variant === 'spin' || variant === 'upgrade'
     ? add_balance_black 
     : add_balance;
 
@@ -529,11 +529,11 @@ export default function Header({ onNavigate, variant = 'default' }) {
   }, [isBalanceModalOpen, isProgressModalOpen]);
 
   // Определяем класс для модальных окон в зависимости от варианта header
-  const modalClass = variant === 'cases' || variant === 'plinko' || variant === 'spin'
+  const modalClass = variant === 'cases' || variant === 'plinko' || variant === 'spin' || variant === 'upgrade'
     ? 'balance-modal-content modal-special'
     : 'balance-modal-content';
 
-  const progressModalClass = variant === 'cases' || variant === 'plinko' || variant === 'spin'
+  const progressModalClass = variant === 'cases' || variant === 'plinko' || variant === 'spin' || variant === 'upgrade'
     ? 'progress-modal-content modal-special'
     : 'progress-modal-content';
 
@@ -560,7 +560,7 @@ export default function Header({ onNavigate, variant = 'default' }) {
             <div className="balances-container">
               <div className="balance-container ton-balance">
                 <img 
-                  src={variant === 'cases' || variant === 'plinko' || variant === 'spin' ? tonBack : ton} 
+                  src={variant === 'cases' || variant === 'plinko' || variant === 'spin' || variant === 'upgrade' ? tonBack : ton} 
                   alt="TON" 
                   className="balance-icon" 
                 />
@@ -602,7 +602,7 @@ export default function Header({ onNavigate, variant = 'default' }) {
                   className={`currency-tab ${activeCurrency === 'ton' ? 'active' : ''}`}
                   onClick={() => setActiveCurrency('ton')}
                 >
-                  <img src={variant === 'cases' || variant === 'plinko' || variant === 'spin' ? tonBack : ton} alt="TON" className="currency-icon" />
+                  <img src={variant === 'cases' || variant === 'plinko' || variant === 'spin' || variant === 'upgrade' ? tonBack : ton} alt="TON" className="currency-icon" />
                   <span>TON</span>
                 </button>
                 <button

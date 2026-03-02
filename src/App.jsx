@@ -11,7 +11,8 @@ import LuckyBalls from './components/LuckyBalls';
 import Rocket from './components/Rocket.jsx';
 import CasesScreen from './components/CasesScreen';
 import PlinkoScreen from './components/PlinkoScreen';
-import SpinScreen from './components/SpinScreen'; // Единый SpinScreen
+import SpinScreen from './components/SpinScreen';
+import UpgradeScreen from './components/UpgradeScreen'; // 👈 ИМПОРТ НОВОЙ СТРАНИЦЫ
 
 // Импортируем AssetLoader
 import { preloadImages } from './utils/AssetLoader';
@@ -469,7 +470,7 @@ export default function App() {
     }
 
     // Страницы, где нужна кнопка "Назад"
-    const backButtonScreens = ['profile', 'luckyballs', 'rocket', 'cases', 'plinko', 'spin'];
+    const backButtonScreens = ['profile', 'luckyballs', 'rocket', 'cases', 'plinko', 'spin', 'upgrade']; // 👈 ДОБАВИЛИ 'upgrade'
     
     if (backButtonScreens.includes(screen)) {
       try {
@@ -602,14 +603,16 @@ export default function App() {
       case 'cases':
         return <CasesScreen onNavigate={navigateTo} />;
       case 'spin':
-  return (
-    <SpinScreen 
-      onNavigate={navigateTo} 
-      caseId={screenParams.caseId}
-      winData={screenParams.winData}
-      isDemo={screenParams.isDemo}
-    />
-  );
+        return (
+          <SpinScreen 
+            onNavigate={navigateTo} 
+            caseId={screenParams.caseId}
+            winData={screenParams.winData}
+            isDemo={screenParams.isDemo}
+          />
+        );
+      case 'upgrade': // 👈 ДОБАВИЛИ НОВЫЙ КЕЙС
+        return <UpgradeScreen onNavigate={navigateTo} />;
       case 'main':
       default:
         return <MainScreen onNavigate={navigateTo} />;
