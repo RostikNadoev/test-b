@@ -1,53 +1,40 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import Header from './Header';
 import rocketBack from '../assets/Plinko/Back.png';
 import arrow from '../assets/SpinPage/arrow.png';
-import cardton1 from '../assets/MainPage/chest1/ton.png';
+import cardton1 from '../assets/MainPage/chest1/ton.png'; // Временное изображение
 import modalCloseIcon from '../assets/Profile/close.png';
 import tonIcon from '../assets/MainPage/ton.svg';
 import switchr from '../assets/Rocket/switchr.svg';
 import '../styles/UpgradeScreen.css';
-
-const MOCK_MY_INVENTORY = [
-  { id: 1, name: 'Small Chest', price: 10, img: cardton1 },
-  { id: 2, name: 'Medium Chest', price: 50, img: cardton1 },
-  { id: 3, name: 'Big Chest', price: 120, img: cardton1 },
-  { id: 4, name: 'Silver Chest', price: 250, img: cardton1 },
-  { id: 5, name: 'Gold Chest', price: 500, img: cardton1 },
-  { id: 6, name: 'Diamond Chest', price: 1000, img: cardton1 },
-];
-
-const MOCK_TARGET_ITEMS = [
-  { id: 101, name: 'Rare Item', price: 100, img: cardton1 },
-  { id: 102, name: 'Epic Item', price: 500, img: cardton1 },
-  { id: 103, name: 'Legendary Item', price: 1500, img: cardton1 },
-  { id: 104, name: 'Mythic Item', price: 3000, img: cardton1 },
-];
+import { usersApi, upgradeApi  } from '../utils/api'; // Импортируем API
 
 export default function UpgradeScreen({ onNavigate }) {
-  const [myItem, setMyItem] = useState(null);
-  const [targetItem, setTargetItem] = useState(null);
-  const [activeModal, setActiveModal] = useState(null);
+  const [myItem, setMyItem] = useState(null); // { inventory_id, index, name, rarity, image_url, price_ton }
+  const [targetItem, setTargetItem] = useState(null); // { index, name, rarity, image_url, price_ton, telegram_gift_id }
+  const [activeModal, setActiveModal] = useState(null); // 'my', 'target', null
   const [isClosing, setIsClosing] = useState(false);
   const [isSpinning, setIsSpinning] = useState(false);
   const [isReturning, setIsReturning] = useState(false);
   const [arrowRotation, setArrowRotation] = useState(0);
   const [showWinModal, setShowWinModal] = useState(false);
+  const [winChance, setWinChance] = useState(0); // Шанс из API
+
+  // Состояния для данных из API
+  const [myInventory, setMyInventory] = useState([]);
+  const [targetOptions, setTargetOptions] = useState([]);
+  const [isLoadingInventory, setIsLoadingInventory] = useState(false);
+  const [isLoadingOptions, setIsLoadingOptions] = useState(false);
+  const [isLoadingChance, setIsLoadingChance] = useState(false);
+  const [inventoryId, setInventoryId] = useState(null); // ID выбранного предмета из инвентаря
 
   const vibIntervalRef = useRef(null);
-  const spinStartTimeRef = useRef(null);
-  const lastVibTimeRef = useRef(null);
-
-  const winChance = useMemo(() => {
-    if (!myItem || !targetItem) return 0;
-    const chance = (myItem.price / targetItem.price) * 100;
-    return Math.min(Math.max(chance, 1), 95);
-  }, [myItem, targetItem]);
 
   const radius = 110;
   const circumference = 2 * Math.PI * radius;
   const strokeDasharray = `${(winChance / 100) * circumference} ${circumference}`;
 
+  // Очистка интервала вибрации при размонтировании
   useEffect(() => {
     return () => {
       if (vibIntervalRef.current) {
@@ -57,6 +44,7 @@ export default function UpgradeScreen({ onNavigate }) {
     };
   }, []);
 
+  // Функция вибрации
   const triggerVibration = (type = 'light') => {
     try {
       const tg = window.Telegram?.WebApp;
@@ -74,53 +62,104 @@ export default function UpgradeScreen({ onNavigate }) {
     }
   };
 
-  // Функция для умной вибрации с изменяющимся интервалом
+  // Функция для умной вибрации
   const startSmartVibration = () => {
-    // Очищаем предыдущий интервал если есть
     if (vibIntervalRef.current) {
-      clearInterval(vibIntervalRef.current);
+      clearTimeout(vibIntervalRef.current);
       vibIntervalRef.current = null;
     }
 
-    const totalDuration = 4500; // 4.5 секунды вращения
+    const totalDuration = 4500;
     const startTime = Date.now();
-    
-    // Начинаем с частой вибрации
-    let currentInterval = 50; // стартовый интервал 50ms
-    
+
     const scheduleVibration = () => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / totalDuration, 1);
-      
-      // Плавно увеличиваем интервал по мере замедления (от 50ms до 300ms)
-      // Используем кубическую функцию для более заметного замедления в конце
+
       const easedProgress = Math.pow(progress, 1.5);
-      currentInterval = 50 + (250 * easedProgress); // от 50 до 300ms
-      
-      // Вызываем вибрацию
+      const currentInterval = 50 + (250 * easedProgress);
+
       triggerVibration('impact');
-      
-      // Планируем следующую вибрацию с новым интервалом
-      if (elapsed < totalDuration - 100) { // Останавливаем чуть раньше
+
+      if (elapsed < totalDuration - 100) {
         vibIntervalRef.current = setTimeout(scheduleVibration, currentInterval);
       } else {
-        // Финальная вибрация при остановке
         setTimeout(() => {
           triggerVibration('impact');
         }, 100);
       }
     };
-    
-    // Запускаем первую вибрацию
+
     scheduleVibration();
   };
 
+  // Загрузка инвентаря пользователя
+  const loadInventory = async () => {
+    setIsLoadingInventory(true);
+    try {
+      const response = await usersApi.getInventory();
+      // Предполагаем, что response.data содержит массив предметов
+      const inventory = response.data || [];
+      // Сортируем от дешевого к дорогому
+      const sortedInventory = inventory.sort((a, b) => (a.price_ton || 0) - (b.price_ton || 0));
+      setMyInventory(sortedInventory);
+    } catch (error) {
+      console.error('Failed to load inventory:', error);
+      // Можно показать уведомление об ошибке
+    } finally {
+      setIsLoadingInventory(false);
+    }
+  };
+
+  // Загрузка опций апгрейда (целей)
+  const loadUpgradeOptions = async (id) => {
+    if (!id) return;
+    setIsLoadingOptions(true);
+    try {
+      const response = await upgradeApi.getOptions(id);
+      // response.data = { inventory_id, source_item, options: [...] }
+      const options = response.data?.options || [];
+      // Сортируем цели от дешевого к дорогому
+      const sortedOptions = options.sort((a, b) => (a.price_ton || 0) - (b.price_ton || 0));
+      setTargetOptions(sortedOptions);
+    } catch (error) {
+      console.error('Failed to load upgrade options:', error);
+    } finally {
+      setIsLoadingOptions(false);
+    }
+  };
+
+  // Загрузка шанса для выбранной цели
+  const loadChance = async (id, targetIndex) => {
+    if (!id || !targetIndex) return;
+    setIsLoadingChance(true);
+    try {
+      const response = await upgradeApi.calcChance(id, targetIndex);
+      // response.data = { theoretical_chance, ... }
+      setWinChance(response.data?.theoretical_chance || 0);
+    } catch (error) {
+      console.error('Failed to calculate chance:', error);
+    } finally {
+      setIsLoadingChance(false);
+    }
+  };
+
+  // Открытие модалки
   const openModal = (type) => {
     if (isSpinning) return;
     setIsClosing(false);
     setActiveModal(type);
+
+    // Загружаем данные в зависимости от типа модалки
+    if (type === 'my') {
+      loadInventory();
+    } else if (type === 'target' && myItem) {
+      // При открытии модалки цели, грузим опции, используя inventory_id выбранного предмета
+      loadUpgradeOptions(myItem.inventory_id);
+    }
   };
 
+  // Закрытие модалки
   const closeModal = () => {
     setIsClosing(true);
     setTimeout(() => {
@@ -129,14 +168,30 @@ export default function UpgradeScreen({ onNavigate }) {
     }, 300);
   };
 
+  // Обработчик выбора предмета из модалки
   const handleSelectItem = (item, type) => {
     setIsClosing(true);
 
     if (type === 'my') {
-      setMyItem(item);
-      setTargetItem(null);
+      // Выбран свой предмет
+      setMyItem({
+        ...item,
+        inventory_id: item.id || item.inventory_id, // Убеждаемся, что есть ID
+        image_url: item.image_url || cardton1, // Заглушка, если нет картинки
+      });
+      setInventoryId(item.id || item.inventory_id);
+      setTargetItem(null); // Сбрасываем цель при смене своего предмета
+      setWinChance(0); // Сбрасываем шанс
     } else {
-      setTargetItem(item);
+      // Выбран целевой предмет
+      setTargetItem({
+        ...item,
+        image_url: item.image_url || cardton1, // Заглушка
+      });
+      // Как только цель выбрана, запрашиваем шанс
+      if (inventoryId && item.index) {
+        loadChance(inventoryId, item.index);
+      }
     }
 
     setTimeout(() => {
@@ -145,71 +200,74 @@ export default function UpgradeScreen({ onNavigate }) {
     }, 300);
   };
 
-  const handleSpin = () => {
-    if (!myItem || !targetItem || isSpinning) return;
+  // Обработчик нажатия кнопки UPGRADE
+  const handleSpin = async () => {
+    if (!myItem || !targetItem || isSpinning || !inventoryId) return;
 
     setIsSpinning(true);
-    
-    // Запускаем вибрацию с изменяющейся частотой
-    setTimeout(() => {
-      startSmartVibration();
-    }, 50); // Небольшая задержка для синхронизации с анимацией
 
-    const roll = Math.random() * 100;
-    const isWin = roll < winChance;
-    const coloredDegrees = (winChance / 100) * 360;
+    try {
+      // Вызываем метод play
+      const response = await upgradeApi.playUpgrade(inventoryId, targetItem.index);
+      const isWin = response.data?.win === true;
 
-    let finalAngle;
-    if (isWin) {
-      finalAngle = 2 + Math.random() * (coloredDegrees - 4);
-    } else {
-      finalAngle = coloredDegrees + 2 + Math.random() * (360 - coloredDegrees - 4);
-    }
-
-    const rotations = 360 * 6;
-    const targetRotation = rotations + finalAngle;
-
-    setArrowRotation(targetRotation);
-
-    // Останавливаем вибрацию через 4.5 секунды
-    setTimeout(() => {
-      if (vibIntervalRef.current) {
-        clearTimeout(vibIntervalRef.current);
-        vibIntervalRef.current = null;
-      }
-
-      // Финальная вибрация (успех или неудача)
-      triggerVibration(isWin ? 'notification' : 'impact');
-
-      if (isWin) {
-        setShowWinModal(true);
-      }
-
-      // Возврат стрелки в исходное положение
+      // Запускаем вибрацию
       setTimeout(() => {
-        setIsReturning(true);
+        startSmartVibration();
+      }, 50);
 
-        const nextFullCircle = Math.ceil(targetRotation / 360) * 360;
-        setArrowRotation(nextFullCircle);
+      // Рассчитываем угол остановки
+      const coloredDegrees = (winChance / 100) * 360;
+      let finalAngle;
+      if (isWin) {
+        finalAngle = 2 + Math.random() * (coloredDegrees - 4);
+      } else {
+        finalAngle = coloredDegrees + 2 + Math.random() * (360 - coloredDegrees - 4);
+      }
 
+      const rotations = 360 * 6;
+      const targetRotation = rotations + finalAngle;
+      setArrowRotation(targetRotation);
+
+      // Останавливаем вибрацию и обрабатываем результат через 4.5 сек
+      setTimeout(() => {
+        if (vibIntervalRef.current) {
+          clearTimeout(vibIntervalRef.current);
+          vibIntervalRef.current = null;
+        }
+
+        triggerVibration(isWin ? 'notification' : 'impact');
+
+        if (isWin) {
+          setShowWinModal(true);
+        }
+
+        // Возврат стрелки
         setTimeout(() => {
-          setIsReturning(false);
-          setArrowRotation(0);
-          setShowWinModal(false);
-          setMyItem(null);
-          setTargetItem(null);
-          setIsSpinning(false);
-        }, 1500);
-      }, 1000);
-    }, 4500);
-  };
+          setIsReturning(true);
+          const nextFullCircle = Math.ceil(targetRotation / 360) * 360;
+          setArrowRotation(nextFullCircle);
 
-  const availableTargets = useMemo(() => {
-    if (!myItem) return [];
-    return MOCK_TARGET_ITEMS.filter(
-      (item) => item.price > myItem.price
-    );
-  }, [myItem]);
+          setTimeout(() => {
+            setIsReturning(false);
+            setArrowRotation(0);
+            setShowWinModal(false);
+            // Сбрасываем выбор для новой попытки
+            setMyItem(null);
+            setTargetItem(null);
+            setInventoryId(null);
+            setWinChance(0);
+            setIsSpinning(false);
+          }, 1500);
+        }, 1000);
+      }, 4500);
+
+    } catch (error) {
+      console.error('Upgrade failed:', error);
+      setIsSpinning(false);
+      // Можно показать ошибку пользователю
+    }
+  };
 
   return (
     <div
@@ -258,10 +316,16 @@ export default function UpgradeScreen({ onNavigate }) {
               </svg>
 
               <div className="upgrade-chance-display">
-                <span className="chance-value">
-                  {winChance.toFixed(2)}
-                </span>
-                <span className="chance-symbol">%</span>
+                {isLoadingChance ? (
+                  <span className="chance-value">...</span>
+                ) : (
+                  <>
+                    <span className="chance-value">
+                      {winChance.toFixed(2)}
+                    </span>
+                    <span className="chance-symbol">%</span>
+                  </>
+                )}
               </div>
 
               <div
@@ -293,12 +357,13 @@ export default function UpgradeScreen({ onNavigate }) {
                 {myItem ? (
                   <>
                     <img
-                      src={myItem.img}
+                      src={myItem.image_url}
                       alt="Mine"
                       className="slot-item-image"
+                      onError={(e) => e.target.src = cardton1} // Заглушка при ошибке загрузки
                     />
                     <div className="slot-item-price">
-                      {myItem.price} TON
+                      {myItem.price_ton || '??'} TON
                     </div>
                   </>
                 ) : (
@@ -334,12 +399,13 @@ export default function UpgradeScreen({ onNavigate }) {
                 {targetItem ? (
                   <>
                     <img
-                      src={targetItem.img}
+                      src={targetItem.image_url}
                       alt="Target"
                       className="slot-item-image"
+                      onError={(e) => e.target.src = cardton1} // Заглушка при ошибке загрузки
                     />
                     <div className="slot-item-price">
-                      {targetItem.price} TON
+                      {targetItem.price_ton || '??'} TON
                     </div>
                   </>
                 ) : (
@@ -354,7 +420,7 @@ export default function UpgradeScreen({ onNavigate }) {
           <button
             className="upgrade-action-button"
             disabled={
-              !myItem || !targetItem || isSpinning
+              !myItem || !targetItem || isSpinning || isLoadingChance
             }
             onClick={handleSpin}
           >
@@ -363,6 +429,7 @@ export default function UpgradeScreen({ onNavigate }) {
         </div>
       </main>
 
+      {/* Модалка выбора предмета */}
       {activeModal && (
         <div
           className="upgrade-modal-overlay"
@@ -381,34 +448,39 @@ export default function UpgradeScreen({ onNavigate }) {
                 : 'SELECT TARGET ITEM'}
             </h2>
 
-            <div className="upgrade-inventory-grid">
-              {(activeModal === 'my'
-                ? MOCK_MY_INVENTORY
-                : availableTargets
-              ).map((item) => (
-                <div
-                  key={item.id}
-                  className="upgrade-inventory-item"
-                  onClick={() =>
-                    handleSelectItem(item, activeModal)
-                  }
-                >
-                  <img
-                    src={item.img}
-                    alt="item"
-                    className="inventory-item-img"
-                  />
-                  <div className="inventory-item-price">
-                    {item.price}{' '}
+            {isLoadingInventory || isLoadingOptions ? (
+              <div className="loading-indicator">Loading...</div>
+            ) : (
+              <div className="upgrade-inventory-grid">
+                {(activeModal === 'my'
+                  ? myInventory
+                  : targetOptions
+                ).map((item) => (
+                  <div
+                    key={item.index || item.id}
+                    className="upgrade-inventory-item"
+                    onClick={() =>
+                      handleSelectItem(item, activeModal)
+                    }
+                  >
                     <img
-                      src={tonIcon}
-                      alt="ton"
-                      className="ton-icon-small"
+                      src={item.image_url || cardton1}
+                      alt={item.name}
+                      className="inventory-item-img"
+                      onError={(e) => e.target.src = cardton1}
                     />
+                    <div className="inventory-item-price">
+                      {item.price_ton || '??'}{' '}
+                      <img
+                        src={tonIcon}
+                        alt="ton"
+                        className="ton-icon-small"
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
             <button
               className="upgrade-modal-close-btn"
@@ -424,22 +496,20 @@ export default function UpgradeScreen({ onNavigate }) {
         </div>
       )}
 
-      {showWinModal && (
+      {/* Модалка победы */}
+      {showWinModal && targetItem && (
         <div className="win-modal-overlay">
           <div className="win-modal">
             <h2 className="win-title">YOU WON!</h2>
-            {targetItem && (
-              <>
-                <img
-                  src={targetItem.img}
-                  alt="win"
-                  className="win-item-image"
-                />
-                <div className="win-price">
-                  {targetItem.price} TON
-                </div>
-              </>
-            )}
+            <img
+              src={targetItem.image_url}
+              alt="win"
+              className="win-item-image"
+              onError={(e) => e.target.src = cardton1}
+            />
+            <div className="win-price">
+              {targetItem.price_ton || '??'} TON
+            </div>
           </div>
         </div>
       )}

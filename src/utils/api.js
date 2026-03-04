@@ -585,5 +585,54 @@ export const referralsApi = {
     }
   }
 };
+
+export const upgradeApi = {
+  // 1) Получить варианты апгрейда (список целей)
+  async getOptions(inventoryId) {
+    try {
+      console.log(`⬆️ Getting upgrade options for inventory_id: ${inventoryId}...`);
+      const response = await api.post('/api/v1/upgrade/options', {
+        inventory_id: inventoryId
+      });
+      console.log('✅ Upgrade options received:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error getting upgrade options:', error);
+      throw error;
+    }
+  },
+
+  // 2) Посчитать шанс (по выбранной цели)
+  async calcChance(inventoryId, targetItemIndex) {
+    try {
+      console.log(`🎲 Calculating chance for inventory_id: ${inventoryId}, target: ${targetItemIndex}...`);
+      const response = await api.post('/api/v1/upgrade/calc', {
+        inventory_id: inventoryId,
+        target_item_index: targetItemIndex
+      });
+      console.log('✅ Chance calculated:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error calculating chance:', error);
+      throw error;
+    }
+  },
+
+  // 3) Сделать апгрейд (серверный ролл)
+  async playUpgrade(inventoryId, targetItemIndex) {
+    try {
+      console.log(`🎰 Playing upgrade for inventory_id: ${inventoryId}, target: ${targetItemIndex}...`);
+      const response = await api.post('/api/v1/upgrade/play', {
+        inventory_id: inventoryId,
+        target_item_index: targetItemIndex
+      });
+      console.log('✅ Upgrade result:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error playing upgrade:', error);
+      throw error;
+    }
+  }
+};
 // Export base axios instance for other requests
 export default api;
