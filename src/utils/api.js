@@ -595,7 +595,7 @@ export const upgradeApi = {
         inventory_id: inventoryId
       });
       console.log('✅ Upgrade options received:', response.data);
-      return response.data;
+      return response.data; // Возвращаем только data, а не весь response
     } catch (error) {
       console.error('❌ Error getting upgrade options:', error);
       throw error;
@@ -611,7 +611,7 @@ export const upgradeApi = {
         target_item_index: targetItemIndex
       });
       console.log('✅ Chance calculated:', response.data);
-      return response.data;
+      return response.data; // Возвращаем только data
     } catch (error) {
       console.error('❌ Error calculating chance:', error);
       throw error;
@@ -627,7 +627,7 @@ export const upgradeApi = {
         target_item_index: targetItemIndex
       });
       console.log('✅ Upgrade result:', response.data);
-      return response.data;
+      return response.data; // Возвращаем только data
     } catch (error) {
       console.error('❌ Error playing upgrade:', error);
       throw error;

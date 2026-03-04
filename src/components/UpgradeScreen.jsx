@@ -93,7 +93,7 @@ export default function UpgradeScreen({ onNavigate }) {
     scheduleVibration();
   };
 
-  // Функция для получения правильного URL изображения (как в PvpScreen)
+  // Функция для получения правильного URL изображения
   const getImageUrl = (imagePath) => {
     if (!imagePath) return cardton1;
     if (imagePath.startsWith('http')) return imagePath;
@@ -103,12 +103,12 @@ export default function UpgradeScreen({ onNavigate }) {
     return imagePath.startsWith('./') ? imagePath : cardton1;
   };
 
-  // Функция для получения изображения предмета (как в PvpScreen)
+  // Функция для получения изображения предмета
   const getItemImage = (item) => {
     return getImageUrl(item.image_url || item.img);
   };
 
-  // Загрузка инвентаря пользователя (как в PvpScreen)
+  // Загрузка инвентаря пользователя
   const loadInventory = async () => {
     setIsLoadingInventory(true);
     try {
@@ -149,16 +149,18 @@ export default function UpgradeScreen({ onNavigate }) {
     if (!id) return;
     setIsLoadingOptions(true);
     try {
-      const response = await upgradeApi.getOptions(id);
-      console.log('📦 Upgrade options received:', response.data);
+      const data = await upgradeApi.getOptions(id);
+      console.log('📦 Upgrade options received:', data);
       
-      // response.data может быть в разных форматах
+      // data содержит { inventory_id, source_item, options }
       let options = [];
-      if (response.data?.options) {
-        options = response.data.options;
-      } else if (Array.isArray(response.data)) {
-        options = response.data;
+      if (data?.options) {
+        options = data.options;
+      } else if (Array.isArray(data)) {
+        options = data;
       }
+      
+      console.log('📦 Processed options:', options);
       
       // Сортируем цели от дешевого к дорогому
       const sortedOptions = options.sort((a, b) => {
@@ -181,9 +183,11 @@ export default function UpgradeScreen({ onNavigate }) {
     if (!id || !targetIndex) return;
     setIsLoadingChance(true);
     try {
-      const response = await upgradeApi.calcChance(id, targetIndex);
-      // response.data может содержать theoretical_chance в разных местах
-      const chance = response.data?.theoretical_chance || response.data?.chance || 0;
+      const data = await upgradeApi.calcChance(id, targetIndex);
+      console.log('📦 Chance data:', data);
+      
+      // data содержит { theoretical_chance }
+      const chance = data?.theoretical_chance || 0;
       setWinChance(chance);
     } catch (error) {
       console.error('Failed to calculate chance:', error);
@@ -257,8 +261,10 @@ export default function UpgradeScreen({ onNavigate }) {
 
     try {
       // Вызываем метод play
-      const response = await upgradeApi.playUpgrade(inventoryId, targetItem.index);
-      const isWin = response.data?.win === true;
+      const data = await upgradeApi.playUpgrade(inventoryId, targetItem.index);
+      console.log('📦 Play result:', data);
+      
+      const isWin = data?.win === true;
 
       // Запускаем вибрацию
       setTimeout(() => {
@@ -507,37 +513,46 @@ export default function UpgradeScreen({ onNavigate }) {
             {isLoadingInventory || isLoadingOptions ? (
               <div className="loading-indicator">
                 <div className="spinner"></div>
-                <p>Loading inventory...</p>
+                <p>Loading...</p>
               </div>
             ) : (
               <div className="upgrade-inventory-grid">
                 {(activeModal === 'my'
                   ? myInventory
                   : targetOptions
-                ).map((item) => (
-                  <div
-                    key={item.index || item.id || Math.random()}
-                    className="upgrade-inventory-item"
-                    onClick={() =>
-                      handleSelectItem(item, activeModal)
-                    }
-                  >
-                    <img
-                      src={getItemImage(item)}
-                      alt={item.name}
-                      className="inventory-item-img"
-                      onError={(e) => e.target.src = cardton1}
-                    />
-                    <div className="inventory-item-price">
-                      {item.price_ton || item.item_value || '??'}{' '}
+                ).length > 0 ? (
+                  (activeModal === 'my'
+                    ? myInventory
+                    : targetOptions
+                  ).map((item) => (
+                    <div
+                      key={item.index || item.id || Math.random()}
+                      className="upgrade-inventory-item"
+                      onClick={() =>
+                        handleSelectItem(item, activeModal)
+                      }
+                    >
                       <img
-                        src={tonIcon}
-                        alt="ton"
-                        className="ton-icon-small"
+                        src={getItemImage(item)}
+                        alt={item.name || 'Item'}
+                        className="inventory-item-img"
+                        onError={(e) => e.target.src = cardton1}
                       />
+                      <div className="inventory-item-price">
+                        {item.price_ton || item.item_value || '??'}{' '}
+                        <img
+                          src={tonIcon}
+                          alt="ton"
+                          className="ton-icon-small"
+                        />
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="empty-inventory-message">
+                    No items available
                   </div>
-                ))}
+                )}
               </div>
             )}
 
