@@ -401,7 +401,7 @@
   
   .referral-text {
     font-size: 16px;
-    -webkit-text-stroke: 1.5px white;
+    -webkit-text-stroke: 1px white;
   }
   
   .referral-highlight {
