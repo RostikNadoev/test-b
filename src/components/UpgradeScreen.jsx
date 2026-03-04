@@ -1,24 +1,24 @@
-import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Header from './Header';
 import rocketBack from '../assets/Plinko/Back.png';
 import arrow from '../assets/SpinPage/arrow.png';
-import cardton1 from '../assets/MainPage/chest1/ton.png'; // Временное изображение
+import cardton1 from '../assets/MainPage/chest1/ton.png';
 import modalCloseIcon from '../assets/Profile/close.png';
 import tonIcon from '../assets/MainPage/ton.svg';
 import switchr from '../assets/Rocket/switchr.svg';
 import '../styles/UpgradeScreen.css';
-import { usersApi, upgradeApi  } from '../utils/api'; // Импортируем API
+import { usersApi, upgradeApi } from '../utils/api';
 
 export default function UpgradeScreen({ onNavigate }) {
-  const [myItem, setMyItem] = useState(null); // { inventory_id, index, name, rarity, image_url, price_ton }
-  const [targetItem, setTargetItem] = useState(null); // { index, name, rarity, image_url, price_ton, telegram_gift_id }
-  const [activeModal, setActiveModal] = useState(null); // 'my', 'target', null
+  const [myItem, setMyItem] = useState(null);
+  const [targetItem, setTargetItem] = useState(null);
+  const [activeModal, setActiveModal] = useState(null);
   const [isClosing, setIsClosing] = useState(false);
   const [isSpinning, setIsSpinning] = useState(false);
   const [isReturning, setIsReturning] = useState(false);
   const [arrowRotation, setArrowRotation] = useState(0);
   const [showWinModal, setShowWinModal] = useState(false);
-  const [winChance, setWinChance] = useState(0); // Шанс из API
+  const [winChance, setWinChance] = useState(0);
 
   // Состояния для данных из API
   const [myInventory, setMyInventory] = useState([]);
@@ -26,7 +26,7 @@ export default function UpgradeScreen({ onNavigate }) {
   const [isLoadingInventory, setIsLoadingInventory] = useState(false);
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
   const [isLoadingChance, setIsLoadingChance] = useState(false);
-  const [inventoryId, setInventoryId] = useState(null); // ID выбранного предмета из инвентаря
+  const [inventoryId, setInventoryId] = useState(null);
 
   const vibIntervalRef = useRef(null);
 
@@ -93,19 +93,52 @@ export default function UpgradeScreen({ onNavigate }) {
     scheduleVibration();
   };
 
-  // Загрузка инвентаря пользователя
+  // Функция для получения правильного URL изображения (как в PvpScreen)
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return cardton1;
+    if (imagePath.startsWith('http')) return imagePath;
+    if (imagePath.startsWith('/static/')) {
+      return `${(import.meta.env.VITE_BACKEND_URL || 'https://shamefully-gifted-catbird.cloudpub.ru').replace(/\/$/, '')}${imagePath}`;
+    }
+    return imagePath.startsWith('./') ? imagePath : cardton1;
+  };
+
+  // Функция для получения изображения предмета (как в PvpScreen)
+  const getItemImage = (item) => {
+    return getImageUrl(item.image_url || item.img);
+  };
+
+  // Загрузка инвентаря пользователя (как в PvpScreen)
   const loadInventory = async () => {
     setIsLoadingInventory(true);
     try {
-      const response = await usersApi.getInventory();
-      // Предполагаем, что response.data содержит массив предметов
-      const inventory = response.data || [];
+      const inventoryData = await usersApi.getInventory();
+      console.log('📦 Inventory data received:', inventoryData);
+      
+      let items = [];
+      if (Array.isArray(inventoryData)) {
+        items = inventoryData;
+      } else if (inventoryData?.inventory) {
+        items = inventoryData.inventory;
+      } else if (inventoryData?.items) {
+        items = inventoryData.items;
+      } else if (inventoryData?.data) {
+        items = inventoryData.data;
+      }
+      
+      console.log('📦 Processed items:', items);
+      
       // Сортируем от дешевого к дорогому
-      const sortedInventory = inventory.sort((a, b) => (a.price_ton || 0) - (b.price_ton || 0));
+      const sortedInventory = items.sort((a, b) => {
+        const priceA = parseFloat(a.price_ton || a.item_value || 0);
+        const priceB = parseFloat(b.price_ton || b.item_value || 0);
+        return priceA - priceB;
+      });
+      
       setMyInventory(sortedInventory);
     } catch (error) {
       console.error('Failed to load inventory:', error);
-      // Можно показать уведомление об ошибке
+      setMyInventory([]);
     } finally {
       setIsLoadingInventory(false);
     }
@@ -117,13 +150,27 @@ export default function UpgradeScreen({ onNavigate }) {
     setIsLoadingOptions(true);
     try {
       const response = await upgradeApi.getOptions(id);
-      // response.data = { inventory_id, source_item, options: [...] }
-      const options = response.data?.options || [];
+      console.log('📦 Upgrade options received:', response.data);
+      
+      // response.data может быть в разных форматах
+      let options = [];
+      if (response.data?.options) {
+        options = response.data.options;
+      } else if (Array.isArray(response.data)) {
+        options = response.data;
+      }
+      
       // Сортируем цели от дешевого к дорогому
-      const sortedOptions = options.sort((a, b) => (a.price_ton || 0) - (b.price_ton || 0));
+      const sortedOptions = options.sort((a, b) => {
+        const priceA = parseFloat(a.price_ton || 0);
+        const priceB = parseFloat(b.price_ton || 0);
+        return priceA - priceB;
+      });
+      
       setTargetOptions(sortedOptions);
     } catch (error) {
       console.error('Failed to load upgrade options:', error);
+      setTargetOptions([]);
     } finally {
       setIsLoadingOptions(false);
     }
@@ -135,8 +182,9 @@ export default function UpgradeScreen({ onNavigate }) {
     setIsLoadingChance(true);
     try {
       const response = await upgradeApi.calcChance(id, targetIndex);
-      // response.data = { theoretical_chance, ... }
-      setWinChance(response.data?.theoretical_chance || 0);
+      // response.data может содержать theoretical_chance в разных местах
+      const chance = response.data?.theoretical_chance || response.data?.chance || 0;
+      setWinChance(chance);
     } catch (error) {
       console.error('Failed to calculate chance:', error);
     } finally {
@@ -154,7 +202,6 @@ export default function UpgradeScreen({ onNavigate }) {
     if (type === 'my') {
       loadInventory();
     } else if (type === 'target' && myItem) {
-      // При открытии модалки цели, грузим опции, используя inventory_id выбранного предмета
       loadUpgradeOptions(myItem.inventory_id);
     }
   };
@@ -176,17 +223,19 @@ export default function UpgradeScreen({ onNavigate }) {
       // Выбран свой предмет
       setMyItem({
         ...item,
-        inventory_id: item.id || item.inventory_id, // Убеждаемся, что есть ID
-        image_url: item.image_url || cardton1, // Заглушка, если нет картинки
+        inventory_id: item.inventory_id || item.id,
+        image_url: getItemImage(item),
+        price_ton: item.price_ton || item.item_value || 0
       });
-      setInventoryId(item.id || item.inventory_id);
-      setTargetItem(null); // Сбрасываем цель при смене своего предмета
-      setWinChance(0); // Сбрасываем шанс
+      setInventoryId(item.inventory_id || item.id);
+      setTargetItem(null);
+      setWinChance(0);
     } else {
       // Выбран целевой предмет
       setTargetItem({
         ...item,
-        image_url: item.image_url || cardton1, // Заглушка
+        image_url: getItemImage(item),
+        price_ton: item.price_ton || 0
       });
       // Как только цель выбрана, запрашиваем шанс
       if (inventoryId && item.index) {
@@ -265,7 +314,13 @@ export default function UpgradeScreen({ onNavigate }) {
     } catch (error) {
       console.error('Upgrade failed:', error);
       setIsSpinning(false);
-      // Можно показать ошибку пользователю
+    }
+  };
+
+  const handleAnimationEnd = () => {
+    if (isClosing) {
+      setActiveModal(null);
+      setIsClosing(false);
     }
   };
 
@@ -360,7 +415,7 @@ export default function UpgradeScreen({ onNavigate }) {
                       src={myItem.image_url}
                       alt="Mine"
                       className="slot-item-image"
-                      onError={(e) => e.target.src = cardton1} // Заглушка при ошибке загрузки
+                      onError={(e) => e.target.src = cardton1}
                     />
                     <div className="slot-item-price">
                       {myItem.price_ton || '??'} TON
@@ -402,7 +457,7 @@ export default function UpgradeScreen({ onNavigate }) {
                       src={targetItem.image_url}
                       alt="Target"
                       className="slot-item-image"
-                      onError={(e) => e.target.src = cardton1} // Заглушка при ошибке загрузки
+                      onError={(e) => e.target.src = cardton1}
                     />
                     <div className="slot-item-price">
                       {targetItem.price_ton || '??'} TON
@@ -441,6 +496,7 @@ export default function UpgradeScreen({ onNavigate }) {
               isClosing ? 'closing' : ''
             }`}
             onClick={(e) => e.stopPropagation()}
+            onAnimationEnd={handleAnimationEnd}
           >
             <h2 className="upgrade-modal-title">
               {activeModal === 'my'
@@ -449,7 +505,10 @@ export default function UpgradeScreen({ onNavigate }) {
             </h2>
 
             {isLoadingInventory || isLoadingOptions ? (
-              <div className="loading-indicator">Loading...</div>
+              <div className="loading-indicator">
+                <div className="spinner"></div>
+                <p>Loading inventory...</p>
+              </div>
             ) : (
               <div className="upgrade-inventory-grid">
                 {(activeModal === 'my'
@@ -457,20 +516,20 @@ export default function UpgradeScreen({ onNavigate }) {
                   : targetOptions
                 ).map((item) => (
                   <div
-                    key={item.index || item.id}
+                    key={item.index || item.id || Math.random()}
                     className="upgrade-inventory-item"
                     onClick={() =>
                       handleSelectItem(item, activeModal)
                     }
                   >
                     <img
-                      src={item.image_url || cardton1}
+                      src={getItemImage(item)}
                       alt={item.name}
                       className="inventory-item-img"
                       onError={(e) => e.target.src = cardton1}
                     />
                     <div className="inventory-item-price">
-                      {item.price_ton || '??'}{' '}
+                      {item.price_ton || item.item_value || '??'}{' '}
                       <img
                         src={tonIcon}
                         alt="ton"
