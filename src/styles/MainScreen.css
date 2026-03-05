@@ -46,7 +46,7 @@
   display: flex;
   align-items: center;
   position: relative;
-  margin: 0 auto 4px auto;
+  margin: 0 auto 34px auto;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
