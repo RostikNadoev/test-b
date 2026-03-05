@@ -1887,7 +1887,6 @@
   height: 42px;
 }
 
-
 /* Статус предмета в инвентаре */
 .inventory-item-status {
   position: absolute;
@@ -1934,6 +1933,23 @@
   white-space: nowrap;
   padding: 0 4px;
   margin-top: 2px;
+}
+
+/* Статус предмета в модалке продажи */
+.sell-item-status {
+  position: absolute;
+  bottom: 30px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 10px;
+  padding: 4px;
+  border-radius: 3px;
+  background: rgba(255, 152, 0, 0.2);
+  color: #ff9800;
+  border: 1px solid #ff9800;
 }
 
 /* Модальное окно вывода с увеличенной высотой при активном lock */
@@ -1997,6 +2013,12 @@
 .withdraw-action-button--disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Кнопка продажи в disabled состоянии */
+.sell-modal-button--disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 @keyframes pulse {

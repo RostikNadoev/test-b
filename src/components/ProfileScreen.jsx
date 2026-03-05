@@ -497,6 +497,7 @@ export default function ProfileScreen({ onNavigate }) {
   };
 
   const handleItemClick = (item, index) => {
+    // Всегда можно нажать на предмет, независимо от статуса
     setSelectedItem({ ...item, originalIndex: index });
     setIsSellModalOpen(true);
   };
@@ -815,10 +816,9 @@ export default function ProfileScreen({ onNavigate }) {
               {getItemsToDisplay().map((item, index) => (
                 <div 
                   key={index} 
-                  className={`inventory-item-frame ${canSellItem(item) ? '' : 'inventory-item-disabled'} ${newItems.has(index) ? 'new-item-pulse' : ''}`}
-                  onClick={() => canSellItem(item) && handleItemClick(item, index)}
-                  style={!canSellItem(item) ? { cursor: 'not-allowed', opacity: 0.6 } : {}}
-                  title={!canSellItem(item) ? (item.status === 'withdraw_pending' ? 'Item is pending withdrawal' : 'This item cannot be sold') : 'Click to sell/withdraw'}
+                  className={`inventory-item-frame ${newItems.has(index) ? 'new-item-pulse' : ''}`}
+                  onClick={() => handleItemClick(item, index)} // Всегда вызываем handleItemClick, независимо от статуса
+                  title={item.status === 'withdraw_pending' ? 'Item is pending withdrawal (click to view)' : 'Click to sell/withdraw'}
                 >
                   <div className="inventory-item-content">
                     <img 
@@ -930,18 +930,22 @@ export default function ProfileScreen({ onNavigate }) {
                 <div className={`sell-item-price ${getPriceClass(getItemPrice(selectedItem))}`}>
                   {getItemPrice(selectedItem)}
                 </div>
+                {selectedItem.status === 'withdraw_pending' && (
+                  <div className="sell-item-status pending">PENDING WITHDRAWAL</div>
+                )}
               </div>
             </div>
             
             <button 
-              className="sell-modal-button"
+              className={`sell-modal-button ${!canSellItem(selectedItem) ? 'sell-modal-button--disabled' : ''}`}
               onClick={handleSellItem}
               disabled={sellingItem || !canSellItem(selectedItem)}
+              style={!canSellItem(selectedItem) ? { opacity: 0.5, pointerEvents: 'none' } : {}}
             >
               {sellingItem ? 'PROCESSING...' : `SELL FOR ${getItemPrice(selectedItem)}`}
             </button>
             
-            {!isDemoMode && canSellItem(selectedItem) && (
+            {!isDemoMode && (
               <button 
                 className="withdraw-modal-button"
                 onClick={handleOpenWithdraw}
