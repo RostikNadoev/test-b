@@ -382,7 +382,8 @@ export const giftsApi = {
     }
   },
 
-   async withdrawItem(inventoryId) {
+  // ВЫВОД ПОДАРКА - ЗАМЕНИТЕ ЭТОТ МЕТОД
+  async withdrawItem(inventoryId) {
     try {
       console.log(`🎁 Withdrawing item with inventory_id: ${inventoryId}...`);
       
@@ -391,9 +392,38 @@ export const giftsApi = {
       });
       
       console.log('✅ Item withdrawn:', response.data);
+      
+      // Возвращаем response.data как есть (сервер сам определяет структуру)
       return response.data;
+      
     } catch (error) {
       console.error('❌ Error withdrawing item:', error);
+      
+      // ЕСЛИ СЕРВЕР ВОЗВРАЩАЕТ 200 С need_topup (НЕКОТОРЫЕ БЭКЕНДЫ ТАК ДЕЛАЮТ)
+      // Проверяем, есть ли в ответе need_topup
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        
+        // Если сервер вернул need_topup (даже если статус 400, но с need_topup)
+        if (errorData.need_topup) {
+          console.log('💰 Server indicates need to top up stars:', errorData);
+          // Возвращаем данные как успешный ответ для обработки во фронтенде
+          return errorData;
+        }
+        
+        // Если есть детальное сообщение об ошибке
+        if (errorData.detail) {
+          throw new Error(errorData.detail);
+        }
+        if (errorData.message) {
+          throw new Error(errorData.message);
+        }
+        if (errorData.error) {
+          throw new Error(errorData.error);
+        }
+      }
+      
+      // Пробрасываем ошибку дальше
       throw error;
     }
   }

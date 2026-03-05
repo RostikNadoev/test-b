@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/ProfileScreen.css';
 import { useDemo } from '../contexts/DemoContext';
-import { authApi, usersApi, giftsApi } from '../utils/api';
+import { authApi, usersApi, giftsApi, starsApi } from '../utils/api';
 import { tonConnect } from '../utils/tonConnect';
 
 import ava from '../assets/MainPage/ava.jpg';
@@ -31,6 +31,7 @@ export default function ProfileScreen({ onNavigate }) {
   const [withdrawing, setWithdrawing] = useState(false);
   const [walletInfo, setWalletInfo] = useState(null);
   const [isWalletConnecting, setIsWalletConnecting] = useState(false);
+  const [withdrawResult, setWithdrawResult] = useState(null); // Для хранения результата вывода (locked_until и т.д.)
   
   const { 
     isDemoMode, 
@@ -191,13 +192,13 @@ export default function ProfileScreen({ onNavigate }) {
       setSellingItem(true);
       
       if (item.item_type !== 'tg_gift') {
-        alert('Этот тип предмета нельзя продать');
+        alert('This item cannot be sold');
         return false;
       }
       
       const inventoryId = item.inventory_id || item.id;
       if (!inventoryId) {
-        alert('Ошибка: отсутствует ID предмета');
+        alert('Error: Missing item ID');
         return false;
       }
       
@@ -222,9 +223,9 @@ export default function ProfileScreen({ onNavigate }) {
         return false;
       }
     } catch (error) {
-      console.error('❌ Ошибка продажи предмета:', error);
+      console.error('❌ Error selling item:', error);
       
-      let errorMessage = 'Ошибка при продаже предмета. Попробуйте снова.';
+      let errorMessage = 'Error selling item. Please try again.';
       if (error.response?.data?.detail) {
         errorMessage = error.response.data.detail;
       }
@@ -245,7 +246,7 @@ export default function ProfileScreen({ onNavigate }) {
       );
       
       if (giftsToSell.length === 0) {
-        alert('Нет предметов для продажи');
+        alert('No items to sell');
         return;
       }
       
@@ -275,7 +276,7 @@ export default function ProfileScreen({ onNavigate }) {
           
           await new Promise(resolve => setTimeout(resolve, 300));
         } catch (error) {
-          console.error(`Ошибка при продаже предмета ${item.id}:`, error);
+          console.error(`Error selling item ${item.id}:`, error);
         }
       }
       
@@ -284,7 +285,7 @@ export default function ProfileScreen({ onNavigate }) {
       ));
       
     } catch (error) {
-      console.error('❌ Ошибка при массовой продаже:', error);
+      console.error('❌ Error in mass sell:', error);
     } finally {
       setSellingAll(false);
       setIsSellAllModalOpen(false);
@@ -329,79 +330,99 @@ export default function ProfileScreen({ onNavigate }) {
       return;
     }
     
+    setWithdrawResult(null); // Сбрасываем предыдущий результат
     setIsSellModalOpen(false);
     setIsWithdrawModalOpen(true);
   };
 
-const handleWithdraw = async () => {
-  if (isDemoMode || !selectedItem) return;
-  
-  try {
-    setWithdrawing(true);
+  const handleWithdraw = async () => {
+    if (isDemoMode || !selectedItem) return;
     
-    // 1. Получаем inventory_id
-    const inventoryId = selectedItem.inventory_id || selectedItem.id;
-    if (!inventoryId) {
-      alert('Ошибка: отсутствует ID предмета');
-      setWithdrawing(false);
-      return;
-    }
-    
-    // 2. Проверяем баланс звезд перед вызовом API
     try {
-      const balanceData = await usersApi.getBalance();
-      const currentStars = balanceData.balances?.stars || 0;
+      setWithdrawing(true);
       
-      if (currentStars < 50) {
-        alert(`Insufficient Stars balance! Need: 50, Current: ${currentStars}`);
+      // 1. Получаем inventory_id
+      const inventoryId = selectedItem.inventory_id || selectedItem.id;
+      if (!inventoryId) {
+        alert('❌ Error: Missing item ID');
         setWithdrawing(false);
         return;
       }
-    } catch (error) {
-      console.error('Ошибка при проверке баланса:', error);
-      // Если не удалось проверить баланс, все равно пробуем выполнить вывод
-      // Сервер сам проверит баланс и вернет ошибку если недостаточно
-    }
-    
-    // 3. Вызываем API для вывода
-    const result = await giftsApi.withdrawItem(inventoryId);
-    
-    if (result.success) {
-      // Обновляем баланс звезд если он вернулся в ответе
-      if (result.balance_stars !== undefined) {
-        authApi.updateUserData({
-          balance_stars: result.balance_stars
-        });
+      
+      console.log(`🎮 Starting withdrawal for item ${inventoryId}...`);
+      
+      // 2. Вызываем API для вывода
+      const result = await giftsApi.withdrawItem(inventoryId);
+      
+      // 3. Проверяем, нужно ли пополнить баланс
+      if (result.need_topup) {
+        console.log('💰 Need to top up stars:', result);
+        
+        // Открываем invoice для пополнения
+        if (result.invoice_link) {
+          if (window.Telegram?.WebApp) {
+            window.Telegram.WebApp.openTelegramLink(result.invoice_link);
+          } else {
+            window.open(result.invoice_link, '_blank');
+          }
+          
+          // Показываем сообщение о необходимости пополнить баланс
+          alert(`⚠️ Insufficient Stars balance!\n\nNeed: ${result.topup_amount} Stars\nFee: ${result.withdraw_fee} Stars\n\nPlease complete the payment in Telegram to continue.`);
+        } else {
+          alert(`⚠️ Insufficient Stars balance! Need ${result.topup_amount || 50} Stars.`);
+        }
+        
+        setWithdrawing(false);
+        return;
       }
       
-      // 4. ПЕРЕЗАГРУЖАЕМ ИНВЕНТАРЬ ЧЕРЕЗ API
-      await loadUserData();
+      // 4. Если вывод успешен (вариант B - Stars хватает)
+      if (result.ok || result.mode === 'manual') {
+        console.log('✅ Withdrawal successful:', result);
+        
+        // Сохраняем результат для отображения
+        setWithdrawResult(result);
+        
+        // Обновляем баланс звезд если он вернулся в ответе
+        if (result.balance_stars !== undefined) {
+          authApi.updateUserData({
+            balance_stars: result.balance_stars
+          });
+        }
+        
+        // Обновляем инвентарь через API
+        await loadUserData();
+        
+        // Показываем сообщение об успехе
+        alert('✅ Withdrawal request created successfully!\n\nThe item will be withdrawn within 24 hours.');
+        
+        // Закрываем модалку
+        setIsWithdrawModalOpen(false);
+        setSelectedItem(null);
+      } else {
+        alert(`❌ Error: ${result.message || 'Failed to withdraw item'}`);
+      }
       
-      alert('✅ Withdrawal successful! The item has been withdrawn.');
+    } catch (error) {
+      console.error('❌ Withdrawal error:', error);
       
-      setIsWithdrawModalOpen(false);
-      setSelectedItem(null);
-    } else {
-      alert(`Ошибка: ${result.message || 'Не удалось выполнить вывод'}`);
+      let errorMessage = 'Error withdrawing item. Please try again.';
+      
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      }
+      
+      alert(`❌ ${errorMessage}`);
+    } finally {
+      setWithdrawing(false);
     }
-    
-  } catch (error) {
-    console.error('❌ Withdrawal error:', error);
-    
-    let errorMessage = 'Ошибка при выводе предмета. Попробуйте снова.';
-    if (error.response?.data?.detail) {
-      errorMessage = error.response.data.detail;
-    } else if (error.response?.data?.message) {
-      errorMessage = error.response.data.message;
-    } else if (error.message) {
-      errorMessage = error.message;
-    }
-    
-    alert(`❌ ${errorMessage}`);
-  } finally {
-    setWithdrawing(false);
-  }
-};
+  };
 
   const handleClose = () => {
     onNavigate('main');
@@ -492,7 +513,7 @@ const handleWithdraw = async () => {
         new URL(userData.photo_url);
         return userData.photo_url;
       } catch (error) {
-        console.warn('Некорректный URL аватара:', userData.photo_url);
+        console.warn('Invalid avatar URL:', userData.photo_url);
         return ava;
       }
     }
@@ -515,6 +536,13 @@ const handleWithdraw = async () => {
     } else {
       return inventory.filter(item => item.item_type === 'tg_gift').length;
     }
+  };
+
+  const getUserStars = () => {
+    if (userData?.balance_stars !== undefined) {
+      return userData.balance_stars;
+    }
+    return 0;
   };
 
   const openTelegramBot = () => {
@@ -584,7 +612,26 @@ const handleWithdraw = async () => {
   };
 
   const getItemsToDisplay = () => {
-    return getSortedInventory(); // Используем отсортированный массив
+    return getSortedInventory();
+  };
+
+  // Форматирование locked_until для отображения
+  const formatLockedUntil = (lockedUntil) => {
+    if (!lockedUntil) return '';
+    
+    const date = new Date(lockedUntil);
+    const now = new Date();
+    const diffMs = date - now;
+    const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (diffHrs > 0) {
+      return `${diffHrs}h ${diffMins}m`;
+    } else if (diffMins > 0) {
+      return `${diffMins}m`;
+    } else {
+      return 'Expired';
+    }
   };
 
   return (
@@ -681,7 +728,6 @@ const handleWithdraw = async () => {
         ) : (
           <div className="wallet-info-section">
             <div className="connected-wallet-info-profile">
-              
               <div className="wallet-address" style={{ opacity: 0.6 }}>
                 Disable Demo to connect wallet
               </div>
@@ -718,7 +764,7 @@ const handleWithdraw = async () => {
                   className={`inventory-item-frame ${canSellItem(item) ? '' : 'inventory-item-disabled'} ${newItems.has(index) ? 'new-item-pulse' : ''}`}
                   onClick={() => canSellItem(item) && handleItemClick(item, index)}
                   style={!canSellItem(item) ? { cursor: 'not-allowed', opacity: 0.6 } : {}}
-                  title={!canSellItem(item) ? 'Этот предмет нельзя продать' : 'Нажмите для продажи'}
+                  title={!canSellItem(item) ? 'This item cannot be sold' : 'Click to sell/withdraw'}
                 >
                   <div className="inventory-item-content">
                     <img 
@@ -737,6 +783,12 @@ const handleWithdraw = async () => {
                     {item.name && (
                       <div className="inventory-item-name">
                         {item.name}
+                      </div>
+                    )}
+                    {/* Отображаем статус, если есть */}
+                    {item.status === 'withdraw_pending' && (
+                      <div className="inventory-item-status pending">
+                        PENDING
                       </div>
                     )}
                   </div>
@@ -856,7 +908,7 @@ const handleWithdraw = async () => {
         </div>
       )}
 
-      {isWithdrawModalOpen && (
+      {isWithdrawModalOpen && selectedItem && (
         <div className="withdraw-modal-overlay" onClick={() => !withdrawing && setIsWithdrawModalOpen(false)}>
           <div className="withdraw-modal-blur-layer"></div>
           <div 
@@ -866,7 +918,9 @@ const handleWithdraw = async () => {
             <div className="withdraw-modal-header">
               <div className="withdraw-modal-star-container">
                 <img src={starIcon} alt="Star" className="withdraw-modal-star-icon" />
-                <span className="withdraw-modal-star-text">50 STARS</span>
+                <span className="withdraw-modal-star-text">
+                  {getUserStars()} / 50 STARS
+                </span>
               </div>
               <h3 className="withdraw-modal-title">WITHDRAW</h3>
             </div>
@@ -876,6 +930,11 @@ const handleWithdraw = async () => {
                 <p className="withdraw-info-text">
                   Withdrawal will be processed within a <span className="withdraw-time">few minutes</span>
                 </p>
+                {withdrawResult && withdrawResult.locked_until && (
+                  <p className="withdraw-info-text" style={{ marginTop: '5px', fontSize: '14px' }}>
+                    Locked until: {new Date(withdrawResult.locked_until).toLocaleString()}
+                  </p>
+                )}
               </div>
               
               <div className="withdraw-item-preview">
@@ -907,7 +966,11 @@ const handleWithdraw = async () => {
                   onClick={handleWithdraw}
                   disabled={withdrawing}
                 >
-                  {withdrawing ? 'PROCESSING...' : (
+                  {withdrawing ? (
+                    'PROCESSING...'
+                  ) : withdrawResult ? (
+                    'WITHDRAWAL REQUESTED'
+                  ) : (
                     <>
                       PAY <span className="withdraw-price">50 STARS</span> AND WITHDRAW
                     </>

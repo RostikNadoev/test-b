@@ -1886,3 +1886,52 @@
   width: 42px;
   height: 42px;
 }
+
+
+/* Статус предмета в инвентаре */
+.inventory-item-status {
+  position: absolute;
+  bottom: 5px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 8px;
+  padding: 2px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #ff9800;
+  border: 1px solid #ff9800;
+}
+
+.inventory-item-status.pending {
+  color: #ff9800;
+  border-color: #ff9800;
+}
+
+/* Контейнер для предмета с относительным позиционированием */
+.inventory-item-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Имя предмета в инвентаре */
+.inventory-item-name {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 600;
+  font-size: 9px;
+  text-align: center;
+  color: rgba(53, 163, 242, 1);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 4px;
+  margin-top: 2px;
+}
