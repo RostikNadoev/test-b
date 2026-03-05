@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import MainLayout from './MainLayout';
 // Импортируем изображения для кнопок
-import gameCard1 from '../assets/MainPage/game-card-1.png';
-import gameCard2 from '../assets/MainPage/ttmb.png';
-import gameCard3 from '../assets/MainPage/cases.png';
-import gameCard4 from '../assets/MainPage/pinkocard.png';
+import gameCard1 from '../assets/MainPage/newplinkocard.png';
+import gameCard2 from '../assets/MainPage/newupgradecard.png';
+import gameCard3 from '../assets/MainPage/newcasescard.png';
+import gameCard4 from '../assets/MainPage/newluckycard.png';
+import gameCard5 from '../assets/MainPage/newrocketcard.png';
 // Импортируем изображения для кнопок рефералов
 import inviteBg from '../assets/MainPage/invite1.png';
 import linkIcon from '../assets/MainPage/link.svg';
@@ -56,15 +57,15 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
 
   const handleImageButtonClick = (buttonNumber) => {
     if (buttonNumber === 1) {
-      onNavigate('rocket');
-    } else if (buttonNumber === 2) {
       onNavigate('plinko');
-    } else if (buttonNumber === 3) { 
-      onNavigate('luckyballs');
-    } else if (buttonNumber === 4) {
-      onNavigate('cases');
-    } else if (buttonNumber === 5) {
+    } else if (buttonNumber === 2) {
       onNavigate('upgrade');
+    } else if (buttonNumber === 3) { 
+      onNavigate('cases');
+    } else if (buttonNumber === 4) {
+      onNavigate('luckyballs');
+    } else if (buttonNumber === 5) {
+      onNavigate('rocket');
     }
   };
 
@@ -260,60 +261,73 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
           <div className="referral-top-badge"></div>
         </div>
 
-        {/* Первая кнопка (ракета) */}
-        <div 
-          className="banner-image-button"
-          onClick={() => handleImageButtonClick(1)}
-          style={{ cursor: 'pointer' }}
-        >
-          <img 
-            src={gameCard2} 
-            alt="Rocket Game" 
-            className="banner-image"
-            loading="lazy"
-          />
-        </div>
-        
-        {/* Вторая кнопка (plinko) */}
-        <div 
-          className="banner-image-button"
-          onClick={() => handleImageButtonClick(2)}
-          style={{ cursor: 'pointer' }}
-        >
-          <img 
-            src={gameCard4} 
-            alt="Plinko Game" 
-            className="banner-image"
-            loading="lazy"
-          />
-        </div>
-
-        {/* Третья кнопка (luckyballs) */}
-        <div 
-          className="banner-image-button"
-          onClick={() => handleImageButtonClick(3)}
-          style={{ cursor: 'pointer' }}
-        >
-          <img 
-            src={gameCard1} 
-            alt="Lucky Balls Game" 
-            className="banner-image"
-            loading="lazy"
-          />
+        {/* Ряд 1: кнопки 1 и 2 (Plinko и Upgrade) */}
+        <div className="buttons-row">
+          <div 
+            className="game-button half-button"
+            onClick={() => handleImageButtonClick(1)}
+          >
+            <img 
+              src={gameCard1} 
+              alt="Plinko game" 
+              className="game-image"
+              loading="lazy"
+            />
+          </div>
+          
+          <div 
+            className="game-button half-button"
+            onClick={() => handleImageButtonClick(2)}
+          >
+            <img 
+              src={gameCard2} 
+              alt="Upgrade Game" 
+              className="game-image"
+              loading="lazy"
+            />
+          </div>
         </div>
 
-        {/* Четвертая кнопка (cases) */}
-        <div 
-          className="banner-image-button"
-          onClick={() => handleImageButtonClick(4)}
-          style={{ cursor: 'pointer' }}
-        >
-          <img 
-            src={gameCard3} 
-            alt="Cases Game" 
-            className="banner-image"
-            loading="lazy"
-          />
+        {/* Ряд 2: кнопка 3 (Cases) - полная ширина */}
+        <div className="buttons-row">
+          <div 
+            className="game-button full-button"
+            onClick={() => handleImageButtonClick(3)}
+          >
+            <img 
+              src={gameCard3} 
+              alt="Cases" 
+              className="game-image"
+              loading="lazy"
+            />
+          </div>
+        </div>
+
+        {/* Ряд 3: кнопки 4 и 5 (LuckyBalls и Rocket) */}
+        <div className="buttons-row">
+          <div 
+            className="game-button half-button"
+            onClick={() => handleImageButtonClick(4)}
+          >
+            <img 
+              src={gameCard4} 
+              alt="LuckyBalls" 
+              className="game-image"
+              loading="lazy"
+            />
+          </div>
+          
+          <div 
+            className="game-button half-button"
+            onClick={() => handleImageButtonClick(5)}
+          >
+            <img 
+              src={gameCard5} 
+              alt="Rocket" 
+              className="game-image"
+              loading="lazy"
+            />
+          </div>
         </div>
       </div>
 

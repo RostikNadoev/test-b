@@ -1,4 +1,4 @@
-/* styles/MainScreen.css - полная версия с сохранением футера */
+/* styles/MainScreen.css - полная версия с правильной сеткой кнопок */
 
 .main-screen {
   width: 100%;
@@ -20,15 +20,15 @@
   overflow-y: auto;
 }
 
-/* --- Стили для картинок-кнопок --- */
+/* --- Контейнер для всех кнопок --- */
 .banner-images-container {
   width: calc(100% - 20px);
   max-width: 430px;
   display: flex;
   flex-direction: column;
-  gap: 0px;
-  margin-bottom: 0px;
   align-items: center;
+  margin: 0 auto;
+  gap: 21px;
 }
 
 /* --- НОВАЯ КНОПКА РЕФЕРАЛОВ ВВЕРХУ --- */
@@ -46,7 +46,7 @@
   display: flex;
   align-items: center;
   position: relative;
-  margin: 0 auto 25px auto;
+  margin: 0 auto 4px auto;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
@@ -108,40 +108,56 @@
   pointer-events: none;
 }
 
-/* --- Стили для картинок-кнопок игр --- */
-.banner-image-button {
-  width: 437px;
-  height: auto;
-  border-radius: 12px;
+/* --- Ряды с кнопками --- */
+.buttons-row {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 11px;
+}
+
+.buttons-row:first-of-type {
+  margin-top: 0;
+}
+
+/* --- Стили для игровых кнопок --- */
+.game-button {
   cursor: pointer;
-  transition: all 0.3s ease;
   padding: 0;
   position: relative;
   overflow: hidden;
   outline: none;
   background: none;
   border: none;
-  margin-top: -10px;
-  
-  /* Для мобильных устройств */
+  border-radius: 12px;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  transition: transform 0.2s ease;
 }
 
-.banner-image {
-  width: 100%;
-  height: auto;
-  border-radius: 12px;
-  display: block;
-  transition: transform 0.3s ease;
-}
-
-.banner-image-button:hover .banner-image {
-  transform: scale(1.02);
-}
-
-.banner-image-button:active .banner-image {
+.game-button:active {
   transform: scale(0.98);
+}
+
+.game-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+/* Кнопки на половину ширины (215x204 на 480px) */
+.half-button {
+  width: calc(50% - 5.5px); /* Учитываем gap 11px */
+  aspect-ratio: 215 / 204;
+}
+
+/* Кнопка на полную ширину (441x78 на 480px) */
+.full-button {
+  width: 100%;
+  aspect-ratio: 441 / 78;
 }
 
 /* --- Стили для реферального блока (внутри модалки) --- */
@@ -804,11 +820,7 @@
     width: 100%;
     padding: 0 10px;
     max-width: 100%;
-  }
-  
-  .banner-image-button {
-    width: 100%;
-    max-width: 380px;
+    gap: 18px;
   }
   
   .referral-top-button {
@@ -837,6 +849,14 @@
     height: 22px;
     bottom: -8px;
     right: -8px;
+  }
+  
+  .buttons-row {
+    gap: 10px;
+  }
+  
+  .half-button {
+    width: calc(50% - 5px);
   }
   
   .referral-frame {
@@ -934,6 +954,18 @@
 }
 
 @media (max-width: 395px) {
+  .banner-images-container {
+    gap: 16px;
+  }
+  
+  .buttons-row {
+    gap: 9px;
+  }
+  
+  .half-button {
+    width: calc(50% - 4.5px);
+  }
+  
   .referral-frame {
     height: 160px;
   }
@@ -976,7 +1008,7 @@
     height: 42px;
   }
 
-    .referral-top-button {
+  .referral-top-button {
     width: 220px;
     height: 32px;
   }
@@ -1006,8 +1038,16 @@
 }
 
 @media (max-width: 375px) {
-  .banner-image-button {
-    max-width: 340px;
+  .banner-images-container {
+    gap: 15px;
+  }
+  
+  .buttons-row {
+    gap: 8px;
+  }
+  
+  .half-button {
+    width: calc(50% - 4px);
   }
   
   .referral-text {
@@ -1070,12 +1110,24 @@
 }
 
 @media (max-width: 353px) {
+  .banner-images-container {
+    gap: 14px;
+  }
+  
+  .buttons-row {
+    gap: 7px;
+  }
+  
+  .half-button {
+    width: calc(50% - 3.5px);
+  }
+  
   .toast_text {
     font-weight: 600;
     font-size: 12px;
   }
 
-      .referral-top-button {
+  .referral-top-button {
     width: 200px;
     height: 30px;
   }

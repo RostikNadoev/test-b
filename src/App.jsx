@@ -72,9 +72,11 @@ import emptypat from './assets/PVP/empty-pat.png';
 import mainpvp from './assets/PVP/main.png';
 
 // MainScreen кнопки
-import gameCard1 from './assets/MainPage/game-card-1.png';
-import gameCard2 from './assets/MainPage/ttmb.png';
-import gameCard3 from './assets/MainPage/cases.png';
+import gameCard1 from './assets/MainPage/newplinkocard.png';
+import gameCard2 from './assets/MainPage/newupgradecard.png';
+import gameCard3 from './assets/MainPage/newcasescard.png';
+import gameCard4 from './assets/MainPage/newluckycard.png';
+import gameCard5 from './assets/MainPage/newrocketcard.png';
 
 // Cases
 import casesBack from './assets/Plinko/Back.png';
@@ -517,6 +519,11 @@ export default function App() {
 
   // === 🔥 Список всех URL-адресов изображений для предзагрузки ===
   const allImageUrls = [
+    gameCard1,
+    gameCard2,
+    gameCard3,
+    gameCard4,
+    gameCard5,
     rocketback1,
     casesBack,
     firstCase,
@@ -552,10 +559,7 @@ export default function App() {
     l1, l2, l3, l4, l5, l6,
     l1a, l2a, l3a, l4a, l5a, l6a,
     ballsq,
-    timerImg,
-    gameCard1,
-    gameCard2,
-    gameCard3
+    timerImg
   ];
 
   // Функция загрузки и анимации
