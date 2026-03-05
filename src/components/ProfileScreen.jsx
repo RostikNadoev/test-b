@@ -31,7 +31,9 @@ export default function ProfileScreen({ onNavigate }) {
   const [withdrawing, setWithdrawing] = useState(false);
   const [walletInfo, setWalletInfo] = useState(null);
   const [isWalletConnecting, setIsWalletConnecting] = useState(false);
-  const [withdrawResult, setWithdrawResult] = useState(null); // Для хранения результата вывода (locked_until и т.д.)
+  const [withdrawResult, setWithdrawResult] = useState(null);
+  const [starsBalance, setStarsBalance] = useState(0);
+  const [checkingBalance, setCheckingBalance] = useState(false);
   
   const { 
     isDemoMode, 
@@ -74,6 +76,23 @@ export default function ProfileScreen({ onNavigate }) {
     loadUserData();
   }, [isDemoMode]);
 
+  // Загружаем баланс звезд при открытии модалки вывода
+  useEffect(() => {
+    if (isWithdrawModalOpen && !isDemoMode && selectedItem) {
+      loadStarsBalance();
+      
+      // Проверяем, есть ли у выбранного предмета статус withdraw_pending
+      if (selectedItem.status === 'withdraw_pending' && selectedItem.locked_until) {
+        setWithdrawResult({
+          locked_until: selectedItem.locked_until,
+          withdraw_req_id: selectedItem.withdraw_req_id
+        });
+      } else {
+        setWithdrawResult(null);
+      }
+    }
+  }, [isWithdrawModalOpen, selectedItem, isDemoMode]);
+
   const loadUserData = async () => {
     try {
       setLoading(true);
@@ -104,6 +123,7 @@ export default function ProfileScreen({ onNavigate }) {
                 balance_ton: balanceData.balances.ton || 0,
                 balance_stars: balanceData.balances.stars || 0
               });
+              setStarsBalance(balanceData.balances.stars || 0);
             }
           } catch (balanceError) {
             console.error('Ошибка загрузки баланса:', balanceError);
@@ -120,6 +140,25 @@ export default function ProfileScreen({ onNavigate }) {
     } finally {
       setLoading(false);
       setRefreshing(false);
+    }
+  };
+
+  const loadStarsBalance = async () => {
+    if (isDemoMode) return;
+    
+    try {
+      setCheckingBalance(true);
+      const balanceData = await usersApi.getBalance();
+      if (balanceData && balanceData.balances) {
+        setStarsBalance(balanceData.balances.stars || 0);
+        authApi.updateUserData({
+          balance_stars: balanceData.balances.stars || 0
+        });
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки баланса звезд:', error);
+    } finally {
+      setCheckingBalance(false);
     }
   };
 
@@ -330,13 +369,20 @@ export default function ProfileScreen({ onNavigate }) {
       return;
     }
     
-    setWithdrawResult(null); // Сбрасываем предыдущий результат
+    setWithdrawResult(null);
     setIsSellModalOpen(false);
     setIsWithdrawModalOpen(true);
   };
 
   const handleWithdraw = async () => {
     if (isDemoMode || !selectedItem) return;
+    
+    // Если предмет уже в статусе withdraw_pending, ничего не делаем
+    if (selectedItem.status === 'withdraw_pending') {
+      alert('This item is already pending withdrawal');
+      setWithdrawing(false);
+      return;
+    }
     
     try {
       setWithdrawing(true);
@@ -388,6 +434,7 @@ export default function ProfileScreen({ onNavigate }) {
           authApi.updateUserData({
             balance_stars: result.balance_stars
           });
+          setStarsBalance(result.balance_stars);
         }
         
         // Обновляем инвентарь через API
@@ -396,9 +443,14 @@ export default function ProfileScreen({ onNavigate }) {
         // Показываем сообщение об успехе
         alert('✅ Withdrawal request created successfully!\n\nThe item will be withdrawn within 24 hours.');
         
-        // Закрываем модалку
-        setIsWithdrawModalOpen(false);
-        setSelectedItem(null);
+        // Обновляем выбранный предмет с новым статусом
+        const updatedItem = {
+          ...selectedItem,
+          status: 'withdraw_pending',
+          locked_until: result.locked_until,
+          withdraw_req_id: result.withdraw_req_id
+        };
+        setSelectedItem(updatedItem);
       } else {
         alert(`❌ Error: ${result.message || 'Failed to withdraw item'}`);
       }
@@ -539,10 +591,7 @@ export default function ProfileScreen({ onNavigate }) {
   };
 
   const getUserStars = () => {
-    if (userData?.balance_stars !== undefined) {
-      return userData.balance_stars;
-    }
-    return 0;
+    return starsBalance;
   };
 
   const openTelegramBot = () => {
@@ -608,7 +657,7 @@ export default function ProfileScreen({ onNavigate }) {
   const canSellItem = (item) => {
     if (isDemoMode) return true;
     
-    return item.item_type === 'tg_gift';
+    return item.item_type === 'tg_gift' && item.status !== 'withdraw_pending';
   };
 
   const getItemsToDisplay = () => {
@@ -632,6 +681,11 @@ export default function ProfileScreen({ onNavigate }) {
     } else {
       return 'Expired';
     }
+  };
+
+  // Проверяем, есть ли у выбранного предмета активный вывод
+  const hasActiveWithdraw = () => {
+    return selectedItem?.status === 'withdraw_pending' || withdrawResult !== null;
   };
 
   return (
@@ -764,7 +818,7 @@ export default function ProfileScreen({ onNavigate }) {
                   className={`inventory-item-frame ${canSellItem(item) ? '' : 'inventory-item-disabled'} ${newItems.has(index) ? 'new-item-pulse' : ''}`}
                   onClick={() => canSellItem(item) && handleItemClick(item, index)}
                   style={!canSellItem(item) ? { cursor: 'not-allowed', opacity: 0.6 } : {}}
-                  title={!canSellItem(item) ? 'This item cannot be sold' : 'Click to sell/withdraw'}
+                  title={!canSellItem(item) ? (item.status === 'withdraw_pending' ? 'Item is pending withdrawal' : 'This item cannot be sold') : 'Click to sell/withdraw'}
                 >
                   <div className="inventory-item-content">
                     <img 
@@ -887,7 +941,7 @@ export default function ProfileScreen({ onNavigate }) {
               {sellingItem ? 'PROCESSING...' : `SELL FOR ${getItemPrice(selectedItem)}`}
             </button>
             
-            {!isDemoMode && (
+            {!isDemoMode && canSellItem(selectedItem) && (
               <button 
                 className="withdraw-modal-button"
                 onClick={handleOpenWithdraw}
@@ -912,14 +966,14 @@ export default function ProfileScreen({ onNavigate }) {
         <div className="withdraw-modal-overlay" onClick={() => !withdrawing && setIsWithdrawModalOpen(false)}>
           <div className="withdraw-modal-blur-layer"></div>
           <div 
-            className="withdraw-modal-content"
+            className={`withdraw-modal-content ${hasActiveWithdraw() ? 'withdraw-modal-content--with-lock' : ''}`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="withdraw-modal-header">
               <div className="withdraw-modal-star-container">
                 <img src={starIcon} alt="Star" className="withdraw-modal-star-icon" />
                 <span className="withdraw-modal-star-text">
-                  {getUserStars()} / 50 STARS
+                  {checkingBalance ? 'Loading...' : `${getUserStars()} / 50 STARS`}
                 </span>
               </div>
               <h3 className="withdraw-modal-title">WITHDRAW</h3>
@@ -930,12 +984,26 @@ export default function ProfileScreen({ onNavigate }) {
                 <p className="withdraw-info-text">
                   Withdrawal will be processed within a <span className="withdraw-time">few minutes</span>
                 </p>
-                {withdrawResult && withdrawResult.locked_until && (
-                  <p className="withdraw-info-text" style={{ marginTop: '5px', fontSize: '14px' }}>
-                    Locked until: {new Date(withdrawResult.locked_until).toLocaleString()}
-                  </p>
-                )}
               </div>
+              
+              {hasActiveWithdraw() && (
+                <div className="withdraw-lock-info">
+                  <div className="withdraw-lock-icon">🔒</div>
+                  <div className="withdraw-lock-text">
+                    <p className="withdraw-lock-title">Item is locked for withdrawal</p>
+                    {selectedItem.locked_until && (
+                      <p className="withdraw-lock-timer">
+                        Unlocks in: {formatLockedUntil(selectedItem.locked_until)}
+                      </p>
+                    )}
+                    {selectedItem.withdraw_req_id && (
+                      <p className="withdraw-lock-req-id">
+                        Request ID: {selectedItem.withdraw_req_id}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
               
               <div className="withdraw-item-preview">
                 <div className="withdraw-item-frame">
@@ -962,14 +1030,14 @@ export default function ProfileScreen({ onNavigate }) {
               
               <div className="withdraw-action-section">
                 <button 
-                  className="withdraw-action-button"
+                  className={`withdraw-action-button ${hasActiveWithdraw() ? 'withdraw-action-button--disabled' : ''}`}
                   onClick={handleWithdraw}
-                  disabled={withdrawing}
+                  disabled={withdrawing || hasActiveWithdraw()}
                 >
                   {withdrawing ? (
                     'PROCESSING...'
-                  ) : withdrawResult ? (
-                    'WITHDRAWAL REQUESTED'
+                  ) : hasActiveWithdraw() ? (
+                    'ALREADY IN WITHDRAWAL'
                   ) : (
                     <>
                       PAY <span className="withdraw-price">50 STARS</span> AND WITHDRAW
