@@ -1,4 +1,4 @@
-/* styles/MainScreen.css - обновленная версия с реферальным блоком */
+/* styles/MainScreen.css - полная версия с сохранением футера */
 
 .main-screen {
   width: 100%;
@@ -15,7 +15,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px 0;
+  padding: 0px 0;
   box-sizing: border-box;
   overflow-y: auto;
 }
@@ -28,10 +28,87 @@
   flex-direction: column;
   gap: 0px;
   margin-bottom: 0px;
-  margin-top: 0px;
   align-items: center;
 }
 
+/* --- НОВАЯ КНОПКА РЕФЕРАЛОВ ВВЕРХУ --- */
+.referral-top-button {
+  width: 280px;
+  height: 43px;
+  background: linear-gradient(135deg, #D8EDFF, #FFFFFF);
+  border-left: 2px solid #FFFFFF;
+  border-right: 2px solid #FFFFFF;
+  border-bottom: 2px solid #FFFFFF;
+  border-top: none;
+  border-radius: 0 0 15px 15px;
+  box-shadow: 0 4px 10px #6DA6D245;
+  backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  position: relative;
+  margin: 0 auto 25px auto;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 0.2s ease;
+}
+
+.referral-top-button:active {
+  transform: scale(0.98);
+}
+
+.referral-top-text {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  line-height: 140%;
+  letter-spacing: 0%;
+  background: linear-gradient(90deg, #35A3F2, #37BDF3);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1px white;
+  text-stroke: 1px white;
+  margin-left: 28px;
+  white-space: nowrap;
+}
+
+.referral-top-icon {
+  width: 20px;
+  height: 23px;
+  object-fit: contain;
+  margin-left: 35px;
+}
+
+.referral-top-count {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  line-height: 140%;
+  letter-spacing: 0%;
+  background: linear-gradient(90deg, #35A3F2, #37BDF3);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1px white;
+  text-stroke: 1px white;
+  margin-left: 5px;
+}
+
+.referral-top-badge {
+  position: absolute;
+  bottom: -10px;
+  right: -10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1EF778, #00FFD4);
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  pointer-events: none;
+}
+
+/* --- Стили для картинок-кнопок игр --- */
 .banner-image-button {
   width: 437px;
   height: auto;
@@ -67,36 +144,11 @@
   transform: scale(0.98);
 }
 
-/* Стили для ряда с квадратными кнопками */
-.square-buttons-row {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  gap: 20px;
-  width: 100%;
-  margin-top: 0px;
-}
-
-.square-button {
-  width: calc(50% - 10px);
-  max-width: 212px;
-  aspect-ratio: 1 / 1;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.square-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 12px;
-}
-
-/* --- Стили для реферального блока --- */
+/* --- Стили для реферального блока (внутри модалки) --- */
 .referral-block {
   width: 100%;
-  margin-top: 10px;
-  margin-bottom: 20px;
+  margin-top: 0px;
+  margin-bottom: 0px;
 }
 
 .referral-frame {
@@ -164,6 +216,12 @@
   box-sizing: border-box;
 }
 
+.inf_date_container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 /* Стиль для текста "You'll get" */
 .referral-date-label {
   font-family: 'KZ Supercell-Magic', sans-serif;
@@ -194,7 +252,7 @@
   margin-left: 4px;
 }
 
-/* Стиль для текста Invited - теперь одного цвета с "You'll get" */
+/* Стиль для текста Invited */
 .referral-invited-text {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
@@ -257,13 +315,315 @@
   paint-order: stroke fill;
 }
 
-.content-section {
-  width: clamp(260px, 85vw, 400px);
-  height: 200px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 16px;
+/* Кнопка с вопросиком */
+.inf_info_button {
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #35A3F2, #37BDF3);
+  border: 2px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+  color: white;
+  line-height: 1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  flex-shrink: 0;
+  padding-top: 3px;
+  margin-top: -3px;
 }
 
+.inf_info_button:active {
+  transform: scale(0.95);
+  opacity: 0.9;
+}
+
+/* --- Стили для кнопок под реферальным блоком --- */
+.referral-buttons-row {
+  display: flex;
+  gap: 15px;
+  width: 100%;
+  margin-top: 10px;
+  box-sizing: border-box;
+}
+
+/* Общие стили для обеих кнопок */
+.referral-button {
+  height: 49px;
+  border: 1px solid #FFFFFF;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  
+  /* Для мобильных устройств */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Левая кнопка (75% ширины) */
+.invite-button {
+  width: calc(75% - 7.5px);
+  position: relative;
+  padding: 0;
+  background: none;
+}
+
+/* Правая кнопка (25% ширины) */
+.link-button {
+  width: calc(25% - 7.5px);
+  background: linear-gradient(135deg, #D8EDFF, #FFFFFF);
+  border: 1px solid #FFFFFF;
+}
+
+/* Фоновое изображение для левой кнопки */
+.invite-button-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Текст INVITE */
+.invite-button-text {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 100%;
+  letter-spacing: 0%;
+  text-transform: uppercase;
+  color: #FFFFFF;
+  -webkit-text-stroke: 1.5px #3AABED;
+  text-stroke: 1.5px #3AABED;
+  paint-order: stroke fill;
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 3px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Иконка ссылки */
+.link-icon {
+  width: 39px;
+  height: 39px;
+  object-fit: contain;
+  z-index: 2;
+  position: relative;
+}
+
+/* Эффекты при нажатии */
+.invite-button:active,
+.link-button:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
+
+/* --- Модальные окна --- */
+.inf_overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: inf_fade_in 0.2s ease;
+}
+
+.inf_modal {
+  width: auto;
+  max-width: 300px;
+  background: linear-gradient(135deg, #ffffff, #f5fbff);
+  border: 3px solid white;
+  border-radius: 20px;
+  padding: 24px 20px 20px 20px;
+  box-shadow: 0 12px 30px rgba(53, 163, 242, 0.25);
+  animation: inf_slide_up 0.2s ease;
+  position: relative;
+  margin: 0 16px;
+}
+
+/* Модалка для рефералов - шире */
+.referral-modal-overlay .inf_modal {
+  max-width: 380px;
+  width: 90%;
+  padding: 28px 16px 20px 16px;
+}
+
+.referral-modal-content {
+  width: 100%;
+}
+
+.referral-modal-content .referral-frame {
+  height: auto;
+  min-height: 180px;
+}
+
+/* Кнопка закрытия */
+.inf_close_btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #35A3F2, #37BDF3);
+  border: 2.5px solid white;
+  color: white;
+  font-size: 19px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: bold;
+  line-height: 1;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  font-family: Arial, sans-serif;
+  padding-bottom: 0px;
+}
+
+.inf_close_btn:active {
+  transform: scale(0.95);
+}
+
+/* Контейнер для контента модалки */
+.inf_content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+/* Строка информации */
+.inf_item {
+  background: rgba(216, 237, 255, 0.4);
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+}
+
+.inf_text {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #89c8f5;
+  display: block;
+}
+
+.inf_text strong {
+  color: #35A3F2;
+  font-weight: 800;
+  background: linear-gradient(90deg, #35A3F2, #37BDF3);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+/* Строка с иконкой замка */
+.inf_item_with_icon {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(216, 237, 255, 0.4);
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+}
+
+.inf_icon {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  object-fit: contain;
+  margin-top: 2px;
+}
+
+.inf_text_with_icon {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #89c8f5;
+  flex: 1;
+}
+
+.inf_text_with_icon strong {
+  color: #35A3F2;
+  font-weight: 800;
+  background: linear-gradient(90deg, #35A3F2, #37BDF3);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Toast уведомление */
+.toast_notification {
+  position: fixed;
+  top: 160px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #35A3F2, #37BDF3);
+  border: 2px solid white;
+  border-radius: 30px;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  z-index: 10000;
+  animation: toast_slide_down 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.1) forwards;
+}
+
+.toast_icon {
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #35A3F2;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.toast_text {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.toast_notification.hide {
+  animation: toast_slide_up 0.3s ease forwards;
+}
+
+/* --- ВСЕ СТИЛИ ФУТЕРА ПОЛНОСТЬЮ СОХРАНЕНЫ --- */
 .main-footer {
   width: 100%;
   height: 60px;
@@ -374,6 +734,70 @@
   paint-order: stroke fill;
 }
 
+/* Disabled состояния */
+.footer-block-item--disabled {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+}
+
+.footer-block-item--disabled .footer-block-wrapper {
+  pointer-events: none;
+}
+
+.footer-block-item--disabled .footer-label {
+  opacity: 0.7;
+}
+
+/* Класс для лайоута без фона */
+.main-screen-no-bg {
+  width: 100%;
+  height: var(--app-height, 100vh);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-image: none;
+  overflow: hidden;
+}
+
+/* --- Анимации --- */
+@keyframes inf_fade_in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes inf_slide_up {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toast_slide_down {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -190px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes toast_slide_up {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -190px);
+  }
+}
+
 /* --- Адаптивные стили --- */
 @media (max-width: 450px) {
   .banner-images-container {
@@ -387,12 +811,32 @@
     max-width: 380px;
   }
   
-  .square-button {
-    max-width: 180px;
+  .referral-top-button {
+    width: 240px;
+    height: 34px;
   }
-
-  .square-buttons-row {
-    gap: 8px;
+  
+  .referral-top-text {
+    font-size: 17px;
+    margin-left: 25px;
+  }
+  
+  .referral-top-icon {
+    width: 17px;
+    height: 20px;
+    margin-left: 25px;
+    margin-bottom: 4px;
+  }
+  
+  .referral-top-count {
+    font-size: 15px;
+  }
+  
+  .referral-top-badge {
+    width: 22px;
+    height: 22px;
+    bottom: -8px;
+    right: -8px;
   }
   
   .referral-frame {
@@ -425,9 +869,41 @@
     font-size: 16px;
     -webkit-text-stroke: 1.2px white;
   }
+  
+  .invite-button-text {
+    font-size: 18px;
+    -webkit-text-stroke: 1.2px #3AABED;
+  }
+  
+  .link-icon {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .referral-button {
+    height: 45px;
+  }
+  
+  .inf_modal {
+    max-width: 270px;
+    padding: 22px 18px 18px 18px;
+  }
+  
+  .inf_text {
+    font-size: 14px;
+  }
+  
+  .inf_text_with_icon {
+    font-size: 14px;
+  }
+  
+  .inf_item, .inf_item_with_icon {
+    padding: 12px 14px;
+  }
 }
 
 @media (max-width: 430px) {
+  /* Стили футера для 430px - полностью сохранены */
   .footer-blocks-container {
     gap: 25px;
   }
@@ -485,23 +961,53 @@
   .referral-stat-number {
     font-size: 15px;
   }
+  
+  .invite-button-text {
+    font-size: 16px;
+    -webkit-text-stroke: 1px #3AABED;
+  }
+  
+  .link-icon {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .referral-button {
+    height: 42px;
+  }
+
+    .referral-top-button {
+    width: 220px;
+    height: 32px;
+  }
+  
+  .referral-top-text {
+    font-size: 16px;
+    margin-left: 25px;
+  }
+  
+  .referral-top-icon {
+    width: 16px;
+    height: 19px;
+    margin-left: 25px;
+    margin-bottom: 4px;
+  }
+  
+  .referral-top-count {
+    font-size: 14px;
+  }
+  
+  .referral-top-badge {
+    width: 20px;
+    height: 20px;
+    bottom: -8px;
+    right: -8px;
+  }
 }
 
 @media (max-width: 375px) {
   .banner-image-button {
     max-width: 340px;
-  }
-  
-  .square-button {
-    max-width: 159px; 
-  }
-  
-  .square-buttons-row {
-    gap: 8px;
-  }
-  
-  .referral-frame {
-    height: 160px;
   }
   
   .referral-text {
@@ -528,6 +1034,74 @@
     font-size: 14px;
     -webkit-text-stroke: 1px white;
   }
+  
+  .invite-button-text {
+    font-size: 15px;
+  }
+  
+  .link-icon {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .referral-button {
+    height: 40px;
+  }
+  
+  .inf_modal {
+    max-width: 250px;
+    padding: 20px 16px 16px 16px;
+  }
+  
+  .inf_text {
+    font-size: 13px;
+  }
+  
+  .inf_text_with_icon {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 370px) {
+  .toast_text {
+    font-weight: 600;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 353px) {
+  .toast_text {
+    font-weight: 600;
+    font-size: 12px;
+  }
+
+      .referral-top-button {
+    width: 200px;
+    height: 30px;
+  }
+  
+  .referral-top-text {
+    font-size: 14px;
+    margin-left: 25px;
+  }
+  
+  .referral-top-icon {
+    width: 15px;
+    height: 18px;
+    margin-left: 20px;
+    margin-bottom: 4px;
+  }
+  
+  .referral-top-count {
+    font-size: 13px;
+  }
+  
+  .referral-top-badge {
+    width: 19px;
+    height: 19px;
+    bottom: -8px;
+    right: -8px;
+  }
 }
 
 @media (max-width: 348px) {
@@ -550,171 +1124,7 @@
   .referral-stat-number {
     font-size: 13px;
   }
-}
-
-/* Класс для лайоута без фона */
-.main-screen-no-bg {
-  width: 100%;
-  height: var(--app-height, 100vh);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background-image: none;
-  overflow: hidden;
-}
-
-/* Disabled состояния */
-.footer-block-item--disabled {
-  opacity: 0.5;
-  cursor: not-allowed !important;
-}
-
-.footer-block-item--disabled .footer-block-wrapper {
-  pointer-events: none;
-}
-
-.footer-block-item--disabled .footer-label {
-  opacity: 0.7;
-}
-
-/* --- Стили для кнопок под реферальным блоком --- */
-
-/* Контейнер для двух кнопок */
-.referral-buttons-row {
-  display: flex;
-  gap: 15px; /* Отступ между кнопками 15px */
-  width: 100%;
-  margin-top: 10px; /* Отступ от реферальной рамки 15px */
-  box-sizing: border-box;
-}
-
-/* Общие стили для обеих кнопок */
-.referral-button {
-  height: 49px;
-  border: 1px solid #FFFFFF;
-  border-radius: 12px;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
   
-  /* Для мобильных устройств */
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-
-/* Левая кнопка (75% ширины) */
-.invite-button {
-  width: calc(75% - 7.5px); /* 75% минус половина gap */
-  position: relative;
-  padding: 0;
-  background: none;
-}
-
-/* Правая кнопка (25% ширины) */
-.link-button {
-  width: calc(25% - 7.5px); /* 25% минус половина gap */
-  background: linear-gradient(135deg, #D8EDFF, #FFFFFF);
-  border: 1px solid #FFFFFF;
-}
-
-/* Фоновое изображение для левой кнопки */
-.invite-button-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* Чтобы изображение покрывало всю кнопку */
-  z-index: 1;
-  pointer-events: none; /* Чтобы не мешало нажатию */
-}
-
-/* Текст INVITE */
-.invite-button-text {
-  font-family: 'KZ Supercell-Magic', sans-serif;
-  font-weight: 800;
-  font-style: normal;
-  font-size: 20px;
-  line-height: 100%;
-  letter-spacing: 0%;
-  text-transform: uppercase;
-  color: #FFFFFF;
-  -webkit-text-stroke: 1.5px #3AABED;
-  text-stroke: 1.5px #3AABED;
-  paint-order: stroke fill;
-  position: relative;
-  z-index: 2;
-  text-shadow: 0 3px 4px rgba(0, 0, 0, 0.1); /* Легкая тень для читаемости */
-}
-
-/* Иконка ссылки */
-.link-icon {
-  width: 39px;
-  height: 39px;
-  object-fit: contain;
-  z-index: 2;
-  position: relative;
-}
-
-/* Эффекты при нажатии */
-.invite-button:active,
-.link-button:active {
-  transform: scale(0.98);
-  transition: transform 0.1s ease;
-}
-
-/* Адаптивные стили для кнопок */
-@media (max-width: 450px) {
-  .invite-button-text {
-    font-size: 18px;
-    -webkit-text-stroke: 1.2px #3AABED;
-  }
-  
-  .link-icon {
-    width: 35px;
-    height: 35px;
-  }
-  
-  .referral-button {
-    height: 45px;
-  }
-}
-
-@media (max-width: 395px) {
-  .invite-button-text {
-    font-size: 16px;
-    -webkit-text-stroke: 1px #3AABED;
-  }
-  
-  .link-icon {
-    width: 32px;
-    height: 32px;
-  }
-  
-  .referral-button {
-    height: 42px;
-  }
-}
-
-@media (max-width: 375px) {
-  .invite-button-text {
-    font-size: 15px;
-  }
-  
-  .link-icon {
-    width: 30px;
-    height: 30px;
-  }
-  
-  .referral-button {
-    height: 40px;
-  }
-}
-
-@media (max-width: 348px) {
   .invite-button-text {
     font-size: 14px;
   }
@@ -729,514 +1139,9 @@
   }
 }
 
-/* --- Уникальные классы для информационной кнопки и модалки (префикс inf_) --- */
-
-/* Контейнер для строки с датой */
-.inf_date_container {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-/* Кнопка с вопросиком - чуть больше */
-.inf_info_button {
-  width: 21px;
-  height: 21px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #35A3F2, #37BDF3);
-  border: 2px solid white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-family: 'KZ Supercell-Magic', sans-serif;
-  font-weight: 800;
-  font-size: 12px;
-  color: white;
-  line-height: 1;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 0.15s ease;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  user-select: none;
-  flex-shrink: 0;
-  padding-top: 3px;
-  margin-top: -3px;
-}
-
-.inf_info_button:active {
-  transform: scale(0.95);
-  opacity: 0.9;
-}
-
-/* Затемняющий фон */
-.inf_overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  animation: inf_fade_in 0.2s ease;
-}
-
-/* Модальное окно */
-.inf_modal {
-  width: auto;
-  max-width: 300px;
-  background: linear-gradient(135deg, #ffffff, #f5fbff);
-  border: 3px solid white;
-  border-radius: 20px;
-  padding: 24px 20px 20px 20px;
-  box-shadow: 0 12px 30px rgba(53, 163, 242, 0.25);
-  animation: inf_slide_up 0.2s ease;
-  position: relative;
-  margin: 0 16px;
-}
-
-/* Кнопка закрытия - больше */
-.inf_close_btn {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #35A3F2, #37BDF3);
-  border: 2.5px solid white;
-  color: white;
-  font-size: 19px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-weight: bold;
-  line-height: 1;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
-  transition: all 0.15s ease;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  font-family: Arial, sans-serif;
-  padding-bottom: 0px;
-}
-
-.inf_close_btn:active {
-  transform: scale(0.95);
-}
-
-/* Контейнер для контента */
-.inf_content {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-top: 4px;
-}
-
-/* Строка информации */
-.inf_item {
-  background: rgba(216, 237, 255, 0.4);
-  padding: 14px 16px;
-  border-radius: 14px;
-  border: 1.5px solid rgba(255, 255, 255, 0.9);
-}
-
-/* Текст информационного сообщения */
-.inf_text {
-  font-family: 'KZ Supercell-Magic', sans-serif;
-  font-weight: 600;
-  font-size: 15px;
-  line-height: 1.5;
-  color: #89c8f5;
-  display: block;
-}
-
-.inf_text strong {
-  color: #35A3F2;
-  font-weight: 800;
-  background: linear-gradient(90deg, #35A3F2, #37BDF3);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  display: inline-block;
-}
-
-/* Строка с иконкой замка */
-.inf_item_with_icon {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  background: rgba(216, 237, 255, 0.4);
-  padding: 14px 16px;
-  border-radius: 14px;
-  border: 1.5px solid rgba(255, 255, 255, 0.9);
-}
-
-.inf_icon {
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  object-fit: contain;
-  margin-top: 2px;
-}
-
-.inf_text_with_icon {
-  font-family: 'KZ Supercell-Magic', sans-serif;
-  font-weight: 600;
-  font-size: 15px;
-  line-height: 1.5;
-  color: #89c8f5;
-  flex: 1;
-}
-
-.inf_text_with_icon strong {
-  color: #35A3F2;
-  font-weight: 800;
-  background: linear-gradient(90deg, #35A3F2, #37BDF3);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* Анимации */
-@keyframes inf_fade_in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes inf_slide_up {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Адаптив */
-@media (max-width: 450px) {
-  
-  .inf_modal {
-    max-width: 270px;
-    padding: 22px 18px 18px 18px;
-  }
-
-  
-  .inf_text {
-    font-size: 14px;
-  }
-  
-  .inf_text_with_icon {
-    font-size: 14px;
-  }
-  
-  .inf_item, .inf_item_with_icon {
-    padding: 12px 14px;
-  }
-}
-
-@media (max-width: 375px) {
-  
-  .inf_modal {
-    max-width: 250px;
-    padding: 20px 16px 16px 16px;
-  }
-
-  
-  .inf_text {
-    font-size: 13px;
-  }
-  
-  .inf_text_with_icon {
-    font-size: 13px;
-  }
-}
-
-.toast_notification {
-  position: fixed;
-  top: 160px; /* Позиция под хедером (предполагая что хедер высотой ~60px) */
-  left: 50%;
-  transform: translateX(-50%);
-  background: linear-gradient(135deg, #35A3F2, #37BDF3);
-  border: 2px solid white;
-  border-radius: 30px;
-  padding: 10px 20px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  z-index: 10000;
-  animation: toast_slide_down 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.1) forwards;
-}
-
-.toast_icon {
-  width: 20px;
-  height: 20px;
-  background: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #35A3F2;
-  font-weight: bold;
-  font-size: 14px;
-}
-
-.toast_text {
-  font-family: 'KZ Supercell-Magic', sans-serif;
-  font-weight: 600;
-  font-size: 14px;
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-@media (max-width: 370px) {
-  .toast_text {
-  font-weight: 600;
-  font-size: 13px;
-}
-}
-
-@media (max-width: 353px) {
-  .toast_text {
-  font-weight: 600;
-  font-size: 12px;
-}
-}
-
 @media (max-width: 337px) {
   .toast_text {
-  font-weight: 600;
-  font-size: 11px;
-}
-}
-
-/* Анимация появления - выезжает с самого верха */
-@keyframes toast_slide_down {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -190px); /* Начинает за пределами экрана сверху */
-  }
-  100% {
-    opacity: 1;
-    transform: translate(-50%, 0); /* Останавливается под хедером */
-  }
-}
-
-/* Анимация исчезновения - уезжает наверх за пределы экрана */
-@keyframes toast_slide_up {
-  0% {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -190px); /* Уезжает за пределы экрана сверху */
-  }
-}
-
-/* Класс для анимации исчезновения */
-.toast_notification.hide {
-  animation: toast_slide_up 0.3s ease forwards;
-}
-/* Контейнер для игр */
-.games-section {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-}
-
-/* Обертка для дополнительных кнопок с оптимизированной анимацией */
-.extra-buttons-wrapper {
-  display: grid;
-  grid-template-rows: 0fr;
-  opacity: 0;
-  width: 100%;
-  transition: grid-template-rows 0.4s cubic-bezier(0.4, 0.0, 0.2, 1),
-              opacity 0.3s cubic-bezier(0.4, 0.0, 0.2, 1) 0.1s;
-  will-change: grid-template-rows, opacity;
-  transform: translateZ(0);
-  backface-visibility: hidden;
-}
-
-.extra-buttons-wrapper.visible {
-  grid-template-rows: 1fr;
-  opacity: 1;
-}
-
-/* Внутренний контейнер для анимации высоты */
-.square-buttons-row {
-  min-height: 0;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  gap: 20px;
-  width: 100%;
-  padding: 10px 0 0 0;
-  transform: translateZ(0);
-}
-
-/* Кнопка Show More / Hide с оптимизированной анимацией */
-.toggle-buttons-button {
-  width: 437px;
-  height: 50px;
-  background: linear-gradient(135deg, #D8EDFF, #FFFFFF);
-  border: 2px solid #FFFFFF;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  cursor: pointer;
-  margin-top: 0;
-  margin-bottom: 5px;
-  transition: margin-top 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  will-change: margin-top;
-}
-
-.toggle-buttons-button.pushed-down {
-  margin-top: 15px;
-}
-
-.toggle-buttons-button:active {
-  transform: scale(0.98);
-  opacity: 0.9;
-}
-
-/* Стили для текста кнопки */
-.toggle-buttons-text {
-  font-family: 'KZ Supercell-Magic', sans-serif;
-  font-weight: 800;
-  font-size: 18px;
-  background: linear-gradient(90deg, #35A3F2, #37BDF3);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  -webkit-text-stroke: 1px white;
-  text-stroke: 1px white;
-  letter-spacing: 0.5px;
-  line-height: 1.4;
-  transform: translateZ(0);
-}
-
-.toggle-buttons-arrow {
-  font-family: 'KZ Supercell-Magic', sans-serif;
-  font-size: 20px;
-  font-weight: 800;
-  background: linear-gradient(90deg, #35A3F2, #37BDF3);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  -webkit-text-stroke: 1px white;
-  text-stroke: 1px white;
-  line-height: 1;
-  display: inline-block;
-  transform: translateY(-1px) translateZ(0);
-}
-
-/* Стили для квадратных кнопок */
-.square-button {
-  width: calc(50% - 10px);
-  max-width: 212px;
-  aspect-ratio: 1 / 1;
-  border-radius: 12px;
-  overflow: hidden;
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  -webkit-font-smoothing: antialiased;
-}
-
-.square-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 12px;
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* Адаптивные стили */
-@media (max-width: 450px) {
-  .toggle-buttons-button {
-    width: 100%;
-    max-width: 380px;
-    height: 45px;
-  }
-  
-  .toggle-buttons-text {
-    font-size: 16px;
-  }
-  
-  .toggle-buttons-arrow {
-    font-size: 18px;
-  }
-  
-  .square-buttons-row {
-    gap: 15px;
-  }
-}
-
-@media (max-width: 375px) {
-  .toggle-buttons-button {
-    max-width: 340px;
-    height: 42px;
-  }
-  
-  .toggle-buttons-text {
-    font-size: 15px;
-  }
-  
-  .toggle-buttons-arrow {
-    font-size: 17px;
-  }
-  
-  .square-buttons-row {
-    gap: 12px;
-  }
-}
-
-/* Оптимизация для мобильных устройств */
-@media (hover: none) and (pointer: coarse) {
-  .extra-buttons-wrapper {
-    transition: grid-template-rows 0.45s cubic-bezier(0.4, 0.0, 0.2, 1),
-                opacity 0.25s cubic-bezier(0.4, 0.0, 0.2, 1) 0.1s;
-  }
-  
-  .toggle-buttons-button {
-    transition: margin-top 0.35s cubic-bezier(0.4, 0.0, 0.2, 1);
-  }
-  
-  .toggle-buttons-button:active {
-    transform: scale(0.98);
-    transition: transform 0.1s ease;
-  }
-}
-
-/* Для очень старых устройств */
-@supports not (grid-template-rows: 0fr) {
-  .extra-buttons-wrapper {
-    max-height: 0;
-    opacity: 0;
-    overflow: hidden;
-    transition: max-height 0.4s ease, opacity 0.3s ease;
-    display: block;
-  }
-  
-  .extra-buttons-wrapper.visible {
-    max-height: 300px;
-    opacity: 1;
+    font-weight: 600;
+    font-size: 11px;
   }
 }

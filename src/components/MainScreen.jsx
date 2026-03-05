@@ -5,11 +5,12 @@ import gameCard1 from '../assets/MainPage/game-card-1.png';
 import gameCard2 from '../assets/MainPage/ttmb.png';
 import gameCard3 from '../assets/MainPage/cases.png';
 import gameCard4 from '../assets/MainPage/pinkocard.png';
-// Импортируем изображения для новых кнопок
-import inviteBg from '../assets/MainPage/invite.png';
+// Импортируем изображения для кнопок рефералов
+import inviteBg from '../assets/MainPage/invite1.png';
 import linkIcon from '../assets/MainPage/link.svg';
-// Импортируем иконку замка
+// Импортируем иконку замка и иконку для новой кнопки
 import lockIcon from '../assets/MainPage/lock.png';
+import referralsIcon from '../assets/MainPage/refferals.svg';
 // Импортируем API
 import { referralsApi } from '../utils/api';
 
@@ -18,13 +19,12 @@ const BOT_USERNAME = 'Bouncecase_bot';
 
 export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+  const [isReferralModalOpen, setIsReferralModalOpen] = useState(false);
   const [referralData, setReferralData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showCopyToast, setShowCopyToast] = useState(false);
   const [isToastHiding, setIsToastHiding] = useState(false);
   const [error, setError] = useState(null);
-  const [showExtraButtons, setShowExtraButtons] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
 
   // Загружаем реферальные данные при монтировании
   useEffect(() => {
@@ -149,18 +149,6 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
     }
   };
 
-  const toggleExtraButtons = () => {
-    if (isAnimating) return;
-    
-    setIsAnimating(true);
-    setShowExtraButtons(!showExtraButtons);
-    
-    // Даем время на анимацию
-    setTimeout(() => {
-      setIsAnimating(false);
-    }, 400);
-  };
-
   const openInfoModal = () => {
     setIsInfoModalOpen(true);
   };
@@ -169,16 +157,109 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
     setIsInfoModalOpen(false);
   };
 
+  const openReferralModal = () => {
+    setIsReferralModalOpen(true);
+  };
+
+  const closeReferralModal = () => {
+    setIsReferralModalOpen(false);
+  };
+
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) {
       closeInfoModal();
+      closeReferralModal();
     }
   };
+
+  // Компонент реферального блока (для переиспользования)
+  const ReferralContent = () => (
+    <div className="referral-block">
+      <div className="referral-frame">
+        <div className="referral-content">
+          <div className="referral-text">
+            Invite friends and earn
+            <span className="referral-highlight">10%</span> <br />of their top-ups!
+          </div>
+    
+          {/* Верхний ряд с надписями */}
+          <div className="referral-stats-header">
+            <div className="inf_date_container">
+              <span className="referral-date-label">
+                You'll get{' '}
+                <span className="referral-date-value">
+                  {isLoading ? 'Loading...' : formatNextPayoutDate(referralData?.accrual_date_utc)}
+                </span>
+              </span>
+              {/* Кнопка с вопросиком */}
+              <div 
+                className="inf_info_button"
+                onClick={openInfoModal}
+                role="button"
+                tabIndex={0}
+                aria-label="Information"
+              >
+                ?
+              </div>
+            </div>
+            <span className="referral-invited-text">Invited</span>
+          </div>
+          
+          {/* Нижний ряд с полями и числами */}
+          <div className="referral-stats-values">
+            <div className="referral-stat-field">
+              <span className="referral-stat-number">
+                {isLoading ? '...' : formatDueAmount(referralData?.amount_due_ton)}
+              </span>
+            </div>
+            <div className="referral-stat-field">
+              <span className="referral-stat-number">
+                {isLoading ? '...' : referralData?.invited_count || '0'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Две кнопки под реферальным блоком */}
+      <div className="referral-buttons-row">
+        {/* Левая кнопка с фоном и надписью INVITE */}
+        <div 
+          className="referral-button invite-button"
+          onClick={handleInviteClick}
+          style={{ cursor: 'pointer' }}
+        >
+          <img src={inviteBg} alt="" className="invite-button-bg" />
+          <span className="invite-button-text">INVITE</span>
+        </div>
+
+        {/* Правая кнопка с иконкой ссылки */}
+        <div 
+          className="referral-button link-button"
+          onClick={handleLinkClick}
+          style={{ cursor: 'pointer' }}
+        >
+          <img src={linkIcon} alt="Copy link" className="link-icon" />
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <MainLayout onNavigate={onNavigate} currentScreen="main">
       {/* Контейнер с кнопками-картинками */}
       <div className="banner-images-container">
+        
+        {/* НОВАЯ КНОПКА РЕФЕРАЛОВ ВВЕРХУ */}
+        <div className="referral-top-button" onClick={openReferralModal}>
+          <span className="referral-top-text">Refferal</span>
+          <img src={referralsIcon} alt="" className="referral-top-icon" />
+          <span className="referral-top-count">
+            {isLoading ? '...' : referralData?.invited_count || '0'}
+          </span>
+          <div className="referral-top-badge"></div>
+        </div>
+
         {/* Первая кнопка (ракета) */}
         <div 
           className="banner-image-button"
@@ -207,142 +288,36 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
           />
         </div>
 
-        {/* Третья кнопка (plinko дубль) */}
+        {/* Третья кнопка (luckyballs) */}
         <div 
           className="banner-image-button"
-          onClick={() => handleImageButtonClick(5)}
+          onClick={() => handleImageButtonClick(3)}
           style={{ cursor: 'pointer' }}
         >
           <img 
-            src={gameCard4} 
-            alt="Plinko Game" 
+            src={gameCard1} 
+            alt="Lucky Balls Game" 
             className="banner-image"
             loading="lazy"
           />
         </div>
 
-        {/* Контейнер для дополнительных кнопок и кнопки Show More */}
-        <div className="games-section">
-          {/* Дополнительные кнопки */}
-          <div className={`extra-buttons-wrapper ${showExtraButtons ? 'visible' : ''}`}>
-            <div className="square-buttons-row">
-              {/* Третья кнопка (luckyballs) */}
-              <div 
-                className="banner-image-button square-button"
-                onClick={() => handleImageButtonClick(3)}
-                style={{ cursor: 'pointer' }}
-              >
-                <img 
-                  src={gameCard1} 
-                  alt="Lucky Balls Game" 
-                  className="banner-image square-image"
-                  loading="lazy"
-                />
-              </div>
-
-              {/* Четвертая кнопка (cases) */}
-              <div 
-                className="banner-image-button square-button"
-                onClick={() => handleImageButtonClick(4)}
-                style={{ cursor: 'pointer' }}
-              >
-                <img 
-                  src={gameCard3} 
-                  alt="Cases Game" 
-                  className="banner-image square-image"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Кнопка Show More / Hide */}
-          <div 
-            className={`toggle-buttons-button ${showExtraButtons ? 'pushed-down' : ''}`}
-            onClick={toggleExtraButtons}
-          >
-            <span className="toggle-buttons-text">
-              {showExtraButtons ? 'HIDE' : 'MORE GAMES'}
-            </span>
-            <span className="toggle-buttons-arrow">
-              {showExtraButtons ? '▲' : '▼'}
-            </span>
-          </div>
-        </div>
-
-        {/* Блок реферальной программы */}
-        <div className="referral-block">
-          <div className="referral-frame">
-            <div className="referral-content">
-              <div className="referral-text">
-                Invite friends and earn
-                <span className="referral-highlight">10%</span> <br />of their top-ups!
-              </div>
-        
-              {/* Верхний ряд с надписями */}
-              <div className="referral-stats-header">
-                <div className="inf_date_container">
-                  <span className="referral-date-label">
-                    You'll get{' '}
-                    <span className="referral-date-value">
-                      {isLoading ? 'Loading...' : formatNextPayoutDate(referralData?.accrual_date_utc)}
-                    </span>
-                  </span>
-                  {/* Кнопка с вопросиком */}
-                  <div 
-                    className="inf_info_button"
-                    onClick={openInfoModal}
-                    role="button"
-                    tabIndex={0}
-                    aria-label="Information"
-                  >
-                    ?
-                  </div>
-                </div>
-                <span className="referral-invited-text">Invited</span>
-              </div>
-              
-              {/* Нижний ряд с полями и числами */}
-              <div className="referral-stats-values">
-                <div className="referral-stat-field">
-                  <span className="referral-stat-number">
-                    {isLoading ? '...' : formatDueAmount(referralData?.amount_due_ton)}
-                  </span>
-                </div>
-                <div className="referral-stat-field">
-                  <span className="referral-stat-number">
-                    {isLoading ? '...' : referralData?.invited_count || '0'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Две кнопки под реферальным блоком */}
-          <div className="referral-buttons-row">
-            {/* Левая кнопка с фоном и надписью INVITE */}
-            <div 
-              className="referral-button invite-button"
-              onClick={handleInviteClick}
-              style={{ cursor: 'pointer' }}
-            >
-              <img src={inviteBg} alt="" className="invite-button-bg" />
-              <span className="invite-button-text">INVITE</span>
-            </div>
-
-            {/* Правая кнопка с иконкой ссылки */}
-            <div 
-              className="referral-button link-button"
-              onClick={handleLinkClick}
-              style={{ cursor: 'pointer' }}
-            >
-              <img src={linkIcon} alt="Copy link" className="link-icon" />
-            </div>
-          </div>
+        {/* Четвертая кнопка (cases) */}
+        <div 
+          className="banner-image-button"
+          onClick={() => handleImageButtonClick(4)}
+          style={{ cursor: 'pointer' }}
+        >
+          <img 
+            src={gameCard3} 
+            alt="Cases Game" 
+            className="banner-image"
+            loading="lazy"
+          />
         </div>
       </div>
 
-      {/* Информационное модальное окно */}
+      {/* Информационное модальное окно (вопросик) */}
       {isInfoModalOpen && (
         <div className="inf_overlay" onClick={handleOverlayClick}>
           <div className="inf_modal">
@@ -363,6 +338,18 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
                   <strong>To receive payments to your TON wallet,</strong> you need 50+ referrals
                 </span>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно с реферальной программой */}
+      {isReferralModalOpen && (
+        <div className="inf_overlay referral-modal-overlay" onClick={handleOverlayClick}>
+          <div className="inf_modal referral-modal">
+            <div className="inf_close_btn" onClick={closeReferralModal}>×</div>
+            <div className="referral-modal-content">
+              <ReferralContent />
             </div>
           </div>
         </div>
