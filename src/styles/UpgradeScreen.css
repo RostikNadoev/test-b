@@ -139,8 +139,6 @@
   filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
 }
 
-/* Остальные стили модалок и слотов остаются без изменений как в твоем исходнике */
-
 /* === Выбор предметов (Слоты) === */
 .upgrade-items-selection {
   display: flex;
@@ -287,8 +285,8 @@
   position: relative;
   width: 100%;
   height: 70vh;
-  background: linear-gradient(180deg, #0B192C, #1A365D); /* Тёмно-синий фон */
-  border-top: 2px solid #35A3F2; /* Синяя рамка сверху */
+  background: linear-gradient(180deg, #0B192C, #1A365D);
+  border-top: 2px solid #35A3F2;
   border-top-left-radius: 16px;
   border-top-right-radius: 16px;
   display: flex;
@@ -314,21 +312,80 @@
   background-clip: text;
   margin-bottom: 20px;
   flex-shrink: 0;
-  filter: drop-shadow(0 0 5px rgba(53, 163, 242, 0.3)); /* Легкое свечение для тёмного фона */
+  filter: drop-shadow(0 0 5px rgba(53, 163, 242, 0.3));
+}
+
+/* Стили для загрузки в модалке */
+.upgrade-modal-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 200px;
+}
+
+.upgrade-modal-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(53, 163, 242, 0.2);
+  border-radius: 50%;
+  border-top-color: #35A3F2;
+  animation: upgradeSpin 1s ease-in-out infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes upgradeSpin {
+  to { transform: rotate(360deg); }
+}
+
+.upgrade-modal-loading-text {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-size: 14px;
+  color: #35A3F2;
+  text-align: center;
+  opacity: 0.8;
+  animation: upgradePulse 1.5s infinite;
+}
+
+@keyframes upgradePulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
 }
 
 .upgrade-inventory-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: 12px;
   overflow-y: auto;
   padding-bottom: 20px;
+  padding-right: 4px;
+}
+
+/* Стилизация скроллбара */
+.upgrade-inventory-grid::-webkit-scrollbar {
+  width: 4px;
+}
+
+.upgrade-inventory-grid::-webkit-scrollbar-track {
+  background: rgba(53, 163, 242, 0.1);
+  border-radius: 4px;
+}
+
+.upgrade-inventory-grid::-webkit-scrollbar-thumb {
+  background: #35A3F2;
+  border-radius: 4px;
+}
+
+.upgrade-inventory-grid::-webkit-scrollbar-thumb:hover {
+  background: #5ab5f5;
 }
 
 .upgrade-inventory-item {
   width: 100%;
   aspect-ratio: 100 / 120;
-  background-image: url('../assets/MainPage/chest1/back2.png'); /* Использован back2.png */
+  background-image: url('../assets/MainPage/chest1/back2.png');
   background-size: cover;
   background-position: center;
   border-radius: 5px;
@@ -346,36 +403,84 @@
 
 .inventory-item-img {
   max-width: 60%;
-  max-height: 50%;
+  max-height: 55%;
   object-fit: contain;
+  margin-bottom: 4px;
 }
 
 .inventory-item-price {
   font-family: 'KZ Supercell-Magic', sans-serif;
-  font-size: 10px;
-  color: white;
-  margin-top: 5px;
+  font-size: 13px; /* Увеличено на 20% */
   display: flex;
   align-items: center;
-  gap: 3px;
-  -webkit-text-stroke: 1px #35A3F2;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 2px;
+}
+
+/* Классы для цен */
+.price-default {
+  color: white;
+  -webkit-text-stroke: 1.2px #35A3F2;
+  paint-order: stroke fill;
+}
+
+.price-gradient-1 {
+  background: rgb(98, 140, 231);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1.2px rgb(0, 81, 255);
+  paint-order: stroke fill;
+}
+
+.price-gradient-2 {
+  background: rgb(206, 161, 248);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1.2px rgb(158, 63, 248);
+  paint-order: stroke fill;
+}
+
+.price-gradient-3 {
+  background: rgb(255, 237, 156);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1.2px rgba(255, 210, 0, 1);
   paint-order: stroke fill;
 }
 
 .ton-icon-small {
-  width: 12px;
-  height: 12px;
+  width: 15px; /* Увеличено на ~20% с 12px */
+  height: 15px; /* Увеличено на ~20% с 12px */
+  object-fit: contain;
+  filter: brightness(1.2);
 }
 
-/* Кнопка закрытия модалки под тёмную тему */
+.empty-inventory-message {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px 20px;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 16px;
+}
+
+/* Кнопка закрытия модалки */
 .upgrade-modal-close-btn {
   position: absolute;
   top: -80px;
   right: 15px;
   width: 60px;
   height: 60px;
-  background: linear-gradient(0deg, #1A365D, #0B192C); /* Тёмно-синий градиент */
-  border: 2px solid #35A3F2; /* Голубая обводка */
+  background: linear-gradient(0deg, #1A365D, #0B192C);
+  border: 2px solid #35A3F2;
   border-radius: 16px;
   display: flex;
   justify-content: center;
@@ -387,7 +492,7 @@
 .upgrade-modal-close-icon {
   width: 40px;
   height: 40px;
-  filter: brightness(0) invert(1); /* Если иконка черная, сделает ее белой, если нужно */
+  filter: brightness(0) invert(1);
 }
 
 @keyframes modalSlideIn {

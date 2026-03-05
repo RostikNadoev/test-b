@@ -108,6 +108,34 @@ export default function UpgradeScreen({ onNavigate }) {
     return getImageUrl(item.image_url || item.img);
   };
 
+  // Функция для форматирования цены (обрезание без округления)
+  const formatPrice = (priceStr) => {
+    const priceValue = parseFloat(priceStr.replace(/[^\d.-]/g, ''));
+    const currency = priceStr.includes('TON') ? ' TON' : '';
+    
+    if (priceValue >= 100) {
+      const priceString = priceValue.toString();
+      const [wholePart, decimalPart] = priceString.split('.');
+      
+      if (decimalPart) {
+        return `${wholePart}.${decimalPart.substring(0, 1)}${currency}`;
+      } else {
+        return `${wholePart}${currency}`;
+      }
+    }
+    
+    return priceStr;
+  };
+
+  // Функция для получения класса цены в зависимости от значения
+  const getPriceClass = (priceValue) => {
+    const value = parseFloat(priceValue);
+    if (value >= 501) return 'price-gradient-3';
+    if (value >= 51) return 'price-gradient-2';
+    if (value >= 11) return 'price-gradient-1';
+    return 'price-default';
+  };
+
   // Загрузка инвентаря пользователя
   const loadInventory = async () => {
     setIsLoadingInventory(true);
@@ -511,9 +539,9 @@ export default function UpgradeScreen({ onNavigate }) {
             </h2>
 
             {isLoadingInventory || isLoadingOptions ? (
-              <div className="loading-indicator">
-                <div className="spinner"></div>
-                <p>Loading...</p>
+              <div className="upgrade-modal-loading">
+                <div className="upgrade-modal-spinner"></div>
+                <p className="upgrade-modal-loading-text">Loading items...</p>
               </div>
             ) : (
               <div className="upgrade-inventory-grid">
@@ -524,30 +552,35 @@ export default function UpgradeScreen({ onNavigate }) {
                   (activeModal === 'my'
                     ? myInventory
                     : targetOptions
-                  ).map((item) => (
-                    <div
-                      key={item.index || item.id || Math.random()}
-                      className="upgrade-inventory-item"
-                      onClick={() =>
-                        handleSelectItem(item, activeModal)
-                      }
-                    >
-                      <img
-                        src={getItemImage(item)}
-                        alt={item.name || 'Item'}
-                        className="inventory-item-img"
-                        onError={(e) => e.target.src = cardton1}
-                      />
-                      <div className="inventory-item-price">
-                        {item.price_ton || item.item_value || '??'}{' '}
+                  ).map((item) => {
+                    const priceValue = parseFloat(item.price_ton || item.item_value || 0);
+                    const priceClass = getPriceClass(priceValue);
+                    
+                    return (
+                      <div
+                        key={item.index || item.id || Math.random()}
+                        className="upgrade-inventory-item"
+                        onClick={() =>
+                          handleSelectItem(item, activeModal)
+                        }
+                      >
                         <img
-                          src={tonIcon}
-                          alt="ton"
-                          className="ton-icon-small"
+                          src={getItemImage(item)}
+                          alt={item.name || 'Item'}
+                          className="inventory-item-img"
+                          onError={(e) => e.target.src = cardton1}
                         />
+                        <div className={`inventory-item-price ${priceClass}`}>
+                          {formatPrice(`${priceValue} TON`)}
+                          <img
+                            src={tonIcon}
+                            alt="ton"
+                            className="ton-icon-small"
+                          />
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
                   <div className="empty-inventory-message">
                     No items available
