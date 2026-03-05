@@ -26,6 +26,7 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
   const [showCopyToast, setShowCopyToast] = useState(false);
   const [isToastHiding, setIsToastHiding] = useState(false);
   const [error, setError] = useState(null);
+  const [isClosing, setIsClosing] = useState(false);
 
   // Загружаем реферальные данные при монтировании
   useEffect(() => {
@@ -150,7 +151,8 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
     }
   };
 
-  const openInfoModal = () => {
+  const openInfoModal = (e) => {
+    e.stopPropagation();
     setIsInfoModalOpen(true);
   };
 
@@ -160,16 +162,26 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
 
   const openReferralModal = () => {
     setIsReferralModalOpen(true);
+    setIsClosing(false);
   };
 
   const closeReferralModal = () => {
-    setIsReferralModalOpen(false);
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsReferralModalOpen(false);
+      setIsClosing(false);
+    }, 300);
   };
 
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) {
-      closeInfoModal();
       closeReferralModal();
+    }
+  };
+
+  const handleInfoOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      closeInfoModal();
     }
   };
 
@@ -187,10 +199,7 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
           <div className="referral-stats-header">
             <div className="inf_date_container">
               <span className="referral-date-label">
-                You'll get{' '}
-                <span className="referral-date-value">
-                  {isLoading ? 'Loading...' : formatNextPayoutDate(referralData?.accrual_date_utc)}
-                </span>
+                You'll get <span className="referral-date-value">{isLoading ? '...' : formatNextPayoutDate(referralData?.accrual_date_utc)}</span>
               </span>
               {/* Кнопка с вопросиком */}
               <div 
@@ -331,11 +340,21 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
         </div>
       </div>
 
-      {/* Информационное модальное окно (вопросик) */}
+      {/* Модальное окно с реферальной программой */}
+      {isReferralModalOpen && (
+        <div className={`ref-overlay ${isClosing ? 'ref-overlay-closing' : ''}`} onClick={handleOverlayClick}>
+          <div className={`ref-modal ${isClosing ? 'ref-modal-out' : 'ref-modal-in'}`}>
+            <button className="ref-close-btn" onClick={closeReferralModal}>×</button>
+            <ReferralContent />
+          </div>
+        </div>
+      )}
+
+      {/* Информационное модальное окно (вопросик) - поверх реферального */}
       {isInfoModalOpen && (
-        <div className="inf_overlay" onClick={handleOverlayClick}>
-          <div className="inf_modal">
-            <div className="inf_close_btn" onClick={closeInfoModal}>×</div>
+        <div className="info-overlay" onClick={handleInfoOverlayClick}>
+          <div className="info-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="info-close-btn" onClick={closeInfoModal}>×</button>
             
             <div className="inf_content">
               {/* Первый пункт */}
@@ -357,21 +376,9 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
         </div>
       )}
 
-      {/* Модальное окно с реферальной программой */}
-      {isReferralModalOpen && (
-        <div className="inf_overlay referral-modal-overlay" onClick={handleOverlayClick}>
-          <div className="inf_modal referral-modal">
-            <div className="inf_close_btn" onClick={closeReferralModal}>×</div>
-            <div className="referral-modal-content">
-              <ReferralContent />
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Toast уведомление */}
       {showCopyToast && (
-        <div className={`toast_notification ${isToastHiding ? 'hide' : ''}`}>
+        <div className={`toast_notification ${isToastHiding ? 'toast_hide' : ''}`}>
           <span className="toast_icon">✓</span>
           <span className="toast_text">Link copied</span>
         </div>

@@ -1,4 +1,4 @@
-/* styles/MainScreen.css - полная версия с правильной сеткой кнопок */
+/* styles/MainScreen.css - полная версия с восстановленными стилями */
 
 .main-screen {
   width: 100%;
@@ -146,11 +146,13 @@
   display: block;
   border-radius: 12px;
   object-fit: cover;
+  filter: drop-shadow(0px 4px 12px rgba(37, 148, 226, 0.5));
+  -webkit-filter: drop-shadow(0px 4px 12px rgba(37, 148, 226, 0.5));
 }
 
 /* Кнопки на половину ширины (215x204 на 480px) */
 .half-button {
-  width: calc(50% - 5.5px); /* Учитываем gap 11px */
+  width: calc(50% - 5.5px);
   aspect-ratio: 215 / 204;
 }
 
@@ -160,7 +162,7 @@
   aspect-ratio: 441 / 78;
 }
 
-/* --- Стили для реферального блока (внутри модалки) --- */
+/* --- Стили для реферального блока (оригинальные цвета) --- */
 .referral-block {
   width: 100%;
   margin-top: 0px;
@@ -172,7 +174,7 @@
   height: 202px;
   border-radius: 15px;
   border: 2px solid #FFFFFF;
-  background: linear-gradient(135deg, rgba(216, 237, 255, 0.8), rgba(255, 255, 255, 0.8));
+  background: linear-gradient(135deg, rgba(216, 237, 255, 0.95), rgba(255, 255, 255, 0.95));
   position: relative;
   box-sizing: border-box;
   backdrop-filter: blur(5px);
@@ -228,7 +230,7 @@
   align-items: center;
   width: 100%;
   margin-top: 15px;
-  padding: 0 0px;
+  padding: 0;
   box-sizing: border-box;
 }
 
@@ -236,13 +238,13 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
 }
 
 /* Стиль для текста "You'll get" */
 .referral-date-label {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
-  font-style: normal;
   font-size: 16px;
   line-height: 140%;
   letter-spacing: 0%;
@@ -250,13 +252,13 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  white-space: nowrap;
 }
 
 /* Стиль для самой даты */
 .referral-date-value {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
-  font-style: normal;
   font-size: 16px;
   line-height: 140%;
   letter-spacing: 0%;
@@ -265,14 +267,13 @@
   background-clip: text;
   -webkit-text-fill-color: transparent;
   display: inline-block;
-  margin-left: 4px;
+  white-space: nowrap;
 }
 
 /* Стиль для текста Invited */
 .referral-invited-text {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
-  font-style: normal;
   font-size: 16px;
   line-height: 140%;
   letter-spacing: 0%;
@@ -280,6 +281,7 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  white-space: nowrap;
 }
 
 /* Контейнер для полей со значениями */
@@ -318,7 +320,6 @@
 .referral-stat-number {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
-  font-style: normal;
   font-size: 18px;
   line-height: 1.3;
   letter-spacing: 0%;
@@ -354,7 +355,6 @@
   user-select: none;
   flex-shrink: 0;
   padding-top: 3px;
-  margin-top: -3px;
 }
 
 .inf_info_button:active {
@@ -382,8 +382,6 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  
-  /* Для мобильных устройств */
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
@@ -419,7 +417,6 @@
 .invite-button-text {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
-  font-style: normal;
   font-size: 20px;
   line-height: 100%;
   letter-spacing: 0%;
@@ -449,53 +446,114 @@
   transition: transform 0.1s ease;
 }
 
-/* --- Модальные окна --- */
-.inf_overlay {
+/* --- УНИКАЛЬНЫЕ КЛАССЫ ДЛЯ МОДАЛОК --- */
+
+/* Оверлей для реферальной модалки */
+.ref-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  animation: inf_fade_in 0.2s ease;
+  animation: refOverlayFadeIn 0.6s ease;
 }
 
-.inf_modal {
+.ref-overlay-closing {
+  animation: refOverlayFadeOut 0.6s ease forwards;
+}
+
+/* Контент реферальной модалки */
+.ref-modal {
+  width: 90%;
+  max-width: 400px;
+  background: transparent;
+  position: relative;
+  margin: 0 auto;
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+
+.ref-modal-in {
+  animation: refModalSlideIn 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+}
+
+.ref-modal-out {
+  animation: refModalSlideOut 0.3s ease forwards;
+}
+
+/* Кнопка закрытия для реферальной модалки */
+.ref-close-btn {
+  position: absolute;
+  top: -45px;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #35A3F2, #37BDF3);
+  border: 2.5px solid white;
+  color: white;
+  font-size: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: 300;
+  line-height: 1;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  z-index: 10001;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+.ref-close-btn:active {
+  transform: scale(0.95);
+  background: linear-gradient(135deg, #2a8fd9, #2ca5d9);
+}
+
+/* --- ИНФОРМАЦИОННАЯ МОДАЛКА (полностью восстановленные стили) --- */
+
+/* Оверлей для информационной модалки */
+.info-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: infoOverlayFadeIn 0.2s ease;
+}
+
+/* Контент информационной модалки */
+.info-modal {
   width: auto;
   max-width: 300px;
   background: linear-gradient(135deg, #ffffff, #f5fbff);
   border: 3px solid white;
   border-radius: 20px;
-  padding: 24px 20px 20px 20px;
+  padding: 28px 20px 20px 20px;
   box-shadow: 0 12px 30px rgba(53, 163, 242, 0.25);
-  animation: inf_slide_up 0.2s ease;
+  animation: infoModalFadeIn 0.3s ease;
   position: relative;
   margin: 0 16px;
+  z-index: 10001;
 }
 
-/* Модалка для рефералов - шире */
-.referral-modal-overlay .inf_modal {
-  max-width: 380px;
-  width: 90%;
-  padding: 28px 16px 20px 16px;
-}
-
-.referral-modal-content {
-  width: 100%;
-}
-
-.referral-modal-content .referral-frame {
-  height: auto;
-  min-height: 180px;
-}
-
-/* Кнопка закрытия */
-.inf_close_btn {
+/* Кнопка закрытия для информационной модалки */
+.info-close-btn {
   position: absolute;
   top: 12px;
   right: 12px;
@@ -505,7 +563,7 @@
   background: linear-gradient(135deg, #35A3F2, #37BDF3);
   border: 2.5px solid white;
   color: white;
-  font-size: 19px;
+  font-size: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -517,14 +575,14 @@
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   font-family: Arial, sans-serif;
-  padding-bottom: 0px;
+  padding-bottom: 2px;
 }
 
-.inf_close_btn:active {
+.info-close-btn:active {
   transform: scale(0.95);
 }
 
-/* Контейнер для контента модалки */
+/* Контейнер для контента информационной модалки */
 .inf_content {
   display: flex;
   flex-direction: column;
@@ -532,7 +590,6 @@
   margin-top: 4px;
 }
 
-/* Строка информации */
 .inf_item {
   background: rgba(216, 237, 255, 0.4);
   padding: 14px 16px;
@@ -559,7 +616,6 @@
   display: inline-block;
 }
 
-/* Строка с иконкой замка */
 .inf_item_with_icon {
   display: flex;
   align-items: flex-start;
@@ -596,7 +652,7 @@
   -webkit-text-fill-color: transparent;
 }
 
-/* Toast уведомление */
+/* --- Toast уведомление --- */
 .toast_notification {
   position: fixed;
   top: 160px;
@@ -610,8 +666,12 @@
   align-items: center;
   gap: 8px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  z-index: 10000;
-  animation: toast_slide_down 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.1) forwards;
+  z-index: 10002;
+  animation: toastSlideDown 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.1) forwards;
+}
+
+.toast_notification.toast_hide {
+  animation: toastSlideUp 0.3s ease forwards;
 }
 
 .toast_icon {
@@ -635,8 +695,75 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-.toast_notification.hide {
-  animation: toast_slide_up 0.3s ease forwards;
+/* --- Анимации для модалок --- */
+@keyframes refOverlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes refOverlayFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes refModalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(70px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes refModalSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(70px);
+  }
+}
+
+@keyframes infoOverlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes infoModalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes toastSlideDown {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -190px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes toastSlideUp {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -190px);
+  }
 }
 
 /* --- ВСЕ СТИЛИ ФУТЕРА ПОЛНОСТЬЮ СОХРАНЕНЫ --- */
@@ -671,14 +798,10 @@
   gap: 10px;
   position: relative;
   cursor: pointer;
-  
-  /* Убираем выделение при нажатии на телефоне */
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
-  
-  /* Область нажатия - увеличиваем */
   padding: 15px 10px;
   margin: -15px -10px;
 }
@@ -721,7 +844,6 @@
   z-index: 2;
 }
 
-/* Индикатор активной страницы */
 .footer-active-indicator {
   position: absolute;
   top: -20px;
@@ -738,7 +860,6 @@
 .footer-label {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
-  font-style: normal;
   font-size: 18px;
   line-height: 1;
   letter-spacing: 0%;
@@ -750,7 +871,6 @@
   paint-order: stroke fill;
 }
 
-/* Disabled состояния */
 .footer-block-item--disabled {
   opacity: 0.5;
   cursor: not-allowed !important;
@@ -764,7 +884,6 @@
   opacity: 0.7;
 }
 
-/* Класс для лайоута без фона */
 .main-screen-no-bg {
   width: 100%;
   height: var(--app-height, 100vh);
@@ -773,45 +892,6 @@
   align-items: center;
   background-image: none;
   overflow: hidden;
-}
-
-/* --- Анимации --- */
-@keyframes inf_fade_in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes inf_slide_up {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes toast_slide_down {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -190px);
-  }
-  100% {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
-}
-
-@keyframes toast_slide_up {
-  0% {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -190px);
-  }
 }
 
 /* --- Адаптивные стили --- */
@@ -904,9 +984,20 @@
     height: 45px;
   }
   
-  .inf_modal {
+  .ref-close-btn {
+    top: -40px;
+    width: 36px;
+    height: 36px;
+    font-size: 28px;
+  }
+  
+  .ref-modal {
+    width: 95%;
+  }
+  
+  .info-modal {
     max-width: 270px;
-    padding: 22px 18px 18px 18px;
+    padding: 24px 18px 18px 18px;
   }
   
   .inf_text {
@@ -923,7 +1014,6 @@
 }
 
 @media (max-width: 430px) {
-  /* Стили футера для 430px - полностью сохранены */
   .footer-blocks-container {
     gap: 25px;
   }
@@ -1035,6 +1125,13 @@
     bottom: -8px;
     right: -8px;
   }
+  
+  .ref-close-btn {
+    top: -38px;
+    width: 34px;
+    height: 34px;
+    font-size: 26px;
+  }
 }
 
 @media (max-width: 375px) {
@@ -1088,9 +1185,9 @@
     height: 40px;
   }
   
-  .inf_modal {
+  .info-modal {
     max-width: 250px;
-    padding: 20px 16px 16px 16px;
+    padding: 22px 16px 16px 16px;
   }
   
   .inf_text {
@@ -1099,6 +1196,13 @@
   
   .inf_text_with_icon {
     font-size: 13px;
+  }
+  
+  .ref-close-btn {
+    top: -36px;
+    width: 32px;
+    height: 32px;
+    font-size: 24px;
   }
 }
 
@@ -1153,6 +1257,13 @@
     height: 19px;
     bottom: -8px;
     right: -8px;
+  }
+  
+  .ref-close-btn {
+    top: -34px;
+    width: 30px;
+    height: 30px;
+    font-size: 22px;
   }
 }
 
