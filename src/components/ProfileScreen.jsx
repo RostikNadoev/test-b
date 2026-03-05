@@ -930,9 +930,6 @@ export default function ProfileScreen({ onNavigate }) {
                 <div className={`sell-item-price ${getPriceClass(getItemPrice(selectedItem))}`}>
                   {getItemPrice(selectedItem)}
                 </div>
-                {selectedItem.status === 'withdraw_pending' && (
-                  <div className="sell-item-status pending">PENDING WITHDRAWAL</div>
-                )}
               </div>
             </div>
             
@@ -990,6 +987,7 @@ export default function ProfileScreen({ onNavigate }) {
                 </p>
               </div>
               
+              {/* Блок с информацией о locked-статусе */}
               {hasActiveWithdraw() && (
                 <div className="withdraw-lock-info">
                   <div className="withdraw-lock-icon">🔒</div>
