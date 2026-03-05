@@ -338,6 +338,37 @@ export const starsApi = {
     }
   },
 
+   async openStarsInvoice(amount) {
+    try {
+      // Создаем инвойс
+      const invoiceData = await this.createInvoice(amount);
+      
+      if (invoiceData && invoiceData.invoice_link) {
+        console.log('🔗 Opening invoice:', invoiceData.invoice_link);
+        
+        // Открываем в Telegram
+        if (window.Telegram?.WebApp) {
+          window.Telegram.WebApp.openTelegramLink(invoiceData.invoice_link);
+        } else {
+          window.open(invoiceData.invoice_link, '_blank');
+        }
+        
+        return {
+          success: true,
+          invoice_link: invoiceData.invoice_link
+        };
+      } else {
+        throw new Error('No invoice link received');
+      }
+    } catch (error) {
+      console.error('❌ Error opening stars invoice:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  },
+
   // Проверить статус инвойса (опционально)
   async checkInvoiceStatus(invoiceId) {
     try {
