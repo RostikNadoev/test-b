@@ -2027,10 +2027,10 @@
   box-sizing: border-box;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
   animation: withdrawModalAppear 0.3s cubic-bezier(0.33, 1, 0.68, 1) forwards;
-  max-height: 500px;
+  max-height: 510px;
   transition: max-height 0.3s ease;
 }
 
 .withdraw-modal-content--with-lock {
-  max-height: 580px !important;
+  max-height: 610px !important;
 }
