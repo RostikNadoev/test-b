@@ -88,7 +88,7 @@
   justify-content: center;
 }
 
-.chance-value {
+.upgrade-chance-value {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
   font-size: 28px;
@@ -98,7 +98,7 @@
   text-shadow: 0 0 10px rgba(53, 163, 242, 0.8);
 }
 
-.chance-symbol {
+.upgrade-chance-symbol {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
   font-size: 16px;
@@ -120,11 +120,11 @@
   transition: none;
 }
 
-.upgrade-arrow-container.is-spinning {
+.upgrade-arrow-container.upgrade-is-spinning {
   transition: transform 4.5s cubic-bezier(0.25, 0.1, 0.1, 1);
 }
 
-.upgrade-arrow-container.is-returning {
+.upgrade-arrow-container.upgrade-is-returning {
   transition: transform 1.5s cubic-bezier(0.45, 0.05, 0.55, 0.95);
 }
 
@@ -164,17 +164,17 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.upgrade-item-slot:active:not(.disabled) {
+.upgrade-item-slot:active:not(.upgrade-disabled) {
   transform: scale(0.95);
 }
 
-.upgrade-item-slot.disabled {
+.upgrade-item-slot.upgrade-disabled {
   opacity: 0.5;
   cursor: not-allowed;
   pointer-events: none;
 }
 
-.slot-title {
+.upgrade-slot-title {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-size: 11px;
   color: white;
@@ -184,7 +184,7 @@
   paint-order: stroke fill;
 }
 
-.slot-frame {
+.upgrade-slot-frame {
   width: 100%;
   aspect-ratio: 100 / 120;
   background-image: url('../assets/MainPage/chest1/back2.png');
@@ -200,24 +200,24 @@
   box-sizing: border-box;
 }
 
-.slot-frame.has-item {
+.upgrade-slot-frame.upgrade-has-item {
   border: 2px solid #35A3F2;
   box-shadow: 0 0 15px rgba(53, 163, 242, 0.4);
 }
 
-.slot-empty-text {
+.upgrade-slot-empty-text {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-size: 14px;
   color: rgba(255, 255, 255, 0.7);
 }
 
-.slot-item-image {
+.upgrade-slot-item-image {
   max-width: 70%;
   max-height: 60%;
   object-fit: contain;
 }
 
-.slot-item-price {
+.upgrade-slot-item-price {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-size: 11px;
   color: #fff;
@@ -290,14 +290,14 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  animation: modalSlideIn 0.4s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+  animation: upgradeModalSlideIn 0.4s cubic-bezier(0.33, 1, 0.68, 1) forwards;
   padding: 20px 16px;
   overflow: hidden;
   box-shadow: 0 -5px 20px rgba(53, 163, 242, 0.2);
 }
 
-.upgrade-modal-content.closing {
-  animation: modalSlideOut 0.4s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+.upgrade-modal-content.upgrade-closing {
+  animation: upgradeModalSlideOut 0.4s cubic-bezier(0.33, 1, 0.68, 1) forwards;
 }
 
 .upgrade-modal-title {
@@ -398,14 +398,14 @@
   transition: transform 0.2s;
   box-sizing: border-box;
   padding: 6px 4px;
-  min-width: 0; /* Предотвращает переполнение */
+  min-width: 0;
 }
 
 .upgrade-inventory-item:active {
   transform: scale(0.95);
 }
 
-.inventory-item-img {
+.upgrade-inventory-item-img {
   max-width: 70%;
   max-height: 55%;
   object-fit: contain;
@@ -413,9 +413,9 @@
   flex-shrink: 0;
 }
 
-.inventory-item-price {
+.upgrade-inventory-item-price {
   font-family: 'KZ Supercell-Magic', sans-serif;
-  font-size: 11px; /* Уменьшено до исходного размера */
+  font-size: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -425,56 +425,56 @@
   overflow: hidden;
   text-overflow: ellipsis;
   padding: 0 2px;
-  line-height: 1.3;
+  line-height: 1.4;
   flex-shrink: 0;
 }
 
 /* Классы для цен (градиенты) */
-.price-default {
+.upgrade-price-default {
   color: white;
   -webkit-text-stroke: 1px #35A3F2;
   paint-order: stroke fill;
 }
 
-.price-gradient-1 {
+.upgrade-price-gradient-1 {
   background: rgb(98, 140, 231);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   -webkit-text-stroke: 1px rgb(0, 81, 255);
   paint-order: stroke fill;
-  line-height: 1.3;
+  line-height: 1.4;
 }
 
-.price-gradient-2 {
+.upgrade-price-gradient-2 {
   background: rgb(206, 161, 248);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   -webkit-text-stroke: 1px rgb(158, 63, 248);
   paint-order: stroke fill;
-  line-height: 1.3;
+  line-height: 1.4;
 }
 
-.price-gradient-3 {
+.upgrade-price-gradient-3 {
   background: rgb(255, 237, 156);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   -webkit-text-stroke: 1px rgba(255, 210, 0, 1);
   paint-order: stroke fill;
-  line-height: 1.3;
+  line-height: 1.4;
 }
 
-.ton-icon-small {
-  width: 13px; /* Увеличено на ~8% с 12px (было 15px) */
-  height: 13px;
+.upgrade-ton-icon-small {
+  width: 12px;
+  height: 12px;
   object-fit: contain;
   filter: brightness(1.2);
   flex-shrink: 0;
 }
 
-.empty-inventory-message {
+.upgrade-empty-inventory-message {
   grid-column: 1 / -1;
   text-align: center;
   padding: 40px 20px;
@@ -506,12 +506,12 @@
   filter: brightness(0) invert(1);
 }
 
-@keyframes modalSlideIn {
+@keyframes upgradeModalSlideIn {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
 
-@keyframes modalSlideOut {
+@keyframes upgradeModalSlideOut {
   from { transform: translateY(0); }
   to { transform: translateY(100%); }
 }
@@ -525,7 +525,7 @@
 }
 
 /* === WIN MODAL === */
-.win-modal-overlay {
+.upgrade-win-modal-overlay {
   position: absolute;
   inset: 0;
   backdrop-filter: blur(6px);
@@ -534,10 +534,10 @@
   justify-content: center;
   align-items: center;
   z-index: 3000;
-  animation: fadeIn 0.3s ease forwards;
+  animation: upgradeFadeIn 0.3s ease forwards;
 }
 
-.win-modal {
+.upgrade-win-modal {
   position: relative;
   width: 260px;
   padding: 30px 20px;
@@ -546,10 +546,10 @@
   border: 2px solid #f1bf28;
   box-shadow: 0 0 40px rgba(241,191,40,0.6);
   text-align: center;
-  animation: popIn 0.4s cubic-bezier(.2,1.5,.5,1) forwards;
+  animation: upgradePopIn 0.4s cubic-bezier(.2,1.5,.5,1) forwards;
 }
 
-.win-title {
+.upgrade-win-title {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-size: 22px;
   color: #f1bf28;
@@ -557,13 +557,13 @@
   text-shadow: 0 0 15px rgba(241,191,40,0.8);
 }
 
-.win-item-image {
+.upgrade-win-item-image {
   width: 100px;
   margin: 10px 0;
-  animation: floatItem 2s ease-in-out infinite alternate;
+  animation: upgradeFloatItem 2s ease-in-out infinite alternate;
 }
 
-.win-price {
+.upgrade-win-price {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-size: 16px;
   color: white;
@@ -571,17 +571,17 @@
   paint-order: stroke fill;
 }
 
-@keyframes popIn {
+@keyframes upgradePopIn {
   from { transform: scale(0.7); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
 
-@keyframes fadeIn {
+@keyframes upgradeFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-@keyframes floatItem {
+@keyframes upgradeFloatItem {
   from { transform: translateY(-5px); }
   to { transform: translateY(5px); }
 }

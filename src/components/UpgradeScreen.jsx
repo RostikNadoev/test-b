@@ -130,10 +130,10 @@ export default function UpgradeScreen({ onNavigate }) {
   // Функция для получения класса цены в зависимости от значения
   const getPriceClass = (priceValue) => {
     const value = parseFloat(priceValue);
-    if (value >= 501) return 'price-gradient-3';
-    if (value >= 51) return 'price-gradient-2';
-    if (value >= 11) return 'price-gradient-1';
-    return 'price-default';
+    if (value >= 501) return 'upgrade-price-gradient-3';
+    if (value >= 51) return 'upgrade-price-gradient-2';
+    if (value >= 11) return 'upgrade-price-gradient-1';
+    return 'upgrade-price-default';
   };
 
   // Загрузка инвентаря пользователя
@@ -406,21 +406,21 @@ export default function UpgradeScreen({ onNavigate }) {
 
               <div className="upgrade-chance-display">
                 {isLoadingChance ? (
-                  <span className="chance-value">...</span>
+                  <span className="upgrade-chance-value">...</span>
                 ) : (
                   <>
-                    <span className="chance-value">
+                    <span className="upgrade-chance-value">
                       {winChance.toFixed(2)}
                     </span>
-                    <span className="chance-symbol">%</span>
+                    <span className="upgrade-chance-symbol">%</span>
                   </>
                 )}
               </div>
 
               <div
                 className={`upgrade-arrow-container ${
-                  isSpinning ? 'is-spinning' : ''
-                } ${isReturning ? 'is-returning' : ''}`}
+                  isSpinning ? 'upgrade-is-spinning' : ''
+                } ${isReturning ? 'upgrade-is-returning' : ''}`}
                 style={{ transform: `rotate(${arrowRotation}deg)` }}
               >
                 <img
@@ -437,10 +437,10 @@ export default function UpgradeScreen({ onNavigate }) {
               className="upgrade-item-slot"
               onClick={() => openModal('my')}
             >
-              <div className="slot-title">Your Item</div>
+              <div className="upgrade-slot-title">Your Item</div>
               <div
-                className={`slot-frame ${
-                  myItem ? 'has-item' : ''
+                className={`upgrade-slot-frame ${
+                  myItem ? 'upgrade-has-item' : ''
                 }`}
               >
                 {myItem ? (
@@ -448,15 +448,15 @@ export default function UpgradeScreen({ onNavigate }) {
                     <img
                       src={myItem.image_url}
                       alt="Mine"
-                      className="slot-item-image"
+                      className="upgrade-slot-item-image"
                       onError={(e) => e.target.src = cardton1}
                     />
-                    <div className="slot-item-price">
+                    <div className="upgrade-slot-item-price">
                       {myItem.price_ton || '??'} TON
                     </div>
                   </>
                 ) : (
-                  <div className="slot-empty-text">
+                  <div className="upgrade-slot-empty-text">
                     + Select
                   </div>
                 )}
@@ -473,16 +473,16 @@ export default function UpgradeScreen({ onNavigate }) {
 
             <div
               className={`upgrade-item-slot ${
-                !myItem ? 'disabled' : ''
+                !myItem ? 'upgrade-disabled' : ''
               }`}
               onClick={() =>
                 myItem && openModal('target')
               }
             >
-              <div className="slot-title">Target Item</div>
+              <div className="upgrade-slot-title">Target Item</div>
               <div
-                className={`slot-frame ${
-                  targetItem ? 'has-item' : ''
+                className={`upgrade-slot-frame ${
+                  targetItem ? 'upgrade-has-item' : ''
                 }`}
               >
                 {targetItem ? (
@@ -490,15 +490,15 @@ export default function UpgradeScreen({ onNavigate }) {
                     <img
                       src={targetItem.image_url}
                       alt="Target"
-                      className="slot-item-image"
+                      className="upgrade-slot-item-image"
                       onError={(e) => e.target.src = cardton1}
                     />
-                    <div className="slot-item-price">
+                    <div className="upgrade-slot-item-price">
                       {targetItem.price_ton || '??'} TON
                     </div>
                   </>
                 ) : (
-                  <div className="slot-empty-text">
+                  <div className="upgrade-slot-empty-text">
                     + Select
                   </div>
                 )}
@@ -527,7 +527,7 @@ export default function UpgradeScreen({ onNavigate }) {
           <div className="upgrade-modal-blur"></div>
           <div
             className={`upgrade-modal-content ${
-              isClosing ? 'closing' : ''
+              isClosing ? 'upgrade-closing' : ''
             }`}
             onClick={(e) => e.stopPropagation()}
             onAnimationEnd={handleAnimationEnd}
@@ -567,22 +567,22 @@ export default function UpgradeScreen({ onNavigate }) {
                         <img
                           src={getItemImage(item)}
                           alt={item.name || 'Item'}
-                          className="inventory-item-img"
+                          className="upgrade-inventory-item-img"
                           onError={(e) => e.target.src = cardton1}
                         />
-                        <div className={`inventory-item-price ${priceClass}`}>
+                        <div className={`upgrade-inventory-item-price ${priceClass}`}>
                           {formatPrice(`${priceValue} TON`)}
                           <img
                             src={tonIcon}
                             alt="ton"
-                            className="ton-icon-small"
+                            className="upgrade-ton-icon-small"
                           />
                         </div>
                       </div>
                     );
                   })
                 ) : (
-                  <div className="empty-inventory-message">
+                  <div className="upgrade-empty-inventory-message">
                     No items available
                   </div>
                 )}
@@ -605,16 +605,16 @@ export default function UpgradeScreen({ onNavigate }) {
 
       {/* Модалка победы */}
       {showWinModal && targetItem && (
-        <div className="win-modal-overlay">
-          <div className="win-modal">
-            <h2 className="win-title">YOU WON!</h2>
+        <div className="upgrade-win-modal-overlay">
+          <div className="upgrade-win-modal">
+            <h2 className="upgrade-win-title">YOU WON!</h2>
             <img
               src={targetItem.image_url}
               alt="win"
-              className="win-item-image"
+              className="upgrade-win-item-image"
               onError={(e) => e.target.src = cardton1}
             />
-            <div className="win-price">
+            <div className="upgrade-win-price">
               {targetItem.price_ton || '??'} TON
             </div>
           </div>
