@@ -137,18 +137,14 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     }
   }, [stage]);
 
-  // --- ЛОГИКА ЗАВЕРШЕНИЯ ВЗРЫВА (Исправление проблемы №1) ---
+  // --- ЛОГИКА ЗАВЕРШЕНИЯ ВЗРЫВА ---
   const handleExplosionComplete = () => {
     console.log('💥 Animation completed. Waiting 500ms before clearing...');
     
-    // Добавляем задержку 500мс (полсекунды) перед переключением
     setTimeout(() => {
       console.log('🧹 Switching to Timer and Clearing bets');
       setStage('timer');
-      
-      // Очищаем таблицу ИМЕННО ЗДЕСЬ, сразу после задержки
       if (clearBetsOnCrash) clearBetsOnCrash();
-      
     }, 500); 
   };
 
@@ -245,7 +241,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       return;
     }
     
-    // canBet теперь корректно обновляется после взрыва
     if (!canBet) {
       if (stage === 'rocket' || stage === 'explosion') {
         showUiError('Wait for next round!');
@@ -412,7 +407,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       if (myActiveBet?.status === 'win') return false;
       return (canCashout || (multiplierNow > 1.0 && hasAnyActiveBet)) && !cashoutPending;
     }
-    // Кнопка активна, если canBet true (который обновляется сразу после взрыва)
     return canBet;
   };
 
@@ -427,11 +421,9 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
   const getDisplayMultipliers = () => lastMultipliersHistory.length > 0 ? lastMultipliersHistory : (lastMultipliers || []);
 
   const getCurrentBetAmount = (participant) => {
-    // ВАЖНО: При перезагрузке статус 'win' теперь корректно обрабатывается здесь
     if (participant.status === 'win' && participant.x) return (participant.amount * participant.x).toFixed(2);
     if (participant.status === 'placed') return (participant.amount * multiplierNow).toFixed(2);
     if (participant.status === 'lose') return (participant.amount * participant.x).toFixed(2);
-    // Fallback для выигранных ставок без multiplier (если вдруг)
     if (participant.status === 'win' && participant.current_amount) return participant.current_amount.toFixed(2);
     
     return participant.amount.toFixed(2);
@@ -481,7 +473,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
                         speed={1.2}
                         lottieRef={(ref) => { explosionAnimationRef.current = ref; }}
                         onComplete={handleExplosionComplete}
-                        // Дублируем для надежности
                         onLoopComplete={handleExplosionComplete}
                       />
                     </div>
