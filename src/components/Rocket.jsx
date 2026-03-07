@@ -12,7 +12,6 @@ import { Switch } from 'antd';
 import { useCrashGame } from '../hooks/useCrashGame';
 import { authApi } from '../utils/api';
 import { useBalance } from '../contexts/BalanceContext';
-import { crashWebSocket } from '../utils/websocket';
 
 export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
   const [animationData, setAnimationData] = useState(null);
@@ -63,13 +62,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     clearBetsOnCrash,
     currentRoundId
   } = useCrashGame();
-
-  // Запрашиваем актуальное состояние при монтировании компонента
-  useEffect(() => {
-    if (wsConnected) {
-      crashWebSocket.requestState();
-    }
-  }, [wsConnected]);
 
   // Сбрасываем локальный флаг при смене раунда
   useEffect(() => {
