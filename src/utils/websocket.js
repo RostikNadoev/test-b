@@ -8,6 +8,8 @@ class CrashWebSocket {
     this.isConnected = false;
     this.connectionPromise = null;
     this.token = null;
+    this.pingInterval = null;
+    this.lastPongTime = Date.now();
   }
 
   // Подключение к WebSocket
@@ -40,15 +42,28 @@ class CrashWebSocket {
           console.log('✅ WebSocket connected successfully');
           this.isConnected = true;
           this.reconnectAttempts = 0;
+          this.lastPongTime = Date.now();
+          
+          // Запускаем пинг для поддержания соединения
+          this.startPingInterval();
+          
           resolve();
         };
 
         this.socket.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            if (data.server_time_ms) {
-               // console.log(`⏱️ Sync: Server ${data.server_time_ms} vs Local ${Date.now()}`);
+            
+            // Обработка pong для поддержания соединения
+            if (data.type === 'pong') {
+              this.lastPongTime = Date.now();
+              return;
             }
+            
+            if (data.server_time_ms) {
+              // console.log(`⏱️ Sync: Server ${data.server_time_ms} vs Local ${Date.now()}`);
+            }
+            
             this.handleMessage(data);
           } catch (error) {
             console.error('❌ Error parsing WebSocket message:', error, 'Raw:', event.data);
@@ -63,13 +78,14 @@ class CrashWebSocket {
           });
           this.isConnected = false;
           this.connectionPromise = null;
+          this.stopPingInterval();
           
           if (!event.wasClean && this.reconnectAttempts < this.maxReconnectAttempts) {
             setTimeout(() => {
               console.log(`🔄 Attempting to reconnect (${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`);
-              this.reconnect();
-            }, this.reconnectDelay * Math.pow(2, this.reconnectAttempts));
-            this.reconnectAttempts++;
+              this.reconnectAttempts++;
+              this.connect().catch(console.error);
+            }, this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1));
           }
         };
 
@@ -89,14 +105,41 @@ class CrashWebSocket {
     return this.connectionPromise;
   }
 
-  reconnect() {
-    if (this.token) {
-      this.connect().catch(console.error);
+  startPingInterval() {
+    this.stopPingInterval();
+    
+    // Отправляем ping каждые 30 секунд
+    this.pingInterval = setInterval(() => {
+      if (this.isReady()) {
+        // Проверяем, не зависло ли соединение
+        const timeSinceLastPong = Date.now() - this.lastPongTime;
+        if (timeSinceLastPong > 60000) { // 60 секунд без pong
+          console.log('No pong received for 60s, reconnecting...');
+          this.reconnect();
+          return;
+        }
+        
+        this.sendCommand({ type: 'ping' });
+      }
+    }, 30000);
+  }
+
+  stopPingInterval() {
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+      this.pingInterval = null;
     }
   }
 
+  reconnect() {
+    this.disconnect();
+    setTimeout(() => {
+      this.connect().catch(console.error);
+    }, 100);
+  }
+
   sendCommand(command) {
-    if (!this.isConnected || this.socket?.readyState !== WebSocket.OPEN) {
+    if (!this.isReady()) {
       console.error('❌ WebSocket not connected, cannot send command:', command);
       return false;
     }
@@ -135,7 +178,8 @@ class CrashWebSocket {
     const handlers = this.messageHandlers.get(data.type) || [];
     handlers.forEach(handler => handler(data));
     
-    if (handlers.length === 0 && data.type !== 'tick') {
+    // Логируем только важные сообщения
+    if (handlers.length === 0 && !['tick', 'pong'].includes(data.type)) {
       console.log('📨 Unhandled WebSocket message type:', data.type, data);
     }
   }
@@ -164,12 +208,21 @@ class CrashWebSocket {
   }
 
   disconnect() {
+    this.stopPingInterval();
+    
     if (this.socket) {
-      this.socket.close(1000, 'User disconnected');
+      // Удаляем все обработчики перед закрытием
+      this.messageHandlers.clear();
+      
+      try {
+        this.socket.close(1000, 'User disconnected');
+      } catch (error) {
+        console.error('Error closing socket:', error);
+      }
+      
       this.socket = null;
       this.isConnected = false;
       this.connectionPromise = null;
-      this.messageHandlers.clear();
       console.log('🔌 WebSocket disconnected by user');
     }
   }
@@ -179,4 +232,5 @@ class CrashWebSocket {
   }
 }
 
+// Создаем и экспортируем единственный экземпляр
 export const crashWebSocket = new CrashWebSocket();

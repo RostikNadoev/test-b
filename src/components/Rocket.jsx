@@ -38,6 +38,8 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
   const lastTempBetIdRef = useRef(null);
   const uiErrorTimeoutRef = useRef(null);
   const hasPlacedBetThisRoundRef = useRef(false);
+  const isBetPlacingRef = useRef(false);
+  const timerUpdateIntervalRef = useRef(null);
   
   const { balances, checkBalance, loadBalances, updateBalanceImmediately } = useBalance();
 
@@ -63,10 +65,26 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     currentRoundId
   } = useCrashGame();
 
+  // Форсированное обновление таймера каждые 100мс
+  useEffect(() => {
+    // Запускаем интервал для принудительного обновления
+    timerUpdateIntervalRef.current = setInterval(() => {
+      // Этот пустой сеттер форсирует ререндер
+      setLocalTimeLeft(prev => prev);
+    }, 100);
+
+    return () => {
+      if (timerUpdateIntervalRef.current) {
+        clearInterval(timerUpdateIntervalRef.current);
+      }
+    };
+  }, []);
+
   // Сбрасываем локальный флаг при смене раунда
   useEffect(() => {
     if (currentRoundId) {
       hasPlacedBetThisRoundRef.current = false;
+      isBetPlacingRef.current = false;
     }
   }, [currentRoundId]);
 
@@ -96,6 +114,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     if (engineEvents.cashout_ok) {
       setCashoutPending(false);
       setRecentlyPlacedBet(null);
+      isBetPlacingRef.current = false;
       setTimeout(() => {
         loadBalances();
         window.dispatchEvent(new CustomEvent('balanceUpdate'));
@@ -112,6 +131,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
         setCashoutPending(false);
         setRecentlyPlacedBet(null);
         lastTempBetIdRef.current = null;
+        isBetPlacingRef.current = false;
         setTimeout(() => {
           loadBalances();
           window.dispatchEvent(new CustomEvent('balanceUpdate'));
@@ -120,11 +140,12 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     }
   }, [engineEvents.bet_result, myActiveBet, recentlyPlacedBet, loadBalances]);
 
-  // Обработка события КРАША (только вибрация)
+  // Обработка события КРАША
   useEffect(() => {
     if (engineEvents.crash) {
       setRecentlyPlacedBet(null);
       lastTempBetIdRef.current = null;
+      isBetPlacingRef.current = false;
       vibrateTriple();
     }
   }, [engineEvents.crash]);
@@ -137,19 +158,17 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     }
   }, [stage]);
 
-  // --- ЛОГИКА ЗАВЕРШЕНИЯ ВЗРЫВА (Исправление проблемы №1) ---
   const handleExplosionComplete = () => {
     console.log('💥 Animation completed. Waiting 500ms before clearing...');
     
-    // Добавляем задержку 500мс (полсекунды) перед переключением
     setTimeout(() => {
       console.log('🧹 Switching to Timer and Clearing bets');
       setStage('timer');
+      isBetPlacingRef.current = false;
       
-      // Очищаем таблицу ИМЕННО ЗДЕСЬ, сразу после задержки
       if (clearBetsOnCrash) clearBetsOnCrash();
       
-    }, 500); 
+    }, 500);
   };
 
   // Вибрация
@@ -232,8 +251,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     }
   };
 
-  // --- ЛОГИКА СТАВОК UI ---
-
   const handleMakeBet = () => {
     if (!wsConnected) {
       showUiError('Connecting to server...');
@@ -245,7 +262,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       return;
     }
     
-    // canBet теперь корректно обновляется после взрыва
     if (!canBet) {
       if (stage === 'rocket' || stage === 'explosion') {
         showUiError('Wait for next round!');
@@ -287,7 +303,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
 
   const formatTime = (seconds) => {
     if (seconds === undefined || seconds === null || isNaN(seconds)) return '15';
-    return seconds.toString().padStart(2, '0');
+    return Math.floor(seconds).toString().padStart(2, '0');
   };
 
   const increaseMultiplier = () => {
@@ -299,19 +315,31 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
   };
 
   const handlePlayBet = async () => {
+    // Предотвращаем двойные ставки
+    if (isBetPlacingRef.current) {
+      console.log('Bet already in progress');
+      return;
+    }
+
     if (!betAmount || parseFloat(betAmount) <= 0) {
       showUiError('Please enter a valid bet amount');
       return;
     }
+    
     const betAmountNum = parseFloat(betAmount);
     if (!checkBalance(selectedCurrency, betAmountNum)) {
       showUiError(`Insufficient ${selectedCurrency.toUpperCase()} balance`);
       return;
     }
+
+    isBetPlacingRef.current = true;
+    
     const success = placeBet(selectedCurrency, betAmountNum, autoPayoutEnabled ? payoutMultiplier : null);
+    
     if (success) {
       if (updateBalanceImmediately) updateBalanceImmediately(selectedCurrency, -betAmountNum);
       hasPlacedBetThisRoundRef.current = true;
+      
       const tempBet = {
         bet_id: Date.now(),
         id: Date.now(),
@@ -322,13 +350,18 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
         x: null,
         user: userData ? { id: userData.id, username: userData.username, photo_url: userData.photo_url } : null
       };
+      
       lastTempBetIdRef.current = tempBet.bet_id;
       setRecentlyPlacedBet(tempBet);
       closeBetModal();
+      
+      // Обновляем баланс с задержкой, чтобы не блокировать таймер
       setTimeout(() => {
         loadBalances();
         window.dispatchEvent(new CustomEvent('balanceUpdate'));
-      }, 100);
+        isBetPlacingRef.current = false;
+      }, 500);
+      
       setTimeout(() => {
         setRecentlyPlacedBet(prev => {
           if (!prev) return null;
@@ -338,6 +371,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       }, 5000);
     } else {
       showUiError('Failed to place bet. Betting might be closed.');
+      isBetPlacingRef.current = false;
     }
   };
 
@@ -365,7 +399,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     }
   };
 
-  // UI Helpers
   const getAvatarColor = (userId) => {
     const colors = ['#6971FF', '#45B7D1', '#96CEB4', '#FFEAA7', '#FF6B6B'];
     return colors[userId % colors.length];
@@ -412,7 +445,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       if (myActiveBet?.status === 'win') return false;
       return (canCashout || (multiplierNow > 1.0 && hasAnyActiveBet)) && !cashoutPending;
     }
-    // Кнопка активна, если canBet true (который обновляется сразу после взрыва)
     return canBet;
   };
 
@@ -427,11 +459,9 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
   const getDisplayMultipliers = () => lastMultipliersHistory.length > 0 ? lastMultipliersHistory : (lastMultipliers || []);
 
   const getCurrentBetAmount = (participant) => {
-    // ВАЖНО: При перезагрузке статус 'win' теперь корректно обрабатывается здесь
     if (participant.status === 'win' && participant.x) return (participant.amount * participant.x).toFixed(2);
     if (participant.status === 'placed') return (participant.amount * multiplierNow).toFixed(2);
     if (participant.status === 'lose') return (participant.amount * participant.x).toFixed(2);
-    // Fallback для выигранных ставок без multiplier (если вдруг)
     if (participant.status === 'win' && participant.current_amount) return participant.current_amount.toFixed(2);
     
     return participant.amount.toFixed(2);
@@ -481,7 +511,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
                         speed={1.2}
                         lottieRef={(ref) => { explosionAnimationRef.current = ref; }}
                         onComplete={handleExplosionComplete}
-                        // Дублируем для надежности
                         onLoopComplete={handleExplosionComplete}
                       />
                     </div>
