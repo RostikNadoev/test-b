@@ -8,99 +8,8 @@ import tonIcon from '../assets/MainPage/ton.svg';
 import switchr from '../assets/Rocket/switchr.svg';
 import '../styles/UpgradeScreen.css';
 import { usersApi, upgradeApi } from '../utils/api';
-import { useDemo } from '../contexts/DemoContext';
-
-// Демо-предметы для инвентаря
-const DEMO_INVENTORY_ITEMS = [
-  {
-    id: 'demo1',
-    inventory_id: 'demo1',
-    index: 'demo1',
-    name: 'Common Gift',
-    item_type: 'tg_gift',
-    price_ton: 2.5,
-    rarity: 'common',
-    image_url: null,
-    isDemo: true
-  },
-  {
-    id: 'demo2',
-    inventory_id: 'demo2',
-    index: 'demo2',
-    name: 'Rare Gift',
-    item_type: 'tg_gift',
-    price_ton: 7.8,
-    rarity: 'rare',
-    image_url: null,
-    isDemo: true
-  },
-  {
-    id: 'demo3',
-    inventory_id: 'demo3',
-    index: 'demo3',
-    name: 'Epic Gift',
-    item_type: 'tg_gift',
-    price_ton: 15.3,
-    rarity: 'epic',
-    image_url: null,
-    isDemo: true
-  },
-  {
-    id: 'demo4',
-    inventory_id: 'demo4',
-    index: 'demo4',
-    name: 'Legendary Gift',
-    item_type: 'tg_gift',
-    price_ton: 42.0,
-    rarity: 'legendary',
-    image_url: null,
-    isDemo: true
-  }
-];
-
-// Демо-цели для апгрейда
-const DEMO_TARGET_OPTIONS = [
-  {
-    id: 'target1',
-    index: 'target1',
-    name: 'Uncommon Gift',
-    item_type: 'tg_gift',
-    price_ton: 5.0,
-    rarity: 'uncommon',
-    image_url: null
-  },
-  {
-    id: 'target2',
-    index: 'target2',
-    name: 'Rare Gift',
-    item_type: 'tg_gift',
-    price_ton: 12.5,
-    rarity: 'rare',
-    image_url: null
-  },
-  {
-    id: 'target3',
-    index: 'target3',
-    name: 'Epic Gift',
-    item_type: 'tg_gift',
-    price_ton: 28.0,
-    rarity: 'epic',
-    image_url: null
-  },
-  {
-    id: 'target4',
-    index: 'target4',
-    name: 'Legendary Gift',
-    item_type: 'tg_gift',
-    price_ton: 65.0,
-    rarity: 'legendary',
-    image_url: null
-  }
-];
 
 export default function UpgradeScreen({ onNavigate }) {
-  const { isDemoMode, demoInventory, addToDemoInventory, removeFromDemoInventory } = useDemo();
-  
   const [myItem, setMyItem] = useState(null);
   const [targetItem, setTargetItem] = useState(null);
   const [activeModal, setActiveModal] = useState(null);
@@ -229,26 +138,6 @@ export default function UpgradeScreen({ onNavigate }) {
 
   // Загрузка инвентаря пользователя
   const loadInventory = async () => {
-    if (isDemoMode) {
-      console.log('🎮 Демо-режим: загружаем демо-инвентарь');
-      // В демо-режиме используем инвентарь из DemoContext
-      if (demoInventory && demoInventory.length > 0) {
-        // Преобразуем демо-инвентарь в нужный формат
-        const formattedDemoInventory = demoInventory.map((item, index) => ({
-          ...item,
-          inventory_id: item.id || `demo_${index}`,
-          index: item.index || `demo_${index}`,
-          price_ton: parseFloat(item.price.replace(/[^\d.-]/g, '')) || 1
-        }));
-        setMyInventory(formattedDemoInventory);
-      } else {
-        // Если демо-инвентарь пуст, используем стандартные демо-предметы
-        setMyInventory(DEMO_INVENTORY_ITEMS);
-      }
-      setIsLoadingInventory(false);
-      return;
-    }
-
     setIsLoadingInventory(true);
     try {
       const inventoryData = await usersApi.getInventory();
@@ -285,56 +174,6 @@ export default function UpgradeScreen({ onNavigate }) {
 
   // Загрузка опций апгрейда (целей)
   const loadUpgradeOptions = async (id) => {
-    if (isDemoMode) {
-      console.log('🎮 Демо-режим: загружаем демо-цели');
-      // В демо-режиме генерируем цели на основе выбранного предмета
-      const basePrice = myItem?.price_ton || 5;
-      
-      // Генерируем цели с ценами выше исходной
-      const demoOptions = [
-        {
-          id: 'target_demo_1',
-          index: 'target_demo_1',
-          name: `${(basePrice * 1.5).toFixed(1)} TON Gift`,
-          item_type: 'tg_gift',
-          price_ton: parseFloat((basePrice * 1.5).toFixed(1)),
-          rarity: 'uncommon',
-          image_url: null
-        },
-        {
-          id: 'target_demo_2',
-          index: 'target_demo_2',
-          name: `${(basePrice * 2.5).toFixed(1)} TON Gift`,
-          item_type: 'tg_gift',
-          price_ton: parseFloat((basePrice * 2.5).toFixed(1)),
-          rarity: 'rare',
-          image_url: null
-        },
-        {
-          id: 'target_demo_3',
-          index: 'target_demo_3',
-          name: `${(basePrice * 4).toFixed(1)} TON Gift`,
-          item_type: 'tg_gift',
-          price_ton: parseFloat((basePrice * 4).toFixed(1)),
-          rarity: 'epic',
-          image_url: null
-        },
-        {
-          id: 'target_demo_4',
-          index: 'target_demo_4',
-          name: `${(basePrice * 7).toFixed(1)} TON Gift`,
-          item_type: 'tg_gift',
-          price_ton: parseFloat((basePrice * 7).toFixed(1)),
-          rarity: 'legendary',
-          image_url: null
-        }
-      ];
-      
-      setTargetOptions(demoOptions);
-      setIsLoadingOptions(false);
-      return;
-    }
-
     if (!id) return;
     setIsLoadingOptions(true);
     try {
@@ -369,15 +208,6 @@ export default function UpgradeScreen({ onNavigate }) {
 
   // Загрузка шанса для выбранной цели
   const loadChance = async (id, targetIndex) => {
-    if (isDemoMode) {
-      console.log('🎮 Демо-режим: генерируем случайный шанс');
-      // В демо-режиме генерируем случайный шанс
-      const randomChance = Math.floor(Math.random() * 41) + 10; // от 10% до 50%
-      setWinChance(randomChance);
-      setIsLoadingChance(false);
-      return;
-    }
-
     if (!id || !targetIndex) return;
     setIsLoadingChance(true);
     try {
@@ -457,80 +287,8 @@ export default function UpgradeScreen({ onNavigate }) {
 
     setIsSpinning(true);
 
-    if (isDemoMode) {
-      console.log('🎮 Демо-режим: симуляция апгрейда');
-      
-      // В демо-режиме определяем победу случайно на основе шанса
-      const random = Math.random() * 100;
-      const isWin = random <= winChance;
-
-      // Запускаем вибрацию
-      setTimeout(() => {
-        startSmartVibration();
-      }, 50);
-
-      // Рассчитываем угол остановки
-      const coloredDegrees = (winChance / 100) * 360;
-      let finalAngle;
-      if (isWin) {
-        finalAngle = 2 + Math.random() * (coloredDegrees - 4);
-      } else {
-        finalAngle = coloredDegrees + 2 + Math.random() * (360 - coloredDegrees - 4);
-      }
-
-      const rotations = 360 * 6;
-      const targetRotation = rotations + finalAngle;
-      setArrowRotation(targetRotation);
-
-      // Обрабатываем результат через 4.5 сек
-      setTimeout(() => {
-        if (vibIntervalRef.current) {
-          clearTimeout(vibIntervalRef.current);
-          vibIntervalRef.current = null;
-        }
-
-        triggerVibration(isWin ? 'notification' : 'impact');
-
-        if (isWin) {
-          // В демо-режиме добавляем выигранный предмет в инвентарь
-          addToDemoInventory(targetItem);
-          setShowWinModal(true);
-          
-          // Удаляем исходный предмет из демо-инвентаря
-          // Находим индекс предмета в демо-инвентаре
-          const itemIndex = demoInventory.findIndex(
-            item => item.id === myItem.id || item.index === myItem.index
-          );
-          if (itemIndex !== -1) {
-            removeFromDemoInventory(itemIndex);
-          }
-        }
-
-        // Возврат стрелки
-        setTimeout(() => {
-          setIsReturning(true);
-          const nextFullCircle = Math.ceil(targetRotation / 360) * 360;
-          setArrowRotation(nextFullCircle);
-
-          setTimeout(() => {
-            setIsReturning(false);
-            setArrowRotation(0);
-            setShowWinModal(false);
-            // Сбрасываем выбор для новой попытки
-            setMyItem(null);
-            setTargetItem(null);
-            setInventoryId(null);
-            setWinChance(0);
-            setIsSpinning(false);
-          }, 1500);
-        }, 1000);
-      }, 4500);
-
-      return;
-    }
-
-    // Реальный режим - вызываем API
     try {
+      // Вызываем метод play
       const data = await upgradeApi.playUpgrade(inventoryId, targetItem.index);
       console.log('📦 Play result:', data);
       
