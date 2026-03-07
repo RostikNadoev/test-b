@@ -17,13 +17,52 @@ import back4 from '../assets/MainPage/cases/back4case.png';
 import back5 from '../assets/MainPage/cases/back5case.png';
 import back6 from '../assets/MainPage/cases/back6case.png';
 
+// Демо-цены для кейсов
+const DEMO_CASE_PRICES = {
+  1: { ton: 0, stars: 0 },
+  2: { ton: 1, stars: 100 },
+  3: { ton: 3, stars: 300 },
+  4: { ton: 5, stars: 500 },
+  5: { ton: 10, stars: 1000 },
+  6: { ton: 15, stars: 1500 }
+};
+
 export default function CaseModal({ caseItem, onClose, onNavigate }) {
   const [caseData, setCaseData] = useState(null);
   const [caseItems, setCaseItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const { isDemoMode } = useDemo();
+  const { isDemoMode, demoBalance, removeFromDemoBalance } = useDemo();
   const { balances, checkBalance, loadBalances } = useBalance();
+
+  // Функция для получения цены кейса
+  const getCasePrice = () => {
+    // В демо-режиме используем демо-цены
+    if (isDemoMode) {
+      return DEMO_CASE_PRICES[caseItem.id] || { ton: 0, stars: 0 };
+    }
+    
+    // В реальном режиме сначала из caseData, потом из caseItem
+    if (caseData?.price_ton !== undefined) {
+      return {
+        ton: caseData.price_ton,
+        stars: caseData.price_stars
+      };
+    }
+    
+    if (caseItem.price?.ton !== undefined) {
+      return caseItem.price;
+    }
+    
+    if (caseItem.price_ton !== undefined) {
+      return {
+        ton: caseItem.price_ton,
+        stars: caseItem.price_stars
+      };
+    }
+    
+    return DEMO_CASE_PRICES[caseItem.id] || { ton: 0, stars: 0 };
+  };
 
   // Функция для получения класса заголовка в зависимости от ID кейса
   const getTitleClass = () => {
@@ -98,6 +137,19 @@ const formatPrice = (priceStr) => {
         setIsLoading(true);
         console.log(`📦 Загрузка данных кейса ID: ${caseItem.id}`);
         
+        // В демо-режиме пропускаем загрузку с API
+        if (isDemoMode) {
+          console.log('🎮 Демо-режим: пропускаем загрузку с API');
+          setCaseData({ 
+            id: caseItem.id,
+            name: caseItem.name,
+            ...DEMO_CASE_PRICES[caseItem.id]
+          });
+          setCaseItems([]);
+          setIsLoading(false);
+          return;
+        }
+        
         const response = await casesApi.getCaseById(caseItem.id);
         console.log('✅ Данные кейса загружены:', response);
         
@@ -108,8 +160,7 @@ const formatPrice = (priceStr) => {
         setCaseData({ 
           id: caseItem.id,
           name: caseItem.name,
-          price_ton: caseItem.price?.ton || caseItem.price_ton || 2, 
-          price_stars: caseItem.price?.stars || caseItem.price_stars || 200 
+          ...DEMO_CASE_PRICES[caseItem.id]
         });
         setCaseItems([]);
       } finally {
@@ -120,7 +171,7 @@ const formatPrice = (priceStr) => {
     if (caseItem?.id) {
       loadCaseData();
     }
-  }, [caseItem]);
+  }, [caseItem, isDemoMode]);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -130,21 +181,38 @@ const formatPrice = (priceStr) => {
   }, []);
 
   const handleTonClick = async () => {
-    console.log(`Case ${caseItem.id} TON clicked! Checking balance...`);
+    console.log(`Case ${caseItem.id} TON clicked!`);
+    const price = getCasePrice();
     
     if (isDemoMode) {
-      console.log('Demo mode: opening spin page...');
-      onNavigate('spin', { caseId: caseItem.id, isDemo: true });
+      console.log('🎮 Демо-режим: открытие кейса за TON');
+      
+      // Проверяем баланс в демо-режиме
+      if (demoBalance < price.ton) {
+        alert(`Not enough TON in demo balance! You need ${price.ton} TON`);
+        return;
+      }
+      
+      // Списываем с демо-баланса
+      removeFromDemoBalance(price.ton);
+      
+      // Переходим на спин без вызова API
+      onNavigate('spin', { 
+        caseId: caseItem.id, 
+        isDemo: true,
+        demoPrice: price.ton // передаем цену для отображения
+      });
       onClose();
       return;
     }
     
+    // Реальный режим - проверка баланса и открытие через API
     if (!caseData) {
       alert('Case data not loaded. Please try again.');
       return;
     }
     
-    const requiredAmount = caseData.price_ton || 2;
+    const requiredAmount = price.ton;
     
     try {
       await loadBalances();
@@ -163,9 +231,18 @@ const formatPrice = (priceStr) => {
   };
 
   const handleStarClick = async () => {
+    console.log(`Case ${caseItem.id} STARS clicked!`);
+    const price = getCasePrice();
+    
     if (isDemoMode) {
-      console.log('Demo mode: opening spin page...');
-      onNavigate('spin', { caseId: caseItem.id, isDemo: true });
+      console.log('🎮 Демо-режим: открытие кейса за звезды');
+      
+      // В демо-режиме звезды не списываем, просто открываем
+      onNavigate('spin', { 
+        caseId: caseItem.id, 
+        isDemo: true,
+        demoPrice: price.ton // передаем цену для отображения
+      });
       onClose();
       return;
     }
@@ -180,7 +257,7 @@ const formatPrice = (priceStr) => {
         return;
       }
       
-      const starsCount = caseData.price_stars || 200;
+      const starsCount = price.stars;
       console.log(`Opening case for ${starsCount} stars...`);
       
       if (checkBalance('stars', starsCount)) {
@@ -335,6 +412,7 @@ const formatPrice = (priceStr) => {
   };
 
   const frameContents = getFrameContents();
+  const price = getCasePrice();
 
   const getPriceClass = (priceStr) => {
     const priceValue = parseFloat(priceStr.replace(/[^\d.-]/g, ''));
@@ -426,16 +504,18 @@ const formatPrice = (priceStr) => {
           <div className="modal-footer">
             <div className="modal-button-container">
               {caseItem.id === 1 ? (
-                // Для первого кейса одна полупрозрачная матовая серая кнопка
+                // Для первого кейса одна кнопка FREE/LOCKED
                 <div 
-                  className={`modal-button modal-free-button ${isProcessing ? 'modal-button-disabled' : ''}`}
-                  onClick={handleTonClick}
+                  className={`modal-button modal-free-button ${isDemoMode ? 'modal-button-disabled' : ''}`}
+                  onClick={isDemoMode ? null : handleTonClick}
                 >
                   <span className="modal-button-text">
                     {isProcessing ? (
                       <span className="modal-processing-text">Wait...</span>
                     ) : (
-                      <span className="modal-free-value">FREE</span>
+                      <span className="modal-free-value">
+                        {isDemoMode ? 'LOCKED' : 'FREE'}
+                      </span>
                     )}
                   </span>
                 </div>
@@ -453,7 +533,7 @@ const formatPrice = (priceStr) => {
                         <>
                           <img src={tonIcon} alt="TON" className="modal-ton-icon" />
                           <span className="modal-button-number">
-                            {caseData?.price_ton || '2'}
+                            {price.ton}
                           </span>
                         </>
                       )}
@@ -471,7 +551,7 @@ const formatPrice = (priceStr) => {
                         <>
                           <img src={starsIcon} alt="STARS" className="modal-stars-icon" />
                           <span className="modal-button-number">
-                            {caseData?.price_stars || '200'}
+                            {price.stars}
                           </span>
                         </>
                       )}
