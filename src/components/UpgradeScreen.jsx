@@ -8,8 +8,11 @@ import tonIcon from '../assets/MainPage/ton.svg';
 import switchr from '../assets/Rocket/switchr.svg';
 import '../styles/UpgradeScreen.css';
 import { usersApi, upgradeApi } from '../utils/api';
+import { useDemo } from '../contexts/DemoContext';
 
 export default function UpgradeScreen({ onNavigate }) {
+  const { isDemoMode, demoInventory, addToDemoInventory, removeFromDemoInventory } = useDemo();
+  
   const [myItem, setMyItem] = useState(null);
   const [targetItem, setTargetItem] = useState(null);
   const [activeModal, setActiveModal] = useState(null);
@@ -136,8 +139,48 @@ export default function UpgradeScreen({ onNavigate }) {
     return 'upgrade-price-default';
   };
 
+  // Функция для расчета шанса на основе цен (для демо-режима)
+  const calculateDemoChance = (sourcePrice, targetPrice) => {
+    if (!sourcePrice || !targetPrice) return 0;
+    
+    // Чем больше разница в цене, тем меньше шанс
+    const ratio = sourcePrice / targetPrice;
+    
+    // Базовый шанс: 50% при равных ценах
+    // Уменьшается пропорционально разнице
+    let chance = 50 * ratio;
+    
+    // Ограничиваем шанс от 5% до 80%
+    return Math.min(80, Math.max(5, chance));
+  };
+
   // Загрузка инвентаря пользователя
   const loadInventory = async () => {
+    if (isDemoMode) {
+      console.log('🎮 Демо-режим: загружаем инвентарь из DemoContext');
+      setIsLoadingInventory(true);
+      
+      // Преобразуем демо-инвентарь в нужный формат
+      const demoItems = demoInventory.map((item, index) => ({
+        ...item,
+        inventory_id: item.id || `demo_${index}`,
+        index: item.index || `demo_${index}`,
+        price_ton: parseFloat(item.price?.replace(/[^\d.-]/g, '')) || item.price_ton || 1,
+        isDemo: true
+      }));
+      
+      // Сортируем от дешевого к дорогому
+      const sortedInventory = demoItems.sort((a, b) => {
+        const priceA = parseFloat(a.price_ton || 0);
+        const priceB = parseFloat(b.price_ton || 0);
+        return priceA - priceB;
+      });
+      
+      setMyInventory(sortedInventory);
+      setIsLoadingInventory(false);
+      return;
+    }
+
     setIsLoadingInventory(true);
     try {
       const inventoryData = await usersApi.getInventory();
@@ -175,6 +218,8 @@ export default function UpgradeScreen({ onNavigate }) {
   // Загрузка опций апгрейда (целей)
   const loadUpgradeOptions = async (id) => {
     if (!id) return;
+    
+    // В демо-режиме тоже загружаем с API
     setIsLoadingOptions(true);
     try {
       const data = await upgradeApi.getOptions(id);
@@ -209,6 +254,22 @@ export default function UpgradeScreen({ onNavigate }) {
   // Загрузка шанса для выбранной цели
   const loadChance = async (id, targetIndex) => {
     if (!id || !targetIndex) return;
+    
+    // В демо-режиме рассчитываем шанс на основе цен
+    if (isDemoMode && myItem && targetItem) {
+      console.log('🎮 Демо-режим: рассчитываем шанс на основе цен');
+      setIsLoadingChance(true);
+      
+      const sourcePrice = myItem.price_ton || 0;
+      const targetPrice = targetItem.price_ton || 0;
+      
+      const chance = calculateDemoChance(sourcePrice, targetPrice);
+      setWinChance(chance);
+      
+      setIsLoadingChance(false);
+      return;
+    }
+
     setIsLoadingChance(true);
     try {
       const data = await upgradeApi.calcChance(id, targetIndex);
@@ -257,7 +318,8 @@ export default function UpgradeScreen({ onNavigate }) {
         ...item,
         inventory_id: item.inventory_id || item.id,
         image_url: getItemImage(item),
-        price_ton: item.price_ton || item.item_value || 0
+        price_ton: item.price_ton || item.item_value || 0,
+        isDemo: item.isDemo || false
       });
       setInventoryId(item.inventory_id || item.id);
       setTargetItem(null);
@@ -267,7 +329,8 @@ export default function UpgradeScreen({ onNavigate }) {
       setTargetItem({
         ...item,
         image_url: getItemImage(item),
-        price_ton: item.price_ton || 0
+        price_ton: item.price_ton || 0,
+        isDemo: item.isDemo || false
       });
       // Как только цель выбрана, запрашиваем шанс
       if (inventoryId && item.index) {
@@ -287,6 +350,80 @@ export default function UpgradeScreen({ onNavigate }) {
 
     setIsSpinning(true);
 
+    // ДЕМО РЕЖИМ - рандомный результат
+    if (isDemoMode) {
+      console.log('🎮 Демо-режим: симуляция апгрейда');
+      
+      // Определяем победу случайно на основе шанса
+      const random = Math.random() * 100;
+      const isWin = random <= winChance;
+
+      // Запускаем вибрацию
+      setTimeout(() => {
+        startSmartVibration();
+      }, 50);
+
+      // Рассчитываем угол остановки
+      const coloredDegrees = (winChance / 100) * 360;
+      let finalAngle;
+      if (isWin) {
+        finalAngle = 2 + Math.random() * (coloredDegrees - 4);
+      } else {
+        finalAngle = coloredDegrees + 2 + Math.random() * (360 - coloredDegrees - 4);
+      }
+
+      const rotations = 360 * 6;
+      const targetRotation = rotations + finalAngle;
+      setArrowRotation(targetRotation);
+
+      // Обрабатываем результат через 4.5 сек
+      setTimeout(() => {
+        if (vibIntervalRef.current) {
+          clearTimeout(vibIntervalRef.current);
+          vibIntervalRef.current = null;
+        }
+
+        triggerVibration(isWin ? 'notification' : 'impact');
+
+        if (isWin) {
+          // Добавляем выигранный предмет в демо-инвентарь
+          addToDemoInventory(targetItem);
+          setShowWinModal(true);
+          
+          // Удаляем исходный предмет из демо-инвентаря
+          // Находим индекс предмета в демо-инвентаре
+          const itemIndex = demoInventory.findIndex(
+            item => item.id === myItem.id || item.index === myItem.index
+          );
+          if (itemIndex !== -1) {
+            removeFromDemoInventory(itemIndex);
+          }
+        }
+
+        // Возврат стрелки
+        setTimeout(() => {
+          setIsReturning(true);
+          const nextFullCircle = Math.ceil(targetRotation / 360) * 360;
+          setArrowRotation(nextFullCircle);
+
+          setTimeout(() => {
+            setIsReturning(false);
+            setArrowRotation(0);
+            setShowWinModal(false);
+            // Сбрасываем выбор для новой попытки
+            setMyItem(null);
+            setTargetItem(null);
+            setInventoryId(null);
+            setWinChance(0);
+            setIsSpinning(false);
+          }, 1500);
+        }, 1000);
+      }, 4500);
+
+      return;
+    }
+
+    // РЕАЛЬНЫЙ РЕЖИМ
     try {
       // Вызываем метод play
       const data = await upgradeApi.playUpgrade(inventoryId, targetItem.index);
