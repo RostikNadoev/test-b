@@ -10,6 +10,42 @@ import luckyLoseIcon from '../assets/Lucky/luckylose.png';
 import { useEffect, useRef, useState } from 'react';
 import { luckyBallsApi, authApi } from '../utils/api';
 import { useBalance } from '../contexts/BalanceContext';
+import { useDemo } from '../contexts/DemoContext';
+
+// Конфигурация для демо-режима
+const DEMO_LEVEL_MULTIPLIERS = {
+  1: 1.2,
+  2: 1.5,
+  3: 1.8,
+  4: 2.2,
+  5: 3.5,
+  6: 5,
+  7: 9,
+  8: 15,
+  9: 30,
+  10: 80
+};
+
+// Шансы на победу для каждого уровня в демо-режиме (%)
+const DEMO_WIN_CHANCES = {
+  1: 90,   // 90% шанс пройти 1 уровень
+  2: 80,   // 80% шанс пройти 2 уровень
+  3: 70,   // 70% шанс пройти 3 уровень
+  4: 60,   // 60% шанс пройти 4 уровень
+  5: 50,   // 50% шанс пройти 5 уровень
+  6: 40,   // 40% шанс пройти 6 уровень
+  7: 30,   // 30% шанс пройти 7 уровень
+  8: 20,   // 20% шанс пройти 8 уровень
+  9: 10,   // 10% шанс пройти 9 уровень
+  10: 5    // 5% шанс пройти 10 уровень
+};
+
+// Функция для определения, выиграл ли игрок на текущем уровне в демо-режиме
+const getDemoPickResult = (level) => {
+  const chance = DEMO_WIN_CHANCES[level] || 50;
+  const random = Math.random() * 100;
+  return random <= chance;
+};
 
 export default function LuckyBalls({ 
   onNavigate, 
@@ -35,10 +71,13 @@ export default function LuckyBalls({
   const [isScrolling, setIsScrolling] = useState(false);
 
   const { balances, checkBalance, setNewBalances, loadBalances } = useBalance();
+  const { isDemoMode, demoBalance, removeFromDemoBalance, addToDemoBalance } = useDemo();
 
   useEffect(() => {
-    loadActiveGame();
-  }, []);
+    if (!isDemoMode) {
+      loadActiveGame();
+    }
+  }, [isDemoMode]);
 
   useEffect(() => {
     if (tilesContainerRef.current && rowRefs.current[currentLevel] && !isScrolling) {
@@ -100,6 +139,8 @@ export default function LuckyBalls({
   }, []);
 
   const loadActiveGame = async () => {
+    if (isDemoMode) return;
+    
     try {
       setIsLoading(true);
       const response = await luckyBallsApi.getActiveGame();
@@ -151,11 +192,41 @@ export default function LuckyBalls({
 
     if (isLoading) return;
 
+    const bet = parseFloat(betAmount);
+
+    // ДЕМО РЕЖИМ
+    if (isDemoMode) {
+      if (demoBalance < bet) {
+        alert(`Insufficient TON in demo balance! You need ${bet} TON`);
+        return;
+      }
+      
+      // Списываем с демо-баланса
+      removeFromDemoBalance(bet);
+      
+      setIsLoading(true);
+      
+      // Запускаем демо-игру
+      setActiveGameId('demo_' + Date.now());
+      setCurrentLevel(1);
+      setMultiplier(DEMO_LEVEL_MULTIPLIERS[1]);
+      setGameState('playing');
+      setTileStates({});
+      setSelectedTiles([]);
+      setLastPickResult(null);
+      
+      const prize = bet * DEMO_LEVEL_MULTIPLIERS[1];
+      setCurrentPrize(selectedCurrency === 'STARS' ? Math.round(prize) : prize);
+      
+      setTimeout(() => setIsLoading(false), 500);
+      return;
+    }
+
+    // РЕАЛЬНЫЙ РЕЖИМ
     try {
       setIsLoading(true);
       
       const currency = selectedCurrency.toLowerCase();
-      const bet = parseFloat(betAmount);
       
       // Проверяем баланс через контекст
       if (!checkBalance(currency, bet)) {
@@ -202,6 +273,55 @@ export default function LuckyBalls({
   const handleTileClick = async (row, tile) => {
     if (gameState !== 'playing' || row !== currentLevel + 1 || isLoading || isScrolling) return;
     
+    // ДЕМО РЕЖИМ
+    if (isDemoMode) {
+      setIsLoading(true);
+      
+      // Определяем результат на основе шансов для текущего уровня
+      const isWin = getDemoPickResult(currentLevel);
+      
+      const tileKey = `${row}-${tile}`;
+      setTileStates(prev => ({
+        ...prev,
+        [tileKey]: {
+          revealed: true,
+          isWin: isWin
+        }
+      }));
+      
+      setSelectedTiles(prev => [...prev, { row, tile, isWin: isWin }]);
+      setLastPickResult({ is_win: isWin });
+      
+      if (isWin) {
+        // Переход на следующий уровень
+        const nextLevel = currentLevel + 1;
+        const nextMultiplier = DEMO_LEVEL_MULTIPLIERS[nextLevel] || 1;
+        
+        setMultiplier(nextMultiplier);
+        setCurrentLevel(nextLevel);
+        
+        const bet = parseFloat(betAmount) || 0;
+        const newPrize = bet * nextMultiplier;
+        setCurrentPrize(selectedCurrency === 'STARS' ? Math.round(newPrize) : newPrize);
+        
+        setTimeout(() => {
+          setGameState('playing');
+          setIsLoading(false);
+        }, 800);
+      } else {
+        // Проигрыш
+        setCurrentPrize(0);
+        
+        setTimeout(() => {
+          setGameState('lost');
+          setIsLoading(false);
+        }, 800);
+      }
+      
+      return;
+    }
+
+    // РЕАЛЬНЫЙ РЕЖИМ
     if (!activeGameId) {
       alert('No active game found');
       return;
@@ -269,6 +389,19 @@ export default function LuckyBalls({
     
     if (isLoading || isScrolling) return;
 
+    // ДЕМО РЕЖИМ
+    if (isDemoMode) {
+      // Добавляем выигрыш к демо-балансу
+      if (currentPrize > 0) {
+        addToDemoBalance(currentPrize);
+      }
+      
+      setGameState('cashed_out');
+      alert(`Successfully cashed out ${currentPrize} ${selectedCurrency}!`);
+      return;
+    }
+
+    // РЕАЛЬНЫЙ РЕЖИМ
     try {
       setIsLoading(true);
       
