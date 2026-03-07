@@ -47,21 +47,11 @@ export const useCrashGame = () => {
   const timeOffsetRef = useRef(0);
   const stageRef = useRef('timer');
   const forceTimerUpdateRef = useRef(false); // Новый ref для принудительного обновления таймера
-  const roundStartsAtRef = useRef(null);
-  const roundStatusRef = useRef('waiting');
 
   // Синхронизация ref со стейтом
   useEffect(() => {
     stageRef.current = stage;
   }, [stage]);
-
-  useEffect(() => {
-    roundStartsAtRef.current = roundStartsAt;
-  }, [roundStartsAt]);
-
-  useEffect(() => {
-    roundStatusRef.current = roundStatus;
-  }, [roundStatus]);
 
   // --- 1. ЛОГИКА СИНХРОНИЗАЦИИ ВРЕМЕНИ ---
 
@@ -81,21 +71,26 @@ export const useCrashGame = () => {
     return Date.now() + timeOffsetRef.current;
   }, []);
 
-  // Таймер обратного отсчета - СТАБИЛЬНАЯ ВЕРСИЯ С REFS
+  // Таймер обратного отсчета - УПРОЩЕННАЯ ВЕРСИЯ
   useEffect(() => {
+    // Очищаем предыдущий интервал
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+    }
+
     // Функция обновления таймера
     const updateTimer = () => {
       const now = getServerTime();
       
-      if (roundStartsAtRef.current) {
-        const diff = roundStartsAtRef.current - now;
+      if (roundStartsAt) {
+        const diff = roundStartsAt - now;
         const sec = Math.max(0, Math.ceil(diff / 1000));
         
         // Всегда обновляем timeLeft, даже если нет изменений
         setTimeLeft(sec);
         
         // Определяем stage на основе diff и roundStatus
-        if (diff > 0 && (roundStatusRef.current === 'betting' || roundStatusRef.current === 'countdown')) {
+        if (diff > 0 && (roundStatus === 'betting' || roundStatus === 'countdown')) {
           if (stageRef.current !== 'timer') {
             setStage('timer');
           }
@@ -106,7 +101,7 @@ export const useCrashGame = () => {
       }
     };
 
-    // Запускаем интервал с частотой 100мс один раз при монтировании
+    // Запускаем интервал с частотой 100мс
     timerIntervalRef.current = setInterval(updateTimer, 100);
 
     // Первоначальное обновление
@@ -117,7 +112,7 @@ export const useCrashGame = () => {
         clearInterval(timerIntervalRef.current);
       }
     };
-  }, [getServerTime]); // Зависимость только от getServerTime, который стабилен
+  }, [roundStartsAt, roundStatus, getServerTime]);
 
   // --- 2. HELPERS ДЛЯ ФОРМАТИРОВАНИЯ ---
 
