@@ -46,6 +46,7 @@ export const useCrashGame = () => {
   const hasBetThisRoundRef = useRef(false);
   const timeOffsetRef = useRef(0);
   const stageRef = useRef('timer');
+  const lastCrashTimeRef = useRef(null);
 
   // Синхронизация ref со стейтом
   useEffect(() => {
@@ -244,8 +245,7 @@ export const useCrashGame = () => {
           setRoundStatus(data.status);
           updateStageFromStatus(data.status);
           
-          // Если начался новый раунд (betting/countdown), запрашиваем актуальное состояние,
-          // чтобы обновить roundStartsAt и очистить таблицу
+          // Если начался новый раунд (betting/countdown), запрашиваем актуальное состояние
           if (data.status === 'betting' || data.status === 'countdown') {
             crashWebSocket.requestState();
           }
@@ -287,6 +287,7 @@ export const useCrashGame = () => {
         setEngineEvents(prev => ({ ...prev, crash: data }));
         setRoundStatus('crashed');
         setStage('explosion');
+        lastCrashTimeRef.current = Date.now();
         
         const mult = data.multiplier || data.crash_mult || 1.0;
         setCrashMultiplier(mult);
@@ -404,6 +405,11 @@ export const useCrashGame = () => {
     setBetsById(new Map());
     setMyActiveBet(null);
     myActiveBetRef.current = null;
+    
+    // ВАЖНО: После взрыва запрашиваем актуальное состояние для получения времени старта следующего раунда
+    setTimeout(() => {
+      crashWebSocket.requestState();
+    }, 100);
   }, []);
 
   const getHistoryFromBackend = useCallback(async () => {
