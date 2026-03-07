@@ -1,116 +1,64 @@
+// utils/websocket.js
 class CrashWebSocket {
   constructor() {
     this.socket = null;
     this.messageHandlers = new Map();
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
-    this.reconnectDelay = 1000;
-    this.isConnected = false;
-    this.connectionPromise = null;
-    this.token = null;
+    this.reconnectDelay = 2000;
+    this.url = 'wss://your-backend-url.com/ws/crash'; // Замените на ваш URL
   }
 
-  // Подключение к WebSocket
-  async connect() {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      console.error('No JWT token found in localStorage');
-      return Promise.reject('No token found');
-    }
+  connect() {
+    return new Promise((resolve, reject) => {
+      if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+        resolve();
+        return;
+      }
 
-    if (this.isConnected && this.socket?.readyState === WebSocket.OPEN) {
-      console.log('WebSocket already connected');
-      return Promise.resolve();
-    }
-
-    if (this.connectionPromise) {
-      return this.connectionPromise;
-    }
-
-    this.token = token;
-    this.connectionPromise = new Promise((resolve, reject) => {
       try {
-        const WS_URL = 'wss://shamefully-gifted-catbird.cloudpub.ru/ws/crash';
-        const url = `${WS_URL}?token=${token}`;
-        
-        console.log('🌐 Connecting to WebSocket:', url);
-        this.socket = new WebSocket(url);
+        const token = localStorage.getItem('token');
+        this.socket = new WebSocket(`${this.url}?token=${token}`);
 
         this.socket.onopen = () => {
-          console.log('✅ WebSocket connected successfully');
-          this.isConnected = true;
+          console.log('✅ Crash WebSocket connected');
           this.reconnectAttempts = 0;
+          this.requestState();
           resolve();
         };
 
         this.socket.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            if (data.server_time_ms) {
-               // console.log(`⏱️ Sync: Server ${data.server_time_ms} vs Local ${Date.now()}`);
-            }
             this.handleMessage(data);
-          } catch (error) {
-            console.error('❌ Error parsing WebSocket message:', error, 'Raw:', event.data);
+          } catch (e) {
+            console.error('❌ Failed to parse WS message:', e);
           }
         };
 
         this.socket.onclose = (event) => {
-          console.log('🔌 WebSocket disconnected:', {
-            code: event.code,
-            reason: event.reason,
-            wasClean: event.wasClean
-          });
-          this.isConnected = false;
-          this.connectionPromise = null;
-          
-          if (!event.wasClean && this.reconnectAttempts < this.maxReconnectAttempts) {
-            setTimeout(() => {
-              console.log(`🔄 Attempting to reconnect (${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`);
-              this.reconnect();
-            }, this.reconnectDelay * Math.pow(2, this.reconnectAttempts));
-            this.reconnectAttempts++;
+          console.log(`ℹ️ WebSocket closed: ${event.code}`);
+          if (event.code !== 1000) {
+            this.attemptReconnect();
           }
         };
 
         this.socket.onerror = (error) => {
           console.error('❌ WebSocket error:', error);
-          this.connectionPromise = null;
           reject(error);
         };
 
       } catch (error) {
-        console.error('❌ Failed to create WebSocket:', error);
-        this.connectionPromise = null;
         reject(error);
       }
     });
-
-    return this.connectionPromise;
   }
 
-  reconnect() {
-    if (this.token) {
-      this.connect().catch(console.error);
-    }
-  }
-
-  sendCommand(command) {
-    if (!this.isConnected || this.socket?.readyState !== WebSocket.OPEN) {
-      console.error('❌ WebSocket not connected, cannot send command:', command);
-      return false;
-    }
-
-    try {
-      const cleanCommand = Object.fromEntries(
-        Object.entries(command).filter(([_, value]) => value !== null && value !== undefined)
-      );
-      const jsonCommand = JSON.stringify(cleanCommand);
-      this.socket.send(jsonCommand);
-      return true;
-    } catch (error) {
-      console.error('❌ Error sending command:', error);
-      return false;
+  attemptReconnect() {
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      this.reconnectAttempts++;
+      console.log(`🔄 Reconnecting... Attempt ${this.reconnectAttempts}`);
+      setTimeout(() => this.connect(), this.reconnectDelay);
     }
   }
 
@@ -132,12 +80,23 @@ class CrashWebSocket {
   }
 
   handleMessage(data) {
+    // Вызываем общие обработчики для типа сообщения
     const handlers = this.messageHandlers.get(data.type) || [];
     handlers.forEach(handler => handler(data));
     
+    // Логирование необработанных сообщений (кроме тиков)
     if (handlers.length === 0 && data.type !== 'tick') {
       console.log('📨 Unhandled WebSocket message type:', data.type, data);
     }
+  }
+
+  sendCommand(command) {
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+      this.socket.send(JSON.stringify(command));
+      return true;
+    }
+    console.warn('⚠️ Cannot send command: WS not connected');
+    return false;
   }
 
   requestState() {
@@ -165,17 +124,9 @@ class CrashWebSocket {
 
   disconnect() {
     if (this.socket) {
-      this.socket.close(1000, 'User disconnected');
+      this.socket.close(1000, 'Normal closure');
       this.socket = null;
-      this.isConnected = false;
-      this.connectionPromise = null;
-      this.messageHandlers.clear();
-      console.log('🔌 WebSocket disconnected by user');
     }
-  }
-
-  isReady() {
-    return this.isConnected && this.socket?.readyState === WebSocket.OPEN;
   }
 }
 
