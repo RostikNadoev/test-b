@@ -1,4 +1,3 @@
-// SpinScreen.js - исправленный код
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/SpinScreen.css';
 import rocketBack from '../assets/Plinko/Back.png';
@@ -44,6 +43,9 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo }) {
   
   const scrollerRef = useRef(null);
   const animationRef = useRef(null);
+
+  // Флаг для отслеживания, был ли уже списан баланс
+  const balanceChargedRef = useRef(false);
 
   // Определяем, какое изображение использовать для этого кейса
   const getDefaultImage = () => {
@@ -151,7 +153,11 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo }) {
       const isDemoActive = isDemoMode || isDemo === true;
       
       // ПРОВЕРКА: ДЕМО РЕЖИМ
-      if (isDemoActive && !winData?.winningItem) {
+      if (isDemoActive && winData?.winningItem) {
+        console.log('🎮 ДЕМО РЕЖИМ: Используем winData из модалки');
+        targetItem = { ...winData.winningItem, isDemo: true };
+      }
+      else if (isDemoActive && !winData?.winningItem) {
         console.log('🎮 ДЕМО РЕЖИМ: Используем случайный предмет из caseItems');
         if (caseItems.length > 0) {
           const randomIndex = Math.floor(Math.random() * caseItems.length);
@@ -294,15 +300,34 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo }) {
   const startSpin = (targetItem) => {
     console.log('🎰 Запуск спина');
     
-    // В демо-режиме списываем баланс
-    if ((isDemoMode || isDemo) && !hasCharged && targetItem) {
-      const price = parseFloat(targetItem.price) || 2;
+    // В демо-режиме списываем баланс ТОЛЬКО если еще не списывали
+    if ((isDemoMode || isDemo) && !balanceChargedRef.current && !hasCharged) {
+      // Пытаемся получить цену из разных источников
+      let price = 0;
+      
+      // Если есть demoPrice в пропсах (из CaseModal)
+      if (winData?.demoPrice) {
+        price = winData.demoPrice;
+      } 
+      // Иначе пытаемся из targetItem
+      else if (targetItem?.price) {
+        const match = targetItem.price.match(/(\d+(\.\d+)?)/);
+        if (match) {
+          price = parseFloat(match[1]);
+        }
+      }
+      
+      console.log(`💰 Демо-режим: списываем ${price} TON с баланса`);
+      
       if (demoBalance < price) {
-        alert("Not enough TON in demo balance!");
+        alert(`Not enough TON in demo balance! You need ${price} TON`);
         onNavigate('cases');
         return;
       }
+      
+      // Списываем с демо-баланса
       removeFromDemoBalance(price);
+      balanceChargedRef.current = true;
       setHasCharged(true);
     }
 

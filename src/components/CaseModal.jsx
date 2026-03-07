@@ -137,19 +137,7 @@ const formatPrice = (priceStr) => {
         setIsLoading(true);
         console.log(`📦 Загрузка данных кейса ID: ${caseItem.id}`);
         
-        // В демо-режиме пропускаем загрузку с API
-        if (isDemoMode) {
-          console.log('🎮 Демо-режим: пропускаем загрузку с API');
-          setCaseData({ 
-            id: caseItem.id,
-            name: caseItem.name,
-            ...DEMO_CASE_PRICES[caseItem.id]
-          });
-          setCaseItems([]);
-          setIsLoading(false);
-          return;
-        }
-        
+        // В демо-режиме тоже загружаем данные с API для отображения содержимого
         const response = await casesApi.getCaseById(caseItem.id);
         console.log('✅ Данные кейса загружены:', response);
         
@@ -171,7 +159,7 @@ const formatPrice = (priceStr) => {
     if (caseItem?.id) {
       loadCaseData();
     }
-  }, [caseItem, isDemoMode]);
+  }, [caseItem]); // Убрали isDemoMode из зависимостей, чтобы всегда загружать
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -193,14 +181,42 @@ const formatPrice = (priceStr) => {
         return;
       }
       
-      // Списываем с демо-баланса
+      // Списываем с демо-баланса (только один раз)
       removeFromDemoBalance(price.ton);
       
-      // Переходим на спин без вызова API
+      // Получаем случайный предмет из caseItems для демо
+      let demoWinningItem = null;
+      if (caseItems.length > 0) {
+        const randomIndex = Math.floor(Math.random() * caseItems.length);
+        const randomItem = caseItems[randomIndex];
+        
+        demoWinningItem = {
+          img: randomItem.item_type === 'tg_gift' && randomItem.image_url 
+            ? getImageUrl(randomItem.image_url) 
+            : cardton1,
+          price: `${randomItem.price_ton} TON`,
+          name: randomItem.name,
+          item_type: randomItem.item_type,
+          index: randomItem.item_index,
+          rarity: randomItem.rarity,
+          isDemo: true
+        };
+      } else {
+        // Если нет предметов, создаем заглушку
+        demoWinningItem = {
+          img: cardton1,
+          price: `${price.ton} TON`,
+          name: `${price.ton} TON`,
+          item_type: 'reward_ton',
+          isDemo: true
+        };
+      }
+      
+      // Переходим на спин с выигрышным предметом
       onNavigate('spin', { 
+        winData: { winningItem: demoWinningItem },
         caseId: caseItem.id, 
-        isDemo: true,
-        demoPrice: price.ton // передаем цену для отображения
+        isDemo: true
       });
       onClose();
       return;
@@ -237,11 +253,39 @@ const formatPrice = (priceStr) => {
     if (isDemoMode) {
       console.log('🎮 Демо-режим: открытие кейса за звезды');
       
-      // В демо-режиме звезды не списываем, просто открываем
+      // Получаем случайный предмет из caseItems для демо
+      let demoWinningItem = null;
+      if (caseItems.length > 0) {
+        const randomIndex = Math.floor(Math.random() * caseItems.length);
+        const randomItem = caseItems[randomIndex];
+        
+        demoWinningItem = {
+          img: randomItem.item_type === 'tg_gift' && randomItem.image_url 
+            ? getImageUrl(randomItem.image_url) 
+            : cardton1,
+          price: `${randomItem.price_ton} TON`,
+          name: randomItem.name,
+          item_type: randomItem.item_type,
+          index: randomItem.item_index,
+          rarity: randomItem.rarity,
+          isDemo: true
+        };
+      } else {
+        // Если нет предметов, создаем заглушку
+        demoWinningItem = {
+          img: cardton1,
+          price: `${price.ton} TON`,
+          name: `${price.ton} TON`,
+          item_type: 'reward_ton',
+          isDemo: true
+        };
+      }
+      
+      // Переходим на спин с выигрышным предметом
       onNavigate('spin', { 
+        winData: { winningItem: demoWinningItem },
         caseId: caseItem.id, 
-        isDemo: true,
-        demoPrice: price.ton // передаем цену для отображения
+        isDemo: true
       });
       onClose();
       return;
