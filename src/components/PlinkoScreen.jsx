@@ -10,6 +10,61 @@ import rocketBack from '../assets/Plinko/Back.png';
 import { bounceFallApi, authApi, usersApi } from '../utils/api';
 import { getRandomPreset } from '../utils/bounceFallPresets';
 import { useBalance } from '../contexts/BalanceContext';
+import { useDemo } from '../contexts/DemoContext';
+
+// Демо-множители для Plinko (сбалансированные шансы)
+const DEMO_MULTIPLIERS = [30, 15, 8, 3, 1.5, 0.6, 0.2, 0.6, 1.5, 3, 8, 15, 30];
+
+// Веса для демо-режима (сумма = 100)
+const DEMO_WEIGHTS = {
+  30: 2,    // 2% шанс на x30
+  15: 4,    // 4% шанс на x15
+  8: 8,     // 8% шанс на x8
+  3: 12,    // 12% шанс на x3
+  1.5: 15,  // 15% шанс на x1.5
+  0.6: 24,  // 24% шанс на x0.6
+  0.2: 35   // 35% шанс на x0.2
+};
+
+// Функция для получения случайного множителя в демо-режиме
+const getRandomDemoMultiplier = () => {
+  const random = Math.random() * 100;
+  let cumulative = 0;
+  
+  for (const [multiplier, weight] of Object.entries(DEMO_WEIGHTS)) {
+    cumulative += weight;
+    if (random < cumulative) {
+      return parseFloat(multiplier);
+    }
+  }
+  
+  return 0.2; // fallback
+};
+
+// Функция для получения индекса исхода по множителю
+const getOutcomeIndexByMultiplier = (multiplier) => {
+  const indexMap = {
+    30: [2, 14],
+    15: [3, 13],
+    8: [4, 12],
+    3: [5, 11],
+    1.5: [6, 10],
+    0.6: [7, 9],
+    0.2: [8]
+  };
+  
+  for (const [key, indices] of Object.entries(indexMap)) {
+    if (parseFloat(key) === multiplier) {
+      // Если несколько индексов, выбираем случайный
+      if (Array.isArray(indices)) {
+        return indices[Math.floor(Math.random() * indices.length)];
+      }
+      return indices;
+    }
+  }
+  
+  return 8; // fallback на x0.2
+};
 
 export default function BounceFallScreen({ onNavigate }) {
   const plinkoRef = useRef();
@@ -28,6 +83,7 @@ export default function BounceFallScreen({ onNavigate }) {
   const [roundData, setRoundData] = useState(null);
   
   const { checkBalance, setNewBalances, loadBalances } = useBalance();
+  const { isDemoMode, demoBalance, removeFromDemoBalance, addToDemoBalance } = useDemo();
 
   // Обработчики для слайдера
   const handleSliderStart = (e) => {
@@ -105,6 +161,65 @@ export default function BounceFallScreen({ onNavigate }) {
     }
 
     const totalBet = parseFloat(betAmount) * ballCount;
+
+    // ДЕМО РЕЖИМ - проверяем демо-баланс
+    if (isDemoMode) {
+      if (demoBalance < totalBet) {
+        alert(`Insufficient TON in demo balance! You need ${totalBet} TON`);
+        return;
+      }
+      
+      // Списываем с демо-баланса
+      removeFromDemoBalance(totalBet);
+      
+      setIsLoading(true);
+      
+      // Очищаем очередь перед запуском
+      if (window.clearLaunchQueue) {
+        window.clearLaunchQueue();
+      }
+      
+      // Генерируем результаты для всех шариков
+      const demoResults = [];
+      for (let i = 0; i < ballCount; i++) {
+        const multiplier = getRandomDemoMultiplier();
+        const outcomeIndex = getOutcomeIndexByMultiplier(multiplier);
+        demoResults.push({
+          multiplier,
+          outcome_index: outcomeIndex
+        });
+      }
+      
+      console.log('🎮 Демо-режим: результаты:', demoResults);
+      
+      setTotalWinnings(0);
+      setBallsDropped(0);
+      setGameState('playing');
+      
+      // Добавляем все шарики в очередь с правильными пресетами
+      demoResults.forEach((result, index) => {
+        const preset = getRandomPreset(result.outcome_index);
+        if (window.queueLaunchParams) {
+          window.queueLaunchParams(preset.x, preset.vx);
+        }
+      });
+      
+      // Запускаем шарики
+      setTimeout(() => {
+        if (plinkoRef.current) {
+          for (let i = 0; i < ballCount; i++) {
+            setTimeout(() => {
+              plinkoRef.current.dropBall();
+            }, i * 400);
+          }
+        }
+      }, 100);
+      
+      setIsLoading(false);
+      return;
+    }
+
+    // РЕАЛЬНЫЙ РЕЖИМ - проверяем реальный баланс
     if (!checkBalance(selectedCurrency.toLowerCase(), totalBet)) {
       alert(`Insufficient ${selectedCurrency} balance`);
       return;
@@ -163,26 +278,34 @@ export default function BounceFallScreen({ onNavigate }) {
   };
 
   const handleTakeWinnings = async () => {
+    // В демо-режиме добавляем выигрыш к демо-балансу
+    if (isDemoMode && totalWinnings > 0) {
+      addToDemoBalance(totalWinnings);
+    }
+    
     setGameState('idle');
     setTotalWinnings(0);
     setBallsDropped(0);
     setRoundData(null);
     
-    try {
-      await loadBalances();
-      window.dispatchEvent(new CustomEvent('balanceUpdate'));
-      console.log('✅ Balance updated after taking winnings');
-    } catch (error) {
-      console.error('Error refreshing balance:', error);
-      
+    // В реальном режиме обновляем баланс
+    if (!isDemoMode) {
       try {
-        const balanceResponse = await usersApi.getBalance();
-        if (balanceResponse?.balances) {
-          setNewBalances(balanceResponse.balances);
-          window.dispatchEvent(new CustomEvent('balanceUpdate'));
+        await loadBalances();
+        window.dispatchEvent(new CustomEvent('balanceUpdate'));
+        console.log('✅ Balance updated after taking winnings');
+      } catch (error) {
+        console.error('Error refreshing balance:', error);
+        
+        try {
+          const balanceResponse = await usersApi.getBalance();
+          if (balanceResponse?.balances) {
+            setNewBalances(balanceResponse.balances);
+            window.dispatchEvent(new CustomEvent('balanceUpdate'));
+          }
+        } catch (balanceError) {
+          console.error('Error refreshing balance directly:', balanceError);
         }
-      } catch (balanceError) {
-        console.error('Error refreshing balance directly:', balanceError);
       }
     }
   };
