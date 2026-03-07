@@ -21,7 +21,7 @@ const caseImages = {
   6: cardton3
 };
 
-export default function SpinScreen({ onNavigate, caseId, winData, isDemo }) {
+export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanceAlreadyCharged = false }) {
   const { 
     isDemoMode, 
     demoBalance, 
@@ -38,14 +38,14 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo }) {
   const [showModal, setShowModal] = useState(false);
   const [particles, setParticles] = useState([]);
   const [glowOpacity, setGlowOpacity] = useState(0);
-  const [hasCharged, setHasCharged] = useState(false);
+  const [hasCharged, setHasCharged] = useState(balanceAlreadyCharged); // Используем пропс
   const [isProcessing, setIsProcessing] = useState(false);
   
   const scrollerRef = useRef(null);
   const animationRef = useRef(null);
 
   // Флаг для отслеживания, был ли уже списан баланс
-  const balanceChargedRef = useRef(false);
+  const balanceChargedRef = useRef(balanceAlreadyCharged);
 
   // Определяем, какое изображение использовать для этого кейса
   const getDefaultImage = () => {
@@ -145,6 +145,7 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo }) {
     console.log('🔄 SpinScreen инициализация');
     console.log('📦 winData получены:', winData);
     console.log('📦 caseItems загружены:', caseItems.length);
+    console.log('💰 balanceAlreadyCharged:', balanceAlreadyCharged);
     
     const initializeData = () => {
       let targetItem = null;
@@ -225,7 +226,7 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo }) {
     };
 
     initializeData();
-  }, [isLoading, isDemoMode, isDemo, winData, caseItems]);
+  }, [isLoading, isDemoMode, isDemo, winData, caseItems, balanceAlreadyCharged]);
 
   // Генерация фреймов для анимации
   const generateFrames = (targetItem) => {
@@ -299,15 +300,22 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo }) {
   // Запуск спина
   const startSpin = (targetItem) => {
     console.log('🎰 Запуск спина');
+    console.log('💰 hasCharged:', hasCharged, 'balanceChargedRef:', balanceChargedRef.current);
     
-    // В демо-режиме списываем баланс ТОЛЬКО если еще не списывали
+    // В демо-режиме списываем баланс ТОЛЬКО если ещё не списывали И баланс не был списан в модалке
     if ((isDemoMode || isDemo) && !balanceChargedRef.current && !hasCharged) {
+      
+      console.log('⚠️ ВНИМАНИЕ: Попытка списать баланс в SpinScreen! Этого не должно происходить, если списали в модалке');
+      console.log('✅ Баланс ДОЛЖЕН списываться только в CaseModal');
+      
+      // Код ниже закомментирован, чтобы никогда не списывать в SpinScreen
+      /*
       // Пытаемся получить цену из разных источников
       let price = 0;
       
       // Если есть demoPrice в пропсах (из CaseModal)
-      if (winData?.demoPrice) {
-        price = winData.demoPrice;
+      if (winData?.demoCasePrice) {
+        price = winData.demoCasePrice;
       } 
       // Иначе пытаемся из targetItem
       else if (targetItem?.price) {
@@ -329,6 +337,7 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo }) {
       removeFromDemoBalance(price);
       balanceChargedRef.current = true;
       setHasCharged(true);
+      */
     }
 
     setIsSpinning(true);

@@ -64,7 +64,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
     return DEMO_CASE_PRICES[caseItem.id] || { ton: 0, stars: 0 };
   };
 
-  // Функция для получения класса заголовка в зависимости от ID кейса
+  // Функция для получения класса заголовка
   const getTitleClass = () => {
     const caseId = caseItem.id;
     switch(caseId) {
@@ -92,7 +92,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
     }
   };
 
-  // Функция для получения фона рамки в зависимости от ID кейса
+  // Функция для получения фона рамки
   const getFrameBackground = () => {
     const caseId = caseItem.id;
     
@@ -107,28 +107,24 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
     }
   };
 
- // Функция для обрезания цены (без округления)
-const formatPrice = (priceStr) => {
-  const priceValue = parseFloat(priceStr.replace(/[^\d.-]/g, ''));
-  const currency = priceStr.includes('TON') ? ' TON' : '';
-  
-  if (priceValue >= 100) {
-    // Преобразуем в строку и обрезаем до 1 знака после запятой БЕЗ округления
-    const priceString = priceValue.toString();
-    const [wholePart, decimalPart] = priceString.split('.');
+  // Функция для обрезания цены (без округления)
+  const formatPrice = (priceStr) => {
+    const priceValue = parseFloat(priceStr.replace(/[^\d.-]/g, ''));
+    const currency = priceStr.includes('TON') ? ' TON' : '';
     
-    if (decimalPart) {
-      // Если есть десятичная часть, берем только первый знак (обрезаем, не округляем)
-      return `${wholePart}.${decimalPart.substring(0, 1)}${currency}`;
-    } else {
-      // Если целое число
-      return `${wholePart}${currency}`;
+    if (priceValue >= 100) {
+      const priceString = priceValue.toString();
+      const [wholePart, decimalPart] = priceString.split('.');
+      
+      if (decimalPart) {
+        return `${wholePart}.${decimalPart.substring(0, 1)}${currency}`;
+      } else {
+        return `${wholePart}${currency}`;
+      }
     }
-  }
-  
-  // Для чисел < 100 оставляем как есть
-  return priceStr;
-};
+    
+    return priceStr;
+  };
 
   // Загружаем данные кейса по ID
   useEffect(() => {
@@ -137,7 +133,6 @@ const formatPrice = (priceStr) => {
         setIsLoading(true);
         console.log(`📦 Загрузка данных кейса ID: ${caseItem.id}`);
         
-        // В демо-режиме тоже загружаем данные с API для отображения содержимого
         const response = await casesApi.getCaseById(caseItem.id);
         console.log('✅ Данные кейса загружены:', response);
         
@@ -159,7 +154,7 @@ const formatPrice = (priceStr) => {
     if (caseItem?.id) {
       loadCaseData();
     }
-  }, [caseItem]); // Убрали isDemoMode из зависимостей, чтобы всегда загружать
+  }, [caseItem]);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -181,7 +176,7 @@ const formatPrice = (priceStr) => {
         return;
       }
       
-      // Списываем с демо-баланса (только один раз)
+      // СПИСЫВАЕМ ТОЛЬКО ЦЕНУ КЕЙСА (один раз)
       removeFromDemoBalance(price.ton);
       
       // Получаем случайный предмет из caseItems для демо
@@ -212,11 +207,15 @@ const formatPrice = (priceStr) => {
         };
       }
       
-      // Переходим на спин с выигрышным предметом
+      // Передаём флаг, что баланс уже списан
       onNavigate('spin', { 
-        winData: { winningItem: demoWinningItem },
+        winData: { 
+          winningItem: demoWinningItem,
+          demoCasePrice: price.ton // передаём для информации, но списывать больше не нужно
+        },
         caseId: caseItem.id, 
-        isDemo: true
+        isDemo: true,
+        balanceAlreadyCharged: true // ВАЖНО: говорим SpinScreen, что баланс уже списан
       });
       onClose();
       return;
@@ -253,6 +252,9 @@ const formatPrice = (priceStr) => {
     if (isDemoMode) {
       console.log('🎮 Демо-режим: открытие кейса за звезды');
       
+      // В демо-режиме за звезды не списываем, просто открываем
+      // Но передаём флаг, что списывать не нужно
+      
       // Получаем случайный предмет из caseItems для демо
       let demoWinningItem = null;
       if (caseItems.length > 0) {
@@ -281,11 +283,11 @@ const formatPrice = (priceStr) => {
         };
       }
       
-      // Переходим на спин с выигрышным предметом
       onNavigate('spin', { 
         winData: { winningItem: demoWinningItem },
         caseId: caseItem.id, 
-        isDemo: true
+        isDemo: true,
+        balanceAlreadyCharged: false // за звезды не списываем
       });
       onClose();
       return;
