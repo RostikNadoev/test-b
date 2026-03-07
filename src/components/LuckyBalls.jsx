@@ -206,9 +206,9 @@ export default function LuckyBalls({
       
       setIsLoading(true);
       
-      // Запускаем демо-игру
+      // Запускаем демо-игру с ПЕРВОГО уровня
       setActiveGameId('demo_' + Date.now());
-      setCurrentLevel(1);
+      setCurrentLevel(1); // Начинаем с 1 уровня
       setMultiplier(DEMO_LEVEL_MULTIPLIERS[1]);
       setGameState('playing');
       setTileStates({});
@@ -295,19 +295,31 @@ export default function LuckyBalls({
       if (isWin) {
         // Переход на следующий уровень
         const nextLevel = currentLevel + 1;
-        const nextMultiplier = DEMO_LEVEL_MULTIPLIERS[nextLevel] || 1;
         
-        setMultiplier(nextMultiplier);
-        setCurrentLevel(nextLevel);
-        
-        const bet = parseFloat(betAmount) || 0;
-        const newPrize = bet * nextMultiplier;
-        setCurrentPrize(selectedCurrency === 'STARS' ? Math.round(newPrize) : newPrize);
-        
-        setTimeout(() => {
-          setGameState('playing');
-          setIsLoading(false);
-        }, 800);
+        if (nextLevel <= 10) {
+          // Есть следующий уровень
+          const nextMultiplier = DEMO_LEVEL_MULTIPLIERS[nextLevel] || 1;
+          
+          setMultiplier(nextMultiplier);
+          setCurrentLevel(nextLevel);
+          
+          const bet = parseFloat(betAmount) || 0;
+          const newPrize = bet * nextMultiplier;
+          setCurrentPrize(selectedCurrency === 'STARS' ? Math.round(newPrize) : newPrize);
+          
+          setTimeout(() => {
+            setGameState('playing');
+            setIsLoading(false);
+          }, 800);
+        } else {
+          // Дошли до 10 уровня и выиграли - максимум
+          setCurrentPrize(prev => prev); // Оставляем текущий приз
+          
+          setTimeout(() => {
+            setGameState('cashed_out'); // Автоматически забираем выигрыш
+            setIsLoading(false);
+          }, 800);
+        }
       } else {
         // Проигрыш
         setCurrentPrize(0);
