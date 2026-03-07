@@ -26,18 +26,18 @@ const DEMO_LEVEL_MULTIPLIERS = {
   10: 80
 };
 
-// Шансы на победу для каждого уровня в демо-режиме (%)
+// ПОВЫШЕННЫЕ шансы на победу для каждого уровня в демо-режиме (%)
 const DEMO_WIN_CHANCES = {
-  1: 90,   // 90% шанс пройти 1 уровень
-  2: 80,   // 80% шанс пройти 2 уровень
-  3: 70,   // 70% шанс пройти 3 уровень
-  4: 60,   // 60% шанс пройти 4 уровень
-  5: 50,   // 50% шанс пройти 5 уровень
-  6: 40,   // 40% шанс пройти 6 уровень
-  7: 30,   // 30% шанс пройти 7 уровень
-  8: 20,   // 20% шанс пройти 8 уровень
-  9: 10,   // 10% шанс пройти 9 уровень
-  10: 5    // 5% шанс пройти 10 уровень
+  1: 95,   // 95% шанс пройти 1 уровень
+  2: 85,   // 90% шанс пройти 2 уровень
+  3: 80,   // 85% шанс пройти 3 уровень
+  4: 70,   // 80% шанс пройти 4 уровень
+  5: 60,   // 75% шанс пройти 5 уровень
+  6: 45,   // 70% шанс пройти 6 уровень
+  7: 30,   // 65% шанс пройти 7 уровень
+  8: 20,   // 60% шанс пройти 8 уровень
+  9: 10,   // 55% шанс пройти 9 уровень
+  10: 4   // 50% шанс пройти 10 уровень
 };
 
 // Функция для определения, выиграл ли игрок на текущем уровне в демо-режиме
@@ -208,15 +208,13 @@ export default function LuckyBalls({
       
       // Запускаем демо-игру с ПЕРВОГО уровня
       setActiveGameId('demo_' + Date.now());
-      setCurrentLevel(1); // Начинаем с 1 уровня
-      setMultiplier(DEMO_LEVEL_MULTIPLIERS[1]);
+      setCurrentLevel(0); // Важно: currentLevel = 0 означает, что следующий уровень - 1
+      setMultiplier(1); // Множитель пока 1, обновится после первого клика
       setGameState('playing');
       setTileStates({});
       setSelectedTiles([]);
       setLastPickResult(null);
-      
-      const prize = bet * DEMO_LEVEL_MULTIPLIERS[1];
-      setCurrentPrize(selectedCurrency === 'STARS' ? Math.round(prize) : prize);
+      setCurrentPrize(0); // Приз пока 0, обновится после первого клика
       
       setTimeout(() => setIsLoading(false), 500);
       return;
@@ -278,7 +276,9 @@ export default function LuckyBalls({
       setIsLoading(true);
       
       // Определяем результат на основе шансов для текущего уровня
-      const isWin = getDemoPickResult(currentLevel);
+      // row = currentLevel + 1, поэтому текущий уровень = row
+      const currentGameLevel = row;
+      const isWin = getDemoPickResult(currentGameLevel);
       
       const tileKey = `${row}-${tile}`;
       setTileStates(prev => ({
@@ -293,30 +293,29 @@ export default function LuckyBalls({
       setLastPickResult({ is_win: isWin });
       
       if (isWin) {
-        // Переход на следующий уровень
-        const nextLevel = currentLevel + 1;
+        // Обновляем множитель и приз для текущего уровня
+        const currentMultiplier = DEMO_LEVEL_MULTIPLIERS[currentGameLevel] || 1;
+        setMultiplier(currentMultiplier);
         
-        if (nextLevel <= 10) {
-          // Есть следующий уровень
-          const nextMultiplier = DEMO_LEVEL_MULTIPLIERS[nextLevel] || 1;
-          
-          setMultiplier(nextMultiplier);
+        const bet = parseFloat(betAmount) || 0;
+        const newPrize = bet * currentMultiplier;
+        setCurrentPrize(selectedCurrency === 'STARS' ? Math.round(newPrize) : newPrize);
+        
+        // Переход на следующий уровень
+        const nextLevel = currentGameLevel;
+        
+        if (nextLevel < 10) {
+          // Есть следующий уровень - обновляем currentLevel
           setCurrentLevel(nextLevel);
-          
-          const bet = parseFloat(betAmount) || 0;
-          const newPrize = bet * nextMultiplier;
-          setCurrentPrize(selectedCurrency === 'STARS' ? Math.round(newPrize) : newPrize);
           
           setTimeout(() => {
             setGameState('playing');
             setIsLoading(false);
           }, 800);
         } else {
-          // Дошли до 10 уровня и выиграли - максимум
-          setCurrentPrize(prev => prev); // Оставляем текущий приз
-          
+          // Дошли до 10 уровня и выиграли
           setTimeout(() => {
-            setGameState('cashed_out'); // Автоматически забираем выигрыш
+            setGameState('playing'); // Оставляем в состоянии игры, чтобы можно было забрать выигрыш
             setIsLoading(false);
           }, 800);
         }
@@ -674,7 +673,7 @@ export default function LuckyBalls({
                 ? 'YOU LOST!' 
                 : gameState === 'cashed_out' 
                   ? 'CASHED OUT!' 
-                  : `LEVEL ${currentLevel}`}
+                  : `LEVEL ${currentLevel + 1}`} {/* Показываем текущий уровень + 1 */}
             </div>
           </div>
           
