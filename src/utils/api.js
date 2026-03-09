@@ -719,7 +719,19 @@ export const upgradeApi = {
       console.error('❌ Error playing upgrade:', error);
       throw error;
     }
-  }
+  },
+
+    async getDemoOptions() {
+    try {
+      console.log('🎮 Getting demo upgrade options...');
+      const response = await api.get('/api/v1/upgrade/demo-options');
+      console.log('✅ Demo options received:', response.data);
+      return response.data; // Возвращаем массив предметов
+    } catch (error) {
+      console.error('❌ Error getting demo options:', error);
+      throw error;
+    }
+  },
 };
 // Export base axios instance for other requests
 export default api;

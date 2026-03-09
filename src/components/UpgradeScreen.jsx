@@ -143,15 +143,10 @@ export default function UpgradeScreen({ onNavigate }) {
   const calculateDemoChance = (sourcePrice, targetPrice) => {
     if (!sourcePrice || !targetPrice) return 0;
     
-    // Чем больше разница в цене, тем меньше шанс
-    const ratio = sourcePrice / targetPrice;
+    let chance = (sourcePrice / targetPrice) * 100;
     
-    // Базовый шанс: 50% при равных ценах
-    // Уменьшается пропорционально разнице
-    let chance = 50 * ratio;
-    
-    // Ограничиваем шанс от 5% до 80%
-    return Math.min(80, Math.max(5, chance));
+    // Ограничиваем шанс от 0.1% до 80%
+    return Math.min(80, Math.max(0.1, chance));
   };
 
   // Загрузка инвентаря пользователя
@@ -219,7 +214,55 @@ export default function UpgradeScreen({ onNavigate }) {
   const loadUpgradeOptions = async (id) => {
     if (!id) return;
     
-    // В демо-режиме тоже загружаем с API
+    // В демо-режиме используем специальный метод demo-options
+    if (isDemoMode) {
+      console.log('🎮 Демо-режим: загружаем демо-опции для апгрейда');
+      setIsLoadingOptions(true);
+      
+      try {
+        const data = await upgradeApi.getDemoOptions();
+        console.log('📦 Demo options received:', data);
+        
+        // data - это массив предметов доступных для апгрейда в демо-режиме
+        let options = [];
+        if (Array.isArray(data)) {
+          options = data;
+        } else if (data?.options) {
+          options = data.options;
+        } else if (data?.items) {
+          options = data.items;
+        }
+        
+        console.log('📦 Processed demo options:', options);
+        
+        // Фильтруем только те предметы, которые дороже выбранного
+        const myItemPrice = myItem?.price_ton || 0;
+        const filteredOptions = options.filter(item => {
+          const itemPrice = parseFloat(item.price_ton || 0);
+          return itemPrice > myItemPrice; // Только дороже
+        });
+        
+        console.log('📦 Filtered options (more expensive):', filteredOptions);
+        
+        // Сортируем цели от дешевого к дорогому
+        const sortedOptions = filteredOptions.sort((a, b) => {
+          const priceA = parseFloat(a.price_ton || 0);
+          const priceB = parseFloat(b.price_ton || 0);
+          return priceA - priceB;
+        });
+        
+        setTargetOptions(sortedOptions);
+      } catch (error) {
+        console.error('Failed to load demo options:', error);
+        setTargetOptions([]);
+      } finally {
+        setIsLoadingOptions(false);
+      }
+      
+      return;
+    }
+
+    // Обычный режим - используем обычный метод
     setIsLoadingOptions(true);
     try {
       const data = await upgradeApi.getOptions(id);
@@ -264,12 +307,14 @@ export default function UpgradeScreen({ onNavigate }) {
       const targetPrice = targetItem.price_ton || 0;
       
       const chance = calculateDemoChance(sourcePrice, targetPrice);
+      console.log(`📊 Демо шанс: ${sourcePrice} -> ${targetPrice} = ${chance}%`);
       setWinChance(chance);
       
       setIsLoadingChance(false);
       return;
     }
 
+    // Обычный режим - запрашиваем шанс через API
     setIsLoadingChance(true);
     try {
       const data = await upgradeApi.calcChance(id, targetIndex);
@@ -353,10 +398,13 @@ export default function UpgradeScreen({ onNavigate }) {
     // ДЕМО РЕЖИМ - рандомный результат
     if (isDemoMode) {
       console.log('🎮 Демо-режим: симуляция апгрейда');
+      console.log(`📊 Шанс победы: ${winChance}%`);
       
       // Определяем победу случайно на основе шанса
       const random = Math.random() * 100;
       const isWin = random <= winChance;
+      
+      console.log(`🎲 Рандом: ${random.toFixed(2)}%, Результат: ${isWin ? 'ПОБЕДА' : 'ПРОИГРЫШ'}`);
 
       // Запускаем вибрацию
       setTimeout(() => {
@@ -386,6 +434,7 @@ export default function UpgradeScreen({ onNavigate }) {
         triggerVibration(isWin ? 'notification' : 'impact');
 
         if (isWin) {
+          console.log('🎉 ПОБЕДА! Добавляем предмет в инвентарь');
           // Добавляем выигранный предмет в демо-инвентарь
           addToDemoInventory(targetItem);
           setShowWinModal(true);
@@ -396,8 +445,11 @@ export default function UpgradeScreen({ onNavigate }) {
             item => item.id === myItem.id || item.index === myItem.index
           );
           if (itemIndex !== -1) {
+            console.log('🗑️ Удаляем исходный предмет из инвентаря');
             removeFromDemoInventory(itemIndex);
           }
+        } else {
+          console.log('😢 ПРОИГРЫШ');
         }
 
         // Возврат стрелки
@@ -720,7 +772,9 @@ export default function UpgradeScreen({ onNavigate }) {
                   })
                 ) : (
                   <div className="upgrade-empty-inventory-message">
-                    No items available
+                    {activeModal === 'target' && isDemoMode 
+                      ? 'No more expensive items available' 
+                      : 'No items available'}
                   </div>
                 )}
               </div>
