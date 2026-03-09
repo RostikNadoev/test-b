@@ -143,10 +143,18 @@ export default function UpgradeScreen({ onNavigate }) {
   const calculateDemoChance = (sourcePrice, targetPrice) => {
     if (!sourcePrice || !targetPrice) return 0;
     
+    // Простой процент: (цена источника / цена цели) * 100
+    // Если предмет стоит 1, цель 100 → шанс 1%
+    // Если предмет стоит 80, цель 100 → шанс 80%
+    // Если предмет стоит 100, цель 100 → шанс 100%
     let chance = (sourcePrice / targetPrice) * 100;
     
-    // Ограничиваем шанс от 0.1% до 80%
-    return Math.min(80, Math.max(0.1, chance));
+    // НЕ ОГРАНИЧИВАЕМ шанс - показываем как есть (может быть 99%, 100% и т.д.)
+    // Только если targetPrice = 0, чтобы избежать деления на ноль
+    if (targetPrice === 0) return 0;
+    
+    console.log(`📊 Расчет шанса: ${sourcePrice} / ${targetPrice} * 100 = ${chance}%`);
+    return chance;
   };
 
   // Загрузка инвентаря пользователя
@@ -301,16 +309,16 @@ export default function UpgradeScreen({ onNavigate }) {
     // В демо-режиме рассчитываем шанс на основе цен
     if (isDemoMode && myItem && targetItem) {
       console.log('🎮 Демо-режим: рассчитываем шанс на основе цен');
-      setIsLoadingChance(true);
       
       const sourcePrice = myItem.price_ton || 0;
       const targetPrice = targetItem.price_ton || 0;
       
       const chance = calculateDemoChance(sourcePrice, targetPrice);
-      console.log(`📊 Демо шанс: ${sourcePrice} -> ${targetPrice} = ${chance}%`);
+      console.log(`📊 Демо шанс: ${sourcePrice} -> ${targetPrice} = ${chance.toFixed(2)}%`);
+      
+      // Устанавливаем шанс сразу, без задержки загрузки
       setWinChance(chance);
       
-      setIsLoadingChance(false);
       return;
     }
 
@@ -377,8 +385,17 @@ export default function UpgradeScreen({ onNavigate }) {
         price_ton: item.price_ton || 0,
         isDemo: item.isDemo || false
       });
-      // Как только цель выбрана, запрашиваем шанс
-      if (inventoryId && item.index) {
+      
+      // Сразу после выбора цели рассчитываем шанс
+      if (isDemoMode && myItem) {
+        // Для демо-режима рассчитываем сразу
+        const sourcePrice = myItem.price_ton || 0;
+        const targetPrice = item.price_ton || 0;
+        const chance = calculateDemoChance(sourcePrice, targetPrice);
+        console.log(`📊 Мгновенный расчет шанса: ${sourcePrice} -> ${targetPrice} = ${chance.toFixed(2)}%`);
+        setWinChance(chance);
+      } else if (inventoryId && item.index) {
+        // Для обычного режима через API
         loadChance(inventoryId, item.index);
       }
     }
@@ -387,6 +404,29 @@ export default function UpgradeScreen({ onNavigate }) {
       setActiveModal(null);
       setIsClosing(false);
     }, 300);
+  };
+
+  // Функция для удаления предмета из демо-инвентаря по ID или индексу
+  const removeItemFromDemoInventory = (itemToRemove) => {
+    if (!isDemoMode) return;
+    
+    console.log('🗑️ Удаляем предмет из демо-инвентаря:', itemToRemove);
+    
+    // Ищем предмет в инвентаре
+    const itemIndex = demoInventory.findIndex(item => {
+      // Сравниваем по разным возможным идентификаторам
+      return (item.id && item.id === itemToRemove.id) || 
+             (item.index && item.index === itemToRemove.index) ||
+             (item.inventory_id && item.inventory_id === itemToRemove.inventory_id) ||
+             (item.name && item.name === itemToRemove.name && item.price === itemToRemove.price);
+    });
+    
+    if (itemIndex !== -1) {
+      console.log(`✅ Найден предмет на индексе ${itemIndex}, удаляем`);
+      removeFromDemoInventory(itemIndex);
+    } else {
+      console.log('❌ Предмет не найден в инвентаре');
+    }
   };
 
   // Обработчик нажатия кнопки UPGRADE
@@ -398,7 +438,7 @@ export default function UpgradeScreen({ onNavigate }) {
     // ДЕМО РЕЖИМ - рандомный результат
     if (isDemoMode) {
       console.log('🎮 Демо-режим: симуляция апгрейда');
-      console.log(`📊 Шанс победы: ${winChance}%`);
+      console.log(`📊 Шанс победы: ${winChance.toFixed(2)}%`);
       
       // Определяем победу случайно на основе шанса
       const random = Math.random() * 100;
@@ -434,22 +474,20 @@ export default function UpgradeScreen({ onNavigate }) {
         triggerVibration(isWin ? 'notification' : 'impact');
 
         if (isWin) {
-          console.log('🎉 ПОБЕДА! Добавляем предмет в инвентарь');
-          // Добавляем выигранный предмет в демо-инвентарь
+          console.log('🎉 ПОБЕДА! Добавляем выигранный предмет в инвентарь');
+          
+          // Сохраняем целевой предмет в демо-инвентарь
           addToDemoInventory(targetItem);
           setShowWinModal(true);
           
           // Удаляем исходный предмет из демо-инвентаря
-          // Находим индекс предмета в демо-инвентаре
-          const itemIndex = demoInventory.findIndex(
-            item => item.id === myItem.id || item.index === myItem.index
-          );
-          if (itemIndex !== -1) {
-            console.log('🗑️ Удаляем исходный предмет из инвентаря');
-            removeFromDemoInventory(itemIndex);
-          }
+          removeItemFromDemoInventory(myItem);
+          
         } else {
-          console.log('😢 ПРОИГРЫШ');
+          console.log('😢 ПРОИГРЫШ - предмет удаляется');
+          
+          // При проигрыше удаляем исходный предмет
+          removeItemFromDemoInventory(myItem);
         }
 
         // Возврат стрелки
