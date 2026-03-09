@@ -824,7 +824,6 @@ export default function Header({ onNavigate, variant = 'default' }) {
                       placeholder="0"
                       inputMode="numeric"
                     />
-                    <span className="balance-input-suffix">STARS</span>
                   </div>
 
                   <div className="stars-actions">
