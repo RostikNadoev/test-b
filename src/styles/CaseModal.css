@@ -337,9 +337,10 @@
 }
 
 .modal-ton-icon {
-  width: 20px;
+  width: 22px;
   height: auto;
   object-fit: contain;
+  margin-bottom: 4px;
 }
 
 .modal-stars-icon {

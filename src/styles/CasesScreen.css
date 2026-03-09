@@ -236,9 +236,10 @@ html, body {
 
 .ton-box .price-icon {
   width: auto;
-  height: 57%;
+  height: 59%;
   max-height: clamp(18px, 5.5vw, 24px);
-  margin-bottom: 2px;
+  margin-bottom: 4px;
+  margin-right: 1px;
 }
 
 .stars-box .price-icon {
