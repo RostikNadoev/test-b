@@ -5,21 +5,18 @@ import { useDemo } from '../contexts/DemoContext';
 import { casesApi } from '../utils/api';
 import Header from './Header';
 
-// Импортируем изображения для разных кейсов
-import cardton1 from '../assets/MainPage/chest1/ton.png';
-import cardton2 from '../assets/MainPage/chest2/ton.png';
-import cardton3 from '../assets/MainPage/chest3/ton.png';
 import starsIcon from '../assets/MainPage/cases/starsicon.png';
 import arrow from '../assets/SpinPage/arrow.png';
+import tonIcon from '../assets/MainPage/cases/tonicon.png';
 
 // Маппинг изображений по ID кейса
 const caseImages = {
-  1: cardton1,
-  2: cardton2,
-  3: cardton3,
-  4: cardton1,
-  5: cardton2,
-  6: cardton3
+  1: tonIcon,
+  2: tonIcon,
+  3: tonIcon,
+  4: tonIcon,
+  5: tonIcon,
+  6: tonIcon
 };
 
 export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanceAlreadyCharged = false }) {
@@ -50,7 +47,7 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
 
   // Определяем, какое изображение использовать для этого кейса
   const getDefaultImage = () => {
-    return caseImages[caseId] || cardton1;
+    return caseImages[caseId] || tonIcon;
   };
 
   // Функция для получения URL изображения из API

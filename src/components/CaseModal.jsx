@@ -7,7 +7,6 @@ import { useBalance } from '../contexts/BalanceContext';
 // Импортируем иконки
 import tonIcon from '../assets/MainPage/cases/tonicon.png';
 import starsIcon from '../assets/MainPage/cases/starsicon.png';
-import cardton1 from '../assets/MainPage/chest1/ton.png';
 import lockIcon from '../assets/MainPage/lock.png'; // Нужно добавить иконку замка
 
 // Импортируем фоны для рамок
