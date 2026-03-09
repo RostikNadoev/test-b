@@ -501,13 +501,19 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
   const frameContents = getFrameContents();
   const price = getCasePrice();
 
-  const getPriceClass = (priceStr) => {
-    const priceValue = parseFloat(priceStr.replace(/[^\d.-]/g, ''));
-    if (priceValue >= 501) return 'modal-item-price-gradient-3';
-    if (priceValue >= 51) return 'modal-item-price-gradient-2';
-    if (priceValue >= 11) return 'modal-item-price-gradient-1';
+ // Функция для получения класса цены
+const getPriceClass = (priceStr) => {
+  // Если это звезды - всегда обычный класс без градиентов
+  if (priceStr.includes('Stars')) {
     return 'modal-item-price';
-  };
+  }
+  
+  const priceValue = parseFloat(priceStr.replace(/[^\d.-]/g, ''));
+  if (priceValue >= 501) return 'modal-item-price-gradient-3';
+  if (priceValue >= 51) return 'modal-item-price-gradient-2';
+  if (priceValue >= 11) return 'modal-item-price-gradient-1';
+  return 'modal-item-price';
+};
 
   const getTonButtonClass = () => {
     const caseId = caseItem.id;

@@ -480,14 +480,21 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
   }, []);
 
   // Класс для цены
-  const getPriceClass = (priceStr) => {
-    if (!priceStr) return 'item-price';
-    const priceValue = parseFloat(priceStr.replace(/[^\d.-]/g, ''));
-    if (priceValue >= 501) return 'item-price-gradient-3';
-    if (priceValue >= 51) return 'item-price-gradient-2';
-    if (priceValue >= 11) return 'item-price-gradient-1';
+// Класс для цены
+const getPriceClass = (priceStr) => {
+  if (!priceStr) return 'item-price';
+  
+  // Если это звезды - всегда обычный класс без градиентов
+  if (priceStr.includes('Stars')) {
     return 'item-price';
-  };
+  }
+  
+  const priceValue = parseFloat(priceStr.replace(/[^\d.-]/g, ''));
+  if (priceValue >= 501) return 'item-price-gradient-3';
+  if (priceValue >= 51) return 'item-price-gradient-2';
+  if (priceValue >= 11) return 'item-price-gradient-1';
+  return 'item-price';
+};
 
   if (isLoading) {
     return (
