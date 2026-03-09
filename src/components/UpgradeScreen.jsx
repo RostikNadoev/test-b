@@ -588,7 +588,7 @@ export default function UpgradeScreen({ onNavigate }) {
                       className="upgrade-slot-item-image"
                       onError={(e) => e.target.src = cardton1}
                     />
-                    <div className="upgrade-slot-item-price">
+                    <div className={`upgrade-slot-item-price ${getPriceClass(myItem.price_ton)}`}>
                       {myItem.price_ton || '??'} TON
                     </div>
                   </>
@@ -630,7 +630,7 @@ export default function UpgradeScreen({ onNavigate }) {
                       className="upgrade-slot-item-image"
                       onError={(e) => e.target.src = cardton1}
                     />
-                    <div className="upgrade-slot-item-price">
+                    <div className={`upgrade-slot-item-price ${getPriceClass(targetItem.price_ton)}`}>
                       {targetItem.price_ton || '??'} TON
                     </div>
                   </>
@@ -751,7 +751,7 @@ export default function UpgradeScreen({ onNavigate }) {
               className="upgrade-win-item-image"
               onError={(e) => e.target.src = cardton1}
             />
-            <div className="upgrade-win-price">
+            <div className={`upgrade-win-price ${getPriceClass(targetItem.price_ton)}`}>
               {targetItem.price_ton || '??'} TON
             </div>
           </div>
