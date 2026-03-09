@@ -392,6 +392,38 @@ export const starsApi = {
       console.error('❌ Error getting stars withdraw progress:', error);
       throw error;
     }
+  },
+
+  // НОВЫЙ МЕТОД: Отправить заявку на вывод звезд
+  async submitWithdrawRequest(amount) {
+    try {
+      console.log(`💸 Submitting withdraw request for ${amount} stars...`);
+      
+      const response = await api.post('/api/v1/stars/withdraw', {
+        amount: parseInt(amount)
+      });
+      
+      console.log('✅ Withdraw request submitted:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error submitting withdraw request:', error);
+      
+      // Пробрасываем ошибку с данными от сервера
+      if (error.response) {
+        const errorData = error.response.data;
+        console.log('📡 Server error data:', errorData);
+        
+        // Создаем улучшенную ошибку с дополнительными полями
+        const enhancedError = new Error(errorData.error || 'Withdraw failed');
+        enhancedError.status = error.response.status;
+        enhancedError.data = errorData;
+        enhancedError.originalError = error;
+        
+        throw enhancedError;
+      }
+      
+      throw error;
+    }
   }
 };
 

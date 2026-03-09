@@ -1331,3 +1331,353 @@
   min-width: auto;
   object-fit: contain;
 }
+
+/* Confirm Withdraw Modal - Уникальные классы */
+.confirm-withdraw-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+}
+
+.confirm-withdraw-blur {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.confirm-withdraw-modal-content {
+  position: relative;
+  background: white;
+  border-radius: 24px;
+  width: 90%;
+  max-width: 380px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  z-index: 1101;
+  animation: confirm-withdraw-appear 0.3s ease-out;
+}
+
+.confirm-withdraw-modal-content.modal-special {
+  background: #1a1a1a;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@keyframes confirm-withdraw-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.confirm-withdraw-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.modal-special .confirm-withdraw-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.confirm-withdraw-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #000;
+}
+
+.modal-special .confirm-withdraw-title {
+  color: white;
+}
+
+.confirm-withdraw-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirm-withdraw-close-btn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.modal-special .confirm-withdraw-close-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.confirm-withdraw-close-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.confirm-withdraw-close-icon {
+  width: 20px;
+  height: 20px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.confirm-withdraw-close-btn:hover:not(:disabled) .confirm-withdraw-close-icon {
+  opacity: 1;
+}
+
+.modal-special .confirm-withdraw-close-icon {
+  filter: brightness(0) invert(1);
+}
+
+.confirm-withdraw-body {
+  padding: 24px;
+}
+
+.confirm-withdraw-question {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.modal-special .confirm-withdraw-question {
+  color: #eee;
+}
+
+.confirm-withdraw-question strong {
+  color: #007AFF;
+  font-weight: 600;
+}
+
+.confirm-withdraw-info {
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.modal-special .confirm-withdraw-info {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  font-size: 15px;
+  color: #666;
+}
+
+.modal-special .info-row {
+  color: #aaa;
+}
+
+.info-row:not(:last-child) {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.modal-special .info-row:not(:last-child) {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.info-value {
+  font-weight: 600;
+  color: #000;
+}
+
+.modal-special .info-value {
+  color: white;
+}
+
+.info-value.completed {
+  color: #34C759;
+}
+
+.info-value.pending {
+  color: #FF9F0A;
+}
+
+.confirm-withdraw-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px;
+  background: rgba(255, 59, 48, 0.1);
+  border: 1px solid rgba(255, 59, 48, 0.2);
+  border-radius: 12px;
+  color: #FF3B30;
+  font-size: 14px;
+}
+
+.modal-special .confirm-withdraw-error {
+  background: rgba(255, 59, 48, 0.15);
+}
+
+.error-icon {
+  font-size: 16px;
+}
+
+.confirm-withdraw-footer {
+  display: flex;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.modal-special .confirm-withdraw-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.confirm-withdraw-cancel-btn,
+.confirm-withdraw-submit-btn {
+  flex: 1;
+  padding: 14px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.confirm-withdraw-cancel-btn {
+  background: rgba(0, 0, 0, 0.05);
+  color: #666;
+}
+
+.modal-special .confirm-withdraw-cancel-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #aaa;
+}
+
+.confirm-withdraw-cancel-btn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.modal-special .confirm-withdraw-cancel-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.confirm-withdraw-submit-btn {
+  background: #007AFF;
+  color: white;
+}
+
+.confirm-withdraw-submit-btn:hover:not(:disabled) {
+  background: #0051D5;
+}
+
+.confirm-withdraw-submit-btn:disabled,
+.confirm-withdraw-cancel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Success state */
+.confirm-withdraw-success {
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.success-animation {
+  margin-bottom: 24px;
+}
+
+.success-icon-large {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  background: #34C759;
+  color: white;
+  border-radius: 50%;
+  font-size: 36px;
+  animation: scale-in 0.3s ease-out;
+}
+
+@keyframes scale-in {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.success-message {
+  font-size: 20px;
+  font-weight: 600;
+  color: #000;
+  margin-bottom: 8px;
+}
+
+.modal-special .success-message {
+  color: white;
+}
+
+.success-note {
+  font-size: 14px;
+  color: #666;
+}
+
+.modal-special .success-note {
+  color: #aaa;
+}
+
+/* Mobile adaptations */
+@media (max-width: 480px) {
+  .confirm-withdraw-modal-content {
+    width: 95%;
+    max-width: none;
+  }
+  
+  .confirm-withdraw-header {
+    padding: 16px 20px;
+  }
+  
+  .confirm-withdraw-body {
+    padding: 20px;
+  }
+  
+  .confirm-withdraw-footer {
+    padding: 16px 20px;
+  }
+  
+  .confirm-withdraw-question {
+    font-size: 16px;
+  }
+  
+  .info-row {
+    font-size: 14px;
+    padding: 8px 0;
+  }
+  
+  .confirm-withdraw-cancel-btn,
+  .confirm-withdraw-submit-btn {
+    padding: 12px;
+    font-size: 15px;
+  }
+}
