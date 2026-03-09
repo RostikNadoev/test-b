@@ -670,3 +670,8 @@
   padding: 0 10px;
   line-height: 1.4;
 }
+
+/* Уменьшаем иконку тона на 10% */
+.modal-item-image[src*="tonicon"] {
+  transform: scale(0.9);
+}
