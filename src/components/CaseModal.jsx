@@ -286,7 +286,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
         } else if (randomItem.item_type === 'tg_gift' && randomItem.image_url) {
           itemImg = getImageUrl(randomItem.image_url);
         } else {
-          itemImg = cardton1;
+          itemImg = tonIcon;
         }
         
         // Определяем цену для отображения
@@ -312,7 +312,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
       } else {
         // Если нет предметов, создаем заглушку
         demoWinningItem = {
-          img: cardton1,
+          img: tonIcon,
           price: `${price.ton} TON`,
           name: `${price.ton} TON`,
           item_type: 'reward_ton',
@@ -378,7 +378,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
         } else if (randomItem.item_type === 'tg_gift' && randomItem.image_url) {
           itemImg = getImageUrl(randomItem.image_url);
         } else {
-          itemImg = cardton1;
+          itemImg = tonIcon;
         }
         
         // Определяем цену для отображения
@@ -404,7 +404,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
       } else {
         // Если нет предметов, создаем заглушку
         demoWinningItem = {
-          img: cardton1,
+          img: tonIcon,
           price: `${price.ton} TON`,
           name: `${price.ton} TON`,
           item_type: 'reward_ton',
@@ -478,7 +478,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
       } else if (apiItem.image_url) {
         img = getImageUrl(apiItem.image_url);
       } else {
-        img = cardton1;
+        img = tonIcon;
       }
       
       // Определяем цену для отображения
@@ -530,14 +530,14 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
   };
 
   const getImageUrl = (imagePath) => {
-    if (!imagePath) return cardton1;
+    if (!imagePath) return tonIcon;
     
     if (imagePath.startsWith('/static/')) {
       return `https://shamefully-gifted-catbird.cloudpub.ru${imagePath}`;
     }
     
     if (imagePath.trim() === '') {
-      return cardton1;
+      return tonIcon;
     }
     
     return imagePath;
@@ -556,10 +556,10 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
           img = starsIcon;
           price = formatStarsPrice(item.price_stars);
         } else if (item.item_type === 'reward_ton') {
-          img = cardton1;
+          img = tonIcon;
           price = `${item.price_ton} TON`;
         } else {
-          img = cardton1;
+          img = tonIcon;
           price = '0 TON';
         }
         
@@ -578,7 +578,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
     }
     
     return Array(9).fill().map((_, index) => ({
-      img: cardton1,
+      img: tonIcon,
       price: '0 TON',
       itemType: 'reward_ton',
       id: index,
@@ -675,7 +675,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
                         loading="lazy"
                         onError={(e) => {
                           console.error(`Failed to load image: ${content.imageUrl}`);
-                          e.target.src = content.itemType === 'reward_stars' ? starsIcon : cardton1;
+                          e.target.src = content.itemType === 'reward_stars' ? starsIcon : tonIcon;
                         }}
                       />
                       <div className={getPriceClass(content.price)}>
