@@ -152,16 +152,15 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
         
         // Для первого кейса сохраняем статус
         if (caseItem.id === 1 && response.case) {
-          setFreeCaseStatus({
+          const status = {
             eligible: response.case.free_case_eligible_today || false,
             opened: response.case.free_case_opened_today || false,
             available: response.case.free_case_available_today || false
-          });
-          console.log('📊 Статус бесплатного кейса:', {
-            eligible: response.case.free_case_eligible_today,
-            opened: response.case.free_case_opened_today,
-            available: response.case.free_case_available_today
-          });
+          };
+          
+          setFreeCaseStatus(status);
+          console.log('📊 Статус бесплатного кейса УСТАНОВЛЕН:', status);
+          console.log('🔍 eligible:', status.eligible, 'opened:', status.opened);
         }
       } catch (error) {
         console.error('❌ Ошибка загрузки данных кейса:', error);
@@ -192,44 +191,52 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
   const canOpenFreeCase = () => {
     if (isDemoMode) return false;
     // Кейс можно открыть если: есть право на открытие (eligible = true) И еще не открыт (opened = false)
-    return freeCaseStatus.eligible && !freeCaseStatus.opened;
+    const canOpen = freeCaseStatus.eligible && !freeCaseStatus.opened;
+    console.log('🔍 canOpenFreeCase:', canOpen, 'eligible:', freeCaseStatus.eligible, 'opened:', freeCaseStatus.opened);
+    return canOpen;
   };
 
-// Получение статуса для первого кейса (текст на кнопке)
-const getFreeCaseStatus = () => {
-  if (isDemoMode) return 'LOCKED';
+  // Получение статуса для первого кейса (текст на кнопке)
+  const getFreeCaseStatus = () => {
+    if (isDemoMode) return 'LOCKED';
 
-  // 1. Сначала проверяем, выполнены ли условия (eligible)
-  if (!freeCaseStatus.eligible) {
-    return 'LOCKED'; // Кнопка заблокирована, так как условия не выполнены [cite: 520, 523]
-  }
+    console.log('🔍 getFreeCaseStatus - текущий статус:', freeCaseStatus);
+    console.log('🔍 eligible:', freeCaseStatus.eligible, 'opened:', freeCaseStatus.opened);
 
-  // 2. Если условия выполнены (eligible: true), проверяем, открыт ли он уже (opened)
-  if (freeCaseStatus.opened) {
-    return 'OPENED'; // Кнопка показывает, что кейс уже открыт [cite: 521, 524]
-  }
+    // 1. Сначала проверяем, выполнены ли условия (eligible)
+    if (!freeCaseStatus.eligible) {
+      console.log('🔍 Решение: LOCKED (не выполнены условия)');
+      return 'LOCKED'; // Кнопка заблокирована, так как условия не выполнены
+    }
 
-  // 3. Если условия выполнены и еще не открыт
-  return 'FREE'; // Кейс доступен для открытия [cite: 521]
-};
+    // 2. Если условия выполнены (eligible: true), проверяем, открыт ли он уже (opened)
+    if (freeCaseStatus.opened) {
+      console.log('🔍 Решение: OPENED (уже открыт)');
+      return 'OPENED'; // Кнопка показывает, что кейс уже открыт
+    }
 
-// Получение текста подсказки для первого кейса
-const getFreeCaseTooltip = () => {
-  if (isDemoMode) return '';
+    // 3. Если условия выполнены и еще не открыт
+    console.log('🔍 Решение: FREE (можно открыть)');
+    return 'FREE'; // Кейс доступен для открытия
+  };
 
-  // 1. Если условия НЕ выполнены (eligible: false) [cite: 523]
-  if (!freeCaseStatus.eligible) {
-    return 'Complete daily tasks to unlock'; // Пишем про выполнение заданий [cite: 523]
-  }
+  // Получение текста подсказки для первого кейса
+  const getFreeCaseTooltip = () => {
+    if (isDemoMode) return '';
 
-  // 2. Если условия выполнены (eligible: true), но кейс УЖЕ открыт (opened: true) [cite: 524]
-  if (freeCaseStatus.opened) {
-    return 'Already opened today'; // Пишем, что кейс уже открыт [cite: 524]
-  }
+    // 1. Если условия НЕ выполнены (eligible: false)
+    if (!freeCaseStatus.eligible) {
+      return 'Complete daily tasks to unlock'; // Пишем про выполнение заданий
+    }
 
-  // 3. Если можно открывать (eligible: true, opened: false)
-  return ''; // Подсказка не нужна [cite: 525]
-};
+    // 2. Если условия выполнены (eligible: true), но кейс УЖЕ открыт (opened: true)
+    if (freeCaseStatus.opened) {
+      return 'Already opened today'; // Пишем, что кейс уже открыт
+    }
+
+    // 3. Если можно открывать (eligible: true, opened: false)
+    return ''; // Подсказка не нужна
+  };
 
   const handleFreeCaseClick = async () => {
     if (!canOpenFreeCase()) return;
@@ -637,6 +644,13 @@ const getFreeCaseTooltip = () => {
   const freeCaseStatusText = getFreeCaseStatus();
   const freeCaseTooltip = getFreeCaseTooltip();
   const isFreeCaseDisabled = freeCaseStatusText !== 'FREE';
+
+  console.log('🎯 Итоговый статус:', { 
+    freeCaseStatusText, 
+    freeCaseTooltip, 
+    isFreeCaseDisabled,
+    rawStatus: freeCaseStatus 
+  });
 
   return (
     <div className="modal-overlay" onClick={onClose}>
