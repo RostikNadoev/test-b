@@ -8,7 +8,7 @@ import { useBalance } from '../contexts/BalanceContext';
 import tonIcon from '../assets/MainPage/cases/tonicon.png';
 import starsIcon from '../assets/MainPage/cases/starsicon.png';
 import cardton1 from '../assets/MainPage/chest1/ton.png';
-import lockIcon from '../assets/MainPage/cases/lockicon.png'; // Нужно добавить иконку замка
+import lockIcon from '../assets/MainPage/lock.png'; // Нужно добавить иконку замка
 
 // Импортируем фоны для рамок
 import back1 from '../assets/MainPage/cases/back1case.png';
