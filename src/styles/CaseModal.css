@@ -653,6 +653,7 @@
   height: 16px;
   margin-right: 6px;
   object-fit: contain;
+  margin-bottom: 4px;
 }
 
 .modal-free-value-disabled {

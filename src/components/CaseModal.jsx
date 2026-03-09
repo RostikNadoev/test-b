@@ -35,7 +35,8 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [freeCaseStatus, setFreeCaseStatus] = useState({
     eligible: false,
-    opened: false
+    opened: false,
+    available: false
   });
   
   const { isDemoMode, demoBalance, removeFromDemoBalance } = useDemo();
@@ -154,7 +155,13 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
         if (caseItem.id === 1 && response.case) {
           setFreeCaseStatus({
             eligible: response.case.free_case_eligible_today || false,
-            opened: response.case.free_case_opened_today || false
+            opened: response.case.free_case_opened_today || false,
+            available: response.case.free_case_available_today || false
+          });
+          console.log('📊 Статус бесплатного кейса:', {
+            eligible: response.case.free_case_eligible_today,
+            opened: response.case.free_case_opened_today,
+            available: response.case.free_case_available_today
           });
         }
       } catch (error) {
@@ -185,23 +192,36 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
   // Проверка, можно ли открыть первый кейс
   const canOpenFreeCase = () => {
     if (isDemoMode) return false;
+    // Кейс можно открыть если: есть право на открытие (eligible) И еще не открыт (opened = false)
     return freeCaseStatus.eligible && !freeCaseStatus.opened;
   };
 
   // Получение статуса для первого кейса
   const getFreeCaseStatus = () => {
     if (isDemoMode) return 'LOCKED';
+    
+    // Если уже открыт сегодня
     if (freeCaseStatus.opened) return 'OPENED';
-    if (!freeCaseStatus.eligible) return 'LOCKED';
-    return 'FREE';
+    
+    // Если есть право на открытие (выполнены задания)
+    if (freeCaseStatus.eligible) return 'FREE';
+    
+    // Если нет права на открытие
+    return 'LOCKED';
   };
 
   // Получение текста подсказки для первого кейса
   const getFreeCaseTooltip = () => {
     if (isDemoMode) return '';
+    
+    // Если уже открыт сегодня
     if (freeCaseStatus.opened) return 'Already opened today';
-    if (!freeCaseStatus.eligible) return 'Complete daily tasks to unlock';
-    return '';
+    
+    // Если есть право на открытие (выполнены задания), но еще не открыт - подсказка не нужна
+    if (freeCaseStatus.eligible) return '';
+    
+    // Если нет права на открытие (задания не выполнены)
+    return 'Complete daily tasks to unlock';
   };
 
   const handleFreeCaseClick = async () => {
