@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import '../styles/TasksScreen.css';
 import MainLayout from './MainLayout';
 import coinIcon from '../assets/Tasks/coin.png';
-import leaderboardImage from '../assets/Tasks/leaderboard.png'; // Импортируем картинку
+import leaderboardImage from '../assets/Tasks/leaderboard.png';
 import api, { usersApi, authApi } from '../utils/api';
 
 export default function TasksScreen({ onNavigate }) {
@@ -13,12 +13,12 @@ export default function TasksScreen({ onNavigate }) {
   const [completedQuests, setCompletedQuests] = useState([]);
   const [isClaiming, setIsClaiming] = useState(false);
 
-  // Function to load balance
-   const formatBalance = (value) => {
+  // Форматирование баланса
+  const formatBalance = (value) => {
     return Math.floor(value);
   };
 
-  // Function to load balance
+  // Загрузка баланса
   const loadBalance = async () => {
     try {
       const response = await api.get('/api/v1/users/balance');
@@ -29,11 +29,10 @@ export default function TasksScreen({ onNavigate }) {
       }
     } catch (err) {
       console.error('❌ Error loading balance:', err);
-      // Keep default value
     }
   };
 
-  // Function to load quests
+  // Загрузка квестов
   const loadQuests = async () => {
     try {
       setIsLoading(true);
@@ -43,12 +42,12 @@ export default function TasksScreen({ onNavigate }) {
       const data = response.data || response;
       
       if (data && data.quests) {
-        // Filter active quests: not completed OR completed but not claimed
+        // Активные квесты: не завершены ИЛИ завершены но не забраны
         const active = data.quests.filter(quest => 
           !quest.completed || (quest.completed && !quest.claimed)
         );
         
-        // Filter completed and claimed quests
+        // Завершенные и забранные квесты
         const completed = data.quests.filter(quest => 
           quest.completed && quest.claimed
         );
@@ -68,7 +67,7 @@ export default function TasksScreen({ onNavigate }) {
     }
   };
 
-  // Function to claim reward
+  // Функция для получения награды
   const claimReward = async (questId) => {
     if (isClaiming) return false;
     
@@ -84,13 +83,13 @@ export default function TasksScreen({ onNavigate }) {
       if (data.message === 'Quest reward claimed' || data.quest) {
         console.log('🎉 Reward claimed for quest:', questId);
         
-        // Update balance from response
+        // Обновляем баланс из ответа
         if (data.balances && typeof data.balances.coins !== 'undefined') {
           setBalance(data.balances.coins);
           authApi.updateUserData({ balance: data.balances.coins });
         }
         
-        // Immediately update local quest state
+        // Обновляем локальное состояние квестов
         setQuests(prevQuests => 
           prevQuests.map(quest => 
             quest.id === questId 
@@ -99,7 +98,7 @@ export default function TasksScreen({ onNavigate }) {
           )
         );
         
-        // Move claimed quest to completed list
+        // Перемещаем забранный квест в завершенные
         const claimedQuest = quests.find(q => q.id === questId);
         if (claimedQuest) {
           setCompletedQuests(prev => [
@@ -107,11 +106,11 @@ export default function TasksScreen({ onNavigate }) {
             ...prev
           ]);
           
-          // Remove from active quests
+          // Удаляем из активных квестов
           setQuests(prev => prev.filter(q => q.id !== questId));
         }
         
-        // Reload data after a short delay to ensure sync
+        // Перезагружаем данные после небольшой задержки
         setTimeout(() => {
           loadQuests();
           loadBalance();
@@ -120,7 +119,6 @@ export default function TasksScreen({ onNavigate }) {
         return true;
       } else {
         console.warn('⚠️ Unexpected response format:', data);
-        // Still reload data
         setTimeout(() => {
           loadQuests();
           loadBalance();
@@ -137,7 +135,7 @@ export default function TasksScreen({ onNavigate }) {
     }
   };
 
-  // Function to claim all rewards
+  // Функция для забора всех наград
   const claimAllRewards = async () => {
     if (isClaiming) return;
     
@@ -151,13 +149,11 @@ export default function TasksScreen({ onNavigate }) {
     try {
       setIsClaiming(true);
       
-      // Claim all quests sequentially
       for (const quest of claimableQuests) {
         const success = await claimReward(quest.id);
         if (!success) {
           console.warn(`Failed to claim quest ${quest.id}, continuing with others...`);
         }
-        // Small delay between claims to avoid rate limiting
         await new Promise(resolve => setTimeout(resolve, 300));
       }
       
@@ -169,7 +165,7 @@ export default function TasksScreen({ onNavigate }) {
     }
   };
 
-  // Load data on mount
+  // Загрузка данных при монтировании
   useEffect(() => {
     const loadData = async () => {
       await Promise.all([loadBalance(), loadQuests()]);
@@ -177,7 +173,6 @@ export default function TasksScreen({ onNavigate }) {
     
     loadData();
     
-    // Update data when screen becomes visible
     const handleFocus = () => {
       loadBalance();
       loadQuests();
@@ -190,8 +185,12 @@ export default function TasksScreen({ onNavigate }) {
     };
   }, []);
 
-  // Check if there are claimable rewards
+  // Проверяем есть ли доступные для забора награды
   const hasClaimableRewards = quests.some(q => q.completed && !q.claimed);
+
+  // Разделяем квесты на ежедневные (id 13 и 14) и остальные
+  const dailyQuests = quests.filter(q => q.id === 13 || q.id === 14);
+  const otherQuests = quests.filter(q => q.id !== 13 && q.id !== 14);
 
   if (error) {
     return (
@@ -209,7 +208,6 @@ export default function TasksScreen({ onNavigate }) {
   return (
     <MainLayout onNavigate={onNavigate} currentScreen="tasks">
       <div className="tasks-content-section">
-        {/* Добавляем картинку leaderboard во всю ширину */}
         <div className="tasks-leaderboard-image-container">
           <img 
             src={leaderboardImage} 
@@ -237,22 +235,52 @@ export default function TasksScreen({ onNavigate }) {
             <div className="loading-spinner">Loading quests...</div>
           ) : (
             <>
-              {quests.length > 0 ? (
-                <div className="active-tasks-list">
-                  {quests.map(quest => (
-                    <TaskItem 
-                      key={quest.id} 
-                      quest={quest} 
-                      coinIcon={coinIcon}
-                      onClaim={claimReward}
-                      isClaiming={isClaiming}
-                    />
-                  ))}
-                </div>
-              ) : (
+              {/* Ежедневные задания */}
+              {dailyQuests.length > 0 && (
+                <>
+                  <div className="completed-tasks-header-container">
+                    <h2 className="completed-tasks-header">Daily tasks</h2>
+                  </div>
+                  <div className="active-tasks-list">
+                    {dailyQuests.map(quest => (
+                      <TaskItem 
+                        key={quest.id} 
+                        quest={quest} 
+                        coinIcon={coinIcon}
+                        onClaim={claimReward}
+                        isClaiming={isClaiming}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* Остальные задания */}
+              {otherQuests.length > 0 && (
+                <>
+                  <div className="completed-tasks-header-container">
+                    <h2 className="completed-tasks-header">Tasks</h2>
+                  </div>
+                  <div className="active-tasks-list">
+                    {otherQuests.map(quest => (
+                      <TaskItem 
+                        key={quest.id} 
+                        quest={quest} 
+                        coinIcon={coinIcon}
+                        onClaim={claimReward}
+                        isClaiming={isClaiming}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* Сообщение если нет активных заданий */}
+              {dailyQuests.length === 0 && otherQuests.length === 0 && (
                 <div className="no-tasks-message">No active quests</div>
               )}
 
+              {/* Завершенные задания */}
               {completedQuests.length > 0 && (
                 <>
                   <div className="completed-tasks-header-container">
@@ -288,7 +316,6 @@ function TaskItem({ quest, coinIcon, onClaim, isClaiming }) {
     }
   };
 
-  // Display progress if available in quest data
   const progress = quest.current_progress || quest.progress || 0;
   const target = quest.required_progress || quest.target || 1;
 
@@ -297,9 +324,7 @@ function TaskItem({ quest, coinIcon, onClaim, isClaiming }) {
       <div className={`task-content ${isCompleted ? 'task-content--completed' : ''}`}>
         <div className="task-text">
           <div className="task-title">{quest.title || 'Quest'}</div>
-          {quest.description && (
-            <div className="task-description">{quest.description}</div>
-          )}
+          {/* Описание убрано */}
         </div>
         {!isCompleted && (
           <div className="task-progress">
@@ -310,18 +335,18 @@ function TaskItem({ quest, coinIcon, onClaim, isClaiming }) {
 
       {!isCompleted ? (
         <button 
-        className={`task-claim-button ${!isClaimable ? 'task-claim-button--disabled' : 'task-claim-button--pulse'}`} 
-        disabled={!isClaimable || isClaiming}
-        onClick={handleClaim}
-      >
-        <span className="task-claim-button-text">
-          {isClaiming ? 'CLAIMING...' : 'CLAIM'}
-        </span>
-        <div className="task-claim-reward">
-          <span className="task-claim-amount">{quest.reward_coins || 0}</span>
-          <img src={coinIcon} alt="Reward Coin" className="task-claim-coin" />
-        </div>
-      </button>
+          className={`task-claim-button ${!isClaimable ? 'task-claim-button--disabled' : 'task-claim-button--pulse'}`} 
+          disabled={!isClaimable || isClaiming}
+          onClick={handleClaim}
+        >
+          <span className="task-claim-button-text">
+            {isClaiming ? 'CLAIMING...' : 'CLAIM'}
+          </span>
+          <div className="task-claim-reward">
+            <span className="task-claim-amount">{quest.reward_coins || 0}</span>
+            <img src={coinIcon} alt="Reward Coin" className="task-claim-coin" />
+          </div>
+        </button>
       ) : (
         <div className="task-completed-reward-container">
           <div className="task-claim-reward task-claim-reward--disabled">
@@ -349,9 +374,7 @@ function CompletedTaskItem({ quest, coinIcon }) {
       <div className="task-content task-content--completed">
         <div className="task-text">
           <div className="task-title">{quest.title || 'Quest'}</div>
-          {quest.description && (
-            <div className="task-description">{quest.description}</div>
-          )}
+          {/* Описание убрано */}
         </div>
         <div className="task-progress task-progress--completed">
           {progress}/{target}
