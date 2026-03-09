@@ -195,41 +195,41 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
     return freeCaseStatus.eligible && !freeCaseStatus.opened;
   };
 
-  // Получение статуса для первого кейса - ИСПРАВЛЕНО!
-  const getFreeCaseStatus = () => {
-    if (isDemoMode) return 'LOCKED';
-    
-    // Сначала проверяем eligible
-    if (!freeCaseStatus.eligible) {
-      return 'LOCKED'; // Задания не выполнены
-    }
-    
-    // Если eligible = true, проверяем opened
-    if (freeCaseStatus.opened) {
-      return 'OPENED'; // Уже открыто сегодня
-    }
-    
-    // Если eligible = true И opened = false
-    return 'FREE'; // Можно открыть
-  };
+// Получение статуса для первого кейса (текст на кнопке)
+const getFreeCaseStatus = () => {
+  if (isDemoMode) return 'LOCKED';
 
-  // Получение текста подсказки для первого кейса - ИСПРАВЛЕНО!
-  const getFreeCaseTooltip = () => {
-    if (isDemoMode) return '';
-    
-    // Сначала проверяем eligible
-    if (!freeCaseStatus.eligible) {
-      return 'Complete daily tasks to unlock'; // Задания не выполнены
-    }
-    
-    // Если eligible = true, проверяем opened
-    if (freeCaseStatus.opened) {
-      return 'Already opened today'; // Уже открыто сегодня
-    }
-    
-    // Если eligible = true И opened = false - подсказка не нужна
-    return '';
-  };
+  // 1. Сначала проверяем, выполнены ли условия (eligible)
+  if (!freeCaseStatus.eligible) {
+    return 'LOCKED'; // Кнопка заблокирована, так как условия не выполнены [cite: 520, 523]
+  }
+
+  // 2. Если условия выполнены (eligible: true), проверяем, открыт ли он уже (opened)
+  if (freeCaseStatus.opened) {
+    return 'OPENED'; // Кнопка показывает, что кейс уже открыт [cite: 521, 524]
+  }
+
+  // 3. Если условия выполнены и еще не открыт
+  return 'FREE'; // Кейс доступен для открытия [cite: 521]
+};
+
+// Получение текста подсказки для первого кейса
+const getFreeCaseTooltip = () => {
+  if (isDemoMode) return '';
+
+  // 1. Если условия НЕ выполнены (eligible: false) [cite: 523]
+  if (!freeCaseStatus.eligible) {
+    return 'Complete daily tasks to unlock'; // Пишем про выполнение заданий [cite: 523]
+  }
+
+  // 2. Если условия выполнены (eligible: true), но кейс УЖЕ открыт (opened: true) [cite: 524]
+  if (freeCaseStatus.opened) {
+    return 'Already opened today'; // Пишем, что кейс уже открыт [cite: 524]
+  }
+
+  // 3. Если можно открывать (eligible: true, opened: false)
+  return ''; // Подсказка не нужна [cite: 525]
+};
 
   const handleFreeCaseClick = async () => {
     if (!canOpenFreeCase()) return;
