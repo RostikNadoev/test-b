@@ -9,6 +9,7 @@ import Header from './Header';
 import cardton1 from '../assets/MainPage/chest1/ton.png';
 import cardton2 from '../assets/MainPage/chest2/ton.png';
 import cardton3 from '../assets/MainPage/chest3/ton.png';
+import starsIcon from '../assets/MainPage/cases/starsicon.png';
 import arrow from '../assets/SpinPage/arrow.png';
 
 // Маппинг изображений по ID кейса
@@ -38,7 +39,7 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
   const [showModal, setShowModal] = useState(false);
   const [particles, setParticles] = useState([]);
   const [glowOpacity, setGlowOpacity] = useState(0);
-  const [hasCharged, setHasCharged] = useState(balanceAlreadyCharged); // Используем пропс
+  const [hasCharged, setHasCharged] = useState(balanceAlreadyCharged);
   const [isProcessing, setIsProcessing] = useState(false);
   
   const scrollerRef = useRef(null);
@@ -67,6 +68,11 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
     return imagePath;
   };
 
+  // Форматирование цены для звезд
+  const formatStarsPrice = (starsCount) => {
+    return `${starsCount} Stars`;
+  };
+
   // Загрузка данных кейса из API
   useEffect(() => {
     const loadCaseData = async () => {
@@ -90,17 +96,25 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
             // Преобразуем предметы в формат для отображения
             const items = response.items.map((item) => {
               // Определяем изображение
-              let img = getDefaultImage();
-              if (item.item_type === 'tg_gift' && item.image_url) {
+              let img;
+              if (item.item_type === 'reward_stars') {
+                img = starsIcon;
+              } else if (item.item_type === 'tg_gift' && item.image_url) {
                 img = getImageUrl(item.image_url);
+              } else {
+                img = getDefaultImage();
               }
               
               // Определяем цену
-              let price = '0 TON';
-              if (item.item_type === 'tg_gift') {
+              let price;
+              if (item.item_type === 'reward_stars') {
+                price = formatStarsPrice(item.price_stars);
+              } else if (item.item_type === 'tg_gift') {
                 price = `${item.price_ton} TON`;
               } else if (item.item_type === 'reward_ton') {
                 price = item.name || `${item.price_ton} TON`;
+              } else {
+                price = '0 TON';
               }
               
               return {
@@ -113,7 +127,8 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
                 item_index: item.item_index,
                 index: item.item_index,
                 rarity: item.rarity || 'common',
-                price_ton: item.price_ton
+                price_ton: item.price_ton,
+                stars_amount: item.price_stars
               };
             });
             
@@ -186,14 +201,21 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
           тип: apiItem.item_type
         });
         
+        // Определяем изображение для звезд
+        let itemImg = apiItem.img;
+        if (apiItem.item_type === 'reward_stars') {
+          itemImg = starsIcon;
+        }
+        
         targetItem = {
-          img: apiItem.img || getDefaultImage(),
-          price: apiItem.price || '0 TON',
+          img: itemImg || getDefaultImage(),
+          price: apiItem.price || '0 Stars',
           name: apiItem.name || 'Reward',
-          item_type: apiItem.item_type || 'reward_ton',
+          item_type: apiItem.item_type || 'reward_stars',
           index: apiItem.index,
           item_index: apiItem.index,
           rarity: apiItem.rarity || 'common',
+          stars_amount: apiItem.stars_amount,
           fromApi: true,
           isRealWin: true,
           originalWinData: winData
@@ -201,7 +223,8 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
         
         console.log('🎯 ИТОГОВЫЙ выигрышный предмет:', {
           имя: targetItem.name,
-          цена: targetItem.price
+          цена: targetItem.price,
+          тип: targetItem.item_type
         });
       } 
       // РЕАЛЬНЫЙ РЕЖИМ БЕЗ winData (ошибка)
@@ -250,7 +273,8 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
           item_type: randomItem.item_type,
           id: randomItem.id,
           index: randomItem.index,
-          rarity: randomItem.rarity
+          rarity: randomItem.rarity,
+          stars_amount: randomItem.stars_amount
         });
       } else {
         frames.push({
@@ -279,7 +303,8 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
           item_type: randomItem.item_type,
           id: randomItem.id,
           index: randomItem.index,
-          rarity: randomItem.rarity
+          rarity: randomItem.rarity,
+          stars_amount: randomItem.stars_amount
         });
       } else {
         frames.push({
@@ -302,44 +327,6 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
     console.log('🎰 Запуск спина');
     console.log('💰 hasCharged:', hasCharged, 'balanceChargedRef:', balanceChargedRef.current);
     
-    // В демо-режиме списываем баланс ТОЛЬКО если ещё не списывали И баланс не был списан в модалке
-    if ((isDemoMode || isDemo) && !balanceChargedRef.current && !hasCharged) {
-      
-      console.log('⚠️ ВНИМАНИЕ: Попытка списать баланс в SpinScreen! Этого не должно происходить, если списали в модалке');
-      console.log('✅ Баланс ДОЛЖЕН списываться только в CaseModal');
-      
-      // Код ниже закомментирован, чтобы никогда не списывать в SpinScreen
-      /*
-      // Пытаемся получить цену из разных источников
-      let price = 0;
-      
-      // Если есть demoPrice в пропсах (из CaseModal)
-      if (winData?.demoCasePrice) {
-        price = winData.demoCasePrice;
-      } 
-      // Иначе пытаемся из targetItem
-      else if (targetItem?.price) {
-        const match = targetItem.price.match(/(\d+(\.\d+)?)/);
-        if (match) {
-          price = parseFloat(match[1]);
-        }
-      }
-      
-      console.log(`💰 Демо-режим: списываем ${price} TON с баланса`);
-      
-      if (demoBalance < price) {
-        alert(`Not enough TON in demo balance! You need ${price} TON`);
-        onNavigate('cases');
-        return;
-      }
-      
-      // Списываем с демо-баланса
-      removeFromDemoBalance(price);
-      balanceChargedRef.current = true;
-      setHasCharged(true);
-      */
-    }
-
     setIsSpinning(true);
     console.log('✅ Спин запущен');
   };
@@ -431,8 +418,14 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
     setIsProcessing(true);
 
     if ((isDemoMode || isDemo) && winningItem) {
-      const priceValue = parseFloat(winningItem.price.replace(/[^\d.-]/g, ''));
-      addToDemoBalance(priceValue);
+      let priceValue = 0;
+      if (winningItem.item_type === 'reward_stars') {
+        priceValue = winningItem.stars_amount || parseFloat(winningItem.price.replace(/[^\d.-]/g, ''));
+        addToDemoBalance(priceValue);
+      } else {
+        priceValue = parseFloat(winningItem.price.replace(/[^\d.-]/g, ''));
+        addToDemoBalance(priceValue);
+      }
       setShowModal(false);
       onNavigate('cases');
     } else if (winningItem && !isDemoMode) {
@@ -460,9 +453,9 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
     setIsProcessing(false);
   };
 
-  // Проверка, является ли предмет TON наградой
-  const isCardtonItem = (item) => {
-    return item && item.item_type === 'reward_ton';
+  // Проверка, является ли предмет TON наградой или звездами
+  const isRewardItem = (item) => {
+    return item && (item.item_type === 'reward_ton' || item.item_type === 'reward_stars');
   };
 
   // Создание снежинок
@@ -586,7 +579,7 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
                     loading="lazy" 
                     onError={(e) => {
                       console.error('Failed to load image:', content?.img);
-                      e.target.src = getDefaultImage();
+                      e.target.src = content?.item_type === 'reward_stars' ? starsIcon : getDefaultImage();
                     }}
                   />
                   <div className={getPriceClass(content?.price || '0 TON')}>
@@ -616,12 +609,12 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
               <div className="spin-winning-frame-large">
                 <div className="spin-winning-content-large">
                   <img 
-                    src={winningItem.img || getDefaultImage()} 
+                    src={winningItem.img || (winningItem.item_type === 'reward_stars' ? starsIcon : getDefaultImage())} 
                     alt="Winning Item" 
                     className="spin-winning-image-large" 
                     loading="lazy" 
                     onError={(e) => {
-                      e.target.src = getDefaultImage();
+                      e.target.src = winningItem.item_type === 'reward_stars' ? starsIcon : getDefaultImage();
                     }}
                   />
                   <div className={`${getPriceClass(winningItem.price)} spin-winning-price-large`}>
@@ -636,7 +629,7 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
                 }}></div>
               </div>
               
-              {isCardtonItem(winningItem) ? (
+              {isRewardItem(winningItem) ? (
                 <button 
                   className="spin-modal-secondary-button spin-modal-single-button" 
                   onClick={handleSell}

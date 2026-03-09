@@ -110,7 +110,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
   // Функция для обрезания цены (без округления)
   const formatPrice = (priceStr) => {
     const priceValue = parseFloat(priceStr.replace(/[^\d.-]/g, ''));
-    const currency = priceStr.includes('TON') ? ' TON' : '';
+    const currency = priceStr.includes('TON') ? ' TON' : priceStr.includes('Star') ? ' Stars' : '';
     
     if (priceValue >= 100) {
       const priceString = priceValue.toString();
@@ -124,6 +124,11 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
     }
     
     return priceStr;
+  };
+
+  // Форматирование цены для звезд
+  const formatStarsPrice = (starsCount) => {
+    return `${starsCount} Stars`;
   };
 
   // Загружаем данные кейса по ID
@@ -185,16 +190,35 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
         const randomIndex = Math.floor(Math.random() * caseItems.length);
         const randomItem = caseItems[randomIndex];
         
+        // Определяем изображение для предмета
+        let itemImg;
+        if (randomItem.item_type === 'reward_stars') {
+          itemImg = starsIcon;
+        } else if (randomItem.item_type === 'tg_gift' && randomItem.image_url) {
+          itemImg = getImageUrl(randomItem.image_url);
+        } else {
+          itemImg = cardton1;
+        }
+        
+        // Определяем цену для отображения
+        let displayPrice;
+        if (randomItem.item_type === 'reward_stars') {
+          displayPrice = formatStarsPrice(randomItem.price_stars);
+        } else if (randomItem.item_type === 'tg_gift') {
+          displayPrice = `${randomItem.price_ton} TON`;
+        } else {
+          displayPrice = `${randomItem.price_ton} TON`;
+        }
+        
         demoWinningItem = {
-          img: randomItem.item_type === 'tg_gift' && randomItem.image_url 
-            ? getImageUrl(randomItem.image_url) 
-            : cardton1,
-          price: `${randomItem.price_ton} TON`,
+          img: itemImg,
+          price: displayPrice,
           name: randomItem.name,
           item_type: randomItem.item_type,
           index: randomItem.item_index,
           rarity: randomItem.rarity,
-          isDemo: true
+          isDemo: true,
+          stars_amount: randomItem.price_stars
         };
       } else {
         // Если нет предметов, создаем заглушку
@@ -211,11 +235,11 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
       onNavigate('spin', { 
         winData: { 
           winningItem: demoWinningItem,
-          demoCasePrice: price.ton // передаём для информации, но списывать больше не нужно
+          demoCasePrice: price.ton
         },
         caseId: caseItem.id, 
         isDemo: true,
-        balanceAlreadyCharged: true // ВАЖНО: говорим SpinScreen, что баланс уже списан
+        balanceAlreadyCharged: true
       });
       onClose();
       return;
@@ -252,25 +276,41 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
     if (isDemoMode) {
       console.log('🎮 Демо-режим: открытие кейса за звезды');
       
-      // В демо-режиме за звезды не списываем, просто открываем
-      // Но передаём флаг, что списывать не нужно
-      
       // Получаем случайный предмет из caseItems для демо
       let demoWinningItem = null;
       if (caseItems.length > 0) {
         const randomIndex = Math.floor(Math.random() * caseItems.length);
         const randomItem = caseItems[randomIndex];
         
+        // Определяем изображение для предмета
+        let itemImg;
+        if (randomItem.item_type === 'reward_stars') {
+          itemImg = starsIcon;
+        } else if (randomItem.item_type === 'tg_gift' && randomItem.image_url) {
+          itemImg = getImageUrl(randomItem.image_url);
+        } else {
+          itemImg = cardton1;
+        }
+        
+        // Определяем цену для отображения
+        let displayPrice;
+        if (randomItem.item_type === 'reward_stars') {
+          displayPrice = formatStarsPrice(randomItem.price_stars);
+        } else if (randomItem.item_type === 'tg_gift') {
+          displayPrice = `${randomItem.price_ton} TON`;
+        } else {
+          displayPrice = `${randomItem.price_ton} TON`;
+        }
+        
         demoWinningItem = {
-          img: randomItem.item_type === 'tg_gift' && randomItem.image_url 
-            ? getImageUrl(randomItem.image_url) 
-            : cardton1,
-          price: `${randomItem.price_ton} TON`,
+          img: itemImg,
+          price: displayPrice,
           name: randomItem.name,
           item_type: randomItem.item_type,
           index: randomItem.item_index,
           rarity: randomItem.rarity,
-          isDemo: true
+          isDemo: true,
+          stars_amount: randomItem.price_stars
         };
       } else {
         // Если нет предметов, создаем заглушку
@@ -287,7 +327,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
         winData: { winningItem: demoWinningItem },
         caseId: caseItem.id, 
         isDemo: true,
-        balanceAlreadyCharged: false // за звезды не списываем
+        balanceAlreadyCharged: false
       });
       onClose();
       return;
@@ -340,36 +380,32 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
         console.log('🔍 Found full item data:', fullItemData);
       }
       
-      let img = cardton1;
-      let price = '0 TON';
-      let name = apiItem.name || 'Reward';
-      
-      if (fullItemData) {
-        if (fullItemData.image_url) {
-          img = getImageUrl(fullItemData.image_url);
-        }
-        
-        if (fullItemData.price_ton !== undefined) {
-          price = `${fullItemData.price_ton} TON`;
-        }
-        
-        if (fullItemData.name) {
-          name = fullItemData.name;
-        }
+      // Определяем изображение
+      let img;
+      if (apiItem.item_type === 'reward_stars') {
+        img = starsIcon;
+      } else if (fullItemData?.image_url) {
+        img = getImageUrl(fullItemData.image_url);
+      } else if (apiItem.image_url) {
+        img = getImageUrl(apiItem.image_url);
       } else {
-        if (apiItem.image_url) {
-          img = getImageUrl(apiItem.image_url);
-        }
-        
-        if (apiItem.item_type === 'reward_ton' && apiItem.name) {
-          const match = apiItem.name.match(/(\d+(\.\d+)?)\s*TON/);
-          if (match) {
-            price = `${match[1]} TON`;
-          } else {
-            price = apiItem.name;
-          }
-        }
+        img = cardton1;
       }
+      
+      // Определяем цену для отображения
+      let price;
+      if (apiItem.item_type === 'reward_stars') {
+        const starsAmount = fullItemData?.price_stars || apiItem.price_stars || 0;
+        price = formatStarsPrice(starsAmount);
+      } else if (fullItemData?.price_ton) {
+        price = `${fullItemData.price_ton} TON`;
+      } else if (apiItem.price_ton) {
+        price = `${apiItem.price_ton} TON`;
+      } else {
+        price = '0 TON';
+      }
+      
+      const name = fullItemData?.name || apiItem.name || 'Reward';
       
       const winData = {
         winningItem: {
@@ -381,6 +417,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
           rarity: apiItem.rarity,
           image_url: fullItemData?.image_url || apiItem.image_url,
           price_ton: fullItemData?.price_ton,
+          stars_amount: fullItemData?.price_stars || apiItem.price_stars,
           id: fullItemData?.id,
           fromApi: true,
           fullDataFound: !!fullItemData
@@ -426,6 +463,9 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
         if (item.item_type === 'tg_gift') {
           img = getImageUrl(item.image_url);
           price = `${item.price_ton} TON`;
+        } else if (item.item_type === 'reward_stars') {
+          img = starsIcon;
+          price = formatStarsPrice(item.price_stars);
         } else if (item.item_type === 'reward_ton') {
           img = cardton1;
           price = `${item.price_ton} TON`;
@@ -442,6 +482,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
           id: item.id,
           index: item.index || item.item_index,
           name: item.name,
+          stars_amount: item.price_stars,
           originalItem: item
         };
       });
@@ -534,7 +575,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
                         loading="lazy"
                         onError={(e) => {
                           console.error(`Failed to load image: ${content.imageUrl}`);
-                          e.target.src = cardton1;
+                          e.target.src = content.itemType === 'reward_stars' ? starsIcon : cardton1;
                         }}
                       />
                       <div className={getPriceClass(content.price)}>
