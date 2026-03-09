@@ -35,13 +35,6 @@ export default function Header({ onNavigate, variant = 'default' }) {
     canWithdraw: false
   });
   const [isLoadingProgress, setIsLoadingProgress] = useState(false);
-  
-  // NEW: Состояния для модалки подтверждения вывода
-  const [isConfirmWithdrawModalOpen, setIsConfirmWithdrawModalOpen] = useState(false);
-  const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [withdrawError, setWithdrawError] = useState(null);
-  const [withdrawSuccess, setWithdrawSuccess] = useState(false);
-  
   const shouldAutoCloseRef = useRef(false);
 
   // Определяем класс для варианта header
@@ -212,124 +205,6 @@ export default function Header({ onNavigate, variant = 'default' }) {
 
   const handleCloseProgressModal = () => {
     setIsProgressModalOpen(false);
-  };
-
-  // NEW: Открыть модалку подтверждения вывода
-  const handleOpenWithdrawModal = () => {
-    if (!progressData.canWithdraw) {
-      handleOpenProgressModal();
-      return;
-    }
-    
-    // Проверяем баланс звезд
-    const starsBalance = parseInt(getStarsBalance());
-    if (starsBalance <= 0) {
-      alert('You have no stars to withdraw');
-      return;
-    }
-    
-    const amountNum = parseInt(topUpAmount);
-    if (isNaN(amountNum) || amountNum <= 0) {
-      alert('Please enter a valid amount');
-      return;
-    }
-    
-    if (amountNum > starsBalance) {
-      alert(`Insufficient balance. You have ${starsBalance} STARS`);
-      return;
-    }
-    
-    setWithdrawAmount(topUpAmount);
-    setWithdrawError(null);
-    setWithdrawSuccess(false);
-    setIsConfirmWithdrawModalOpen(true);
-  };
-
-  // NEW: Закрыть модалку подтверждения
-  const handleCloseConfirmWithdrawModal = () => {
-    setIsConfirmWithdrawModalOpen(false);
-    setWithdrawError(null);
-    setWithdrawSuccess(false);
-  };
-
-  // NEW: Отправить заявку на вывод
-  const handleConfirmWithdraw = async () => {
-    const amountNum = parseInt(withdrawAmount);
-    
-    setIsProcessing(true);
-    setWithdrawError(null);
-
-    try {
-      console.log(`💸 Submitting withdraw request for ${amountNum} stars...`);
-      
-      const result = await starsApi.submitWithdrawRequest(amountNum);
-      
-      console.log('✅ Withdraw request successful:', result);
-      
-      // Показываем успех
-      setWithdrawSuccess(true);
-      
-      // Обновляем баланс и прогресс
-      await loadBalances();
-      await loadProgressData();
-      
-      // Очищаем поле ввода
-      setTopUpAmount('');
-      
-      // Закрываем модалку через 2 секунды
-      setTimeout(() => {
-        handleCloseConfirmWithdrawModal();
-      }, 2000);
-      
-    } catch (error) {
-      console.error('❌ Withdraw error:', error);
-      
-      // Обрабатываем разные типы ошибок
-      if (error.status === 400 && error.data) {
-        if (error.data.error === 'Withdraw conditions not met') {
-          setWithdrawError(
-            `Conditions not met: ${error.data.progress?.games || 0}/${error.data.required?.games || 10} games, ` +
-            `${error.data.progress?.stars || 0}/${error.data.required?.stars || 2500} stars`
-          );
-          // Обновляем прогресс с данными от сервера
-          if (error.data.progress) {
-            setProgressData({
-              games: { 
-                current: error.data.progress.games || 0, 
-                target: error.data.required?.games || 10 
-              },
-              stars: { 
-                current: error.data.progress.stars || 0, 
-                target: error.data.required?.stars || 2500 
-              },
-              canWithdraw: false
-            });
-          }
-        } else if (error.data.error === 'Insufficient stars balance') {
-          setWithdrawError(
-            `Insufficient balance. You have ${error.data.balance_stars || 0} STARS, requested ${error.data.requested || amountNum}`
-          );
-        } else {
-          setWithdrawError(error.data.error || 'Withdraw failed');
-        }
-      } else if (error.status === 404) {
-        setWithdrawError('User not found');
-      } else if (error.status === 500) {
-        if (error.data?.error === 'RELAYER_NOTIFY_CHAT_ID is not set') {
-          setWithdrawError('Withdraw system is not configured. Please contact support.');
-        } else if (error.data?.error === 'Failed to get progress') {
-          setWithdrawError('Failed to verify withdraw conditions. Please try again.');
-        } else {
-          setWithdrawError('Server error. Please try again later.');
-        }
-      } else if (error.status === 502) {
-        setWithdrawError('Failed to notify relayer. Please try again.');
-      } else {
-        setWithdrawError(error.message || 'Failed to submit withdraw request');
-      }
-    } finally {
-      setIsProcessing(false);
-    }
   };
 
   const handleCreateStarsInvoice = async () => {
@@ -644,9 +519,6 @@ export default function Header({ onNavigate, variant = 'default' }) {
       if (e.key === 'Escape' && isProgressModalOpen) {
         handleCloseProgressModal();
       }
-      if (e.key === 'Escape' && isConfirmWithdrawModalOpen) {
-        handleCloseConfirmWithdrawModal();
-      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -654,7 +526,7 @@ export default function Header({ onNavigate, variant = 'default' }) {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isBalanceModalOpen, isProgressModalOpen, isConfirmWithdrawModalOpen]);
+  }, [isBalanceModalOpen, isProgressModalOpen]);
 
   // Определяем класс для модальных окон в зависимости от варианта header
   const modalClass = variant === 'cases' || variant === 'plinko' || variant === 'spin' || variant === 'upgrade'
@@ -664,11 +536,6 @@ export default function Header({ onNavigate, variant = 'default' }) {
   const progressModalClass = variant === 'cases' || variant === 'plinko' || variant === 'spin' || variant === 'upgrade'
     ? 'progress-modal-content modal-special'
     : 'progress-modal-content';
-
-  // NEW: Класс для модалки подтверждения вывода (уникальный)
-  const confirmWithdrawModalClass = variant === 'cases' || variant === 'plinko' || variant === 'spin' || variant === 'upgrade'
-    ? 'confirm-withdraw-modal-content modal-special'
-    : 'confirm-withdraw-modal-content';
 
   return (
     <>
@@ -846,8 +713,14 @@ export default function Header({ onNavigate, variant = 'default' }) {
                     
                     <div className="withdraw-row">
                       <button
-                        className={`balance-modal-action-btn stars-withdraw-btn ${progressData.canWithdraw ? '' : 'disabled'}`}
-                        onClick={handleOpenWithdrawModal}
+                        className="balance-modal-action-btn stars-withdraw-btn"
+                        onClick={() => {
+                          if (progressData.canWithdraw) {
+                            alert('Withdraw feature coming soon!');
+                          } else {
+                            handleOpenProgressModal();
+                          }
+                        }}
                         disabled={!topUpAmount || isNaN(parseInt(topUpAmount)) || parseInt(topUpAmount) <= 0 || isProcessing}
                       >
                         Withdraw {topUpAmount || '0'} STARS
@@ -965,91 +838,6 @@ export default function Header({ onNavigate, variant = 'default' }) {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* NEW: Модалка подтверждения вывода звезд (уникальные классы) */}
-      {isConfirmWithdrawModalOpen && (
-        <div className="confirm-withdraw-overlay" onClick={handleCloseConfirmWithdrawModal}>
-          <div className="confirm-withdraw-blur" />
-          <div
-            className={confirmWithdrawModalClass}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="confirm-withdraw-header">
-              <h3 className="confirm-withdraw-title">
-                Confirm Withdrawal
-              </h3>
-              <button
-                className="confirm-withdraw-close-btn"
-                onClick={handleCloseConfirmWithdrawModal}
-                disabled={isProcessing}
-              >
-                <img src={modalCloseIcon} alt="Close" className="confirm-withdraw-close-icon" />
-              </button>
-            </div>
-            
-            {withdrawSuccess ? (
-              <div className="confirm-withdraw-success">
-                <div className="success-animation">
-                  <span className="success-icon-large">✓</span>
-                </div>
-                <p className="success-message">Withdraw request sent successfully!</p>
-                <p className="success-note">Your stars will be processed shortly.</p>
-              </div>
-            ) : (
-              <>
-                <div className="confirm-withdraw-body">
-                  <p className="confirm-withdraw-question">
-                    Are you sure you want to withdraw <strong>{withdrawAmount} STARS</strong>?
-                  </p>
-                  
-                  <div className="confirm-withdraw-info">
-                    <div className="info-row">
-                      <span>Available balance:</span>
-                      <span className="info-value">{getStarsBalance()} STARS</span>
-                    </div>
-                    <div className="info-row">
-                      <span>Games played:</span>
-                      <span className={`info-value ${progressData.games.current >= progressData.games.target ? 'completed' : 'pending'}`}>
-                        {progressData.games.current}/{progressData.games.target}
-                      </span>
-                    </div>
-                    <div className="info-row">
-                      <span>Stars placed:</span>
-                      <span className={`info-value ${progressData.stars.current >= progressData.stars.target ? 'completed' : 'pending'}`}>
-                        {progressData.stars.current.toLocaleString()}/{progressData.stars.target.toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {withdrawError && (
-                    <div className="confirm-withdraw-error">
-                      <span className="error-icon">⚠️</span>
-                      <span>{withdrawError}</span>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="confirm-withdraw-footer">
-                  <button
-                    className="confirm-withdraw-cancel-btn"
-                    onClick={handleCloseConfirmWithdrawModal}
-                    disabled={isProcessing}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="confirm-withdraw-submit-btn"
-                    onClick={handleConfirmWithdraw}
-                    disabled={isProcessing}
-                  >
-                    {isProcessing ? 'Processing...' : 'Confirm Withdraw'}
-                  </button>
-                </div>
-              </>
-            )}
           </div>
         </div>
       )}
