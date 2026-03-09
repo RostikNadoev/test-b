@@ -27,7 +27,7 @@ const DEMO_CASE_PRICES = {
   6: { ton: 15, stars: 1500 }
 };
 
-export default function CaseModal({ caseItem, onClose, onNavigate }) {
+export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatus: initialFreeCaseStatus }) {
   const [caseData, setCaseData] = useState(null);
   const [caseItems, setCaseItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,6 +40,14 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
   
   const { isDemoMode, demoBalance, removeFromDemoBalance } = useDemo();
   const { balances, checkBalance, loadBalances } = useBalance();
+
+  // Если передан статус из пропсов, используем его сразу
+  useEffect(() => {
+    if (caseItem.id === 1 && initialFreeCaseStatus) {
+      console.log('📊 Использую статус из пропсов:', initialFreeCaseStatus);
+      setFreeCaseStatus(initialFreeCaseStatus);
+    }
+  }, [caseItem.id, initialFreeCaseStatus]);
 
   // Функция для получения цены кейса
   const getCasePrice = () => {
@@ -137,7 +145,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
     return `${starsCount} Stars`;
   };
 
-  // Загружаем данные кейса по ID
+  // Загружаем данные кейса по ID (только для предметов)
   useEffect(() => {
     const loadCaseData = async () => {
       try {
@@ -150,8 +158,8 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
         setCaseData(response.case);
         setCaseItems(response.items || []);
         
-        // Для первого кейса сохраняем статус
-        if (caseItem.id === 1 && response.case) {
+        // Для первого кейса сохраняем статус ТОЛЬКО если его нет в пропсах
+        if (caseItem.id === 1 && response.case && !initialFreeCaseStatus) {
           const status = {
             eligible: response.case.free_case_eligible_today || false,
             opened: response.case.free_case_opened_today || false,
@@ -159,8 +167,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
           };
           
           setFreeCaseStatus(status);
-          console.log('📊 Статус бесплатного кейса УСТАНОВЛЕН:', status);
-          console.log('🔍 eligible:', status.eligible, 'opened:', status.opened);
+          console.log('📊 Статус бесплатного кейса из getCaseById:', status);
         }
       } catch (error) {
         console.error('❌ Ошибка загрузки данных кейса:', error);
@@ -178,7 +185,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
     if (caseItem?.id) {
       loadCaseData();
     }
-  }, [caseItem]);
+  }, [caseItem, initialFreeCaseStatus]);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';

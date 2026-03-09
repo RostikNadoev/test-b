@@ -194,6 +194,12 @@ export default function CasesScreen({ onNavigate }) {
           caseItem={selectedCase} 
           onClose={handleCloseModal}
           onNavigate={onNavigate}
+          // Передаем статус бесплатного кейса, если это первый кейс
+          freeCaseStatus={selectedCase.id === 1 ? {
+            eligible: selectedCase.free_case_eligible_today || false,
+            opened: selectedCase.free_case_opened_today || false,
+            available: selectedCase.free_case_available_today || false
+          } : null}
         />
       )}
     </>
