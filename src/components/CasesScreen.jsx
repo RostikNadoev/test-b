@@ -30,7 +30,7 @@ const caseImages = {
 
 // Демо-цены для кейсов (когда API не работает)
 const DEMO_CASE_PRICES = {
-  1: { ton: 0, stars: 0 }, // FREE - отключен в демо
+  1: { ton: 0, stars: 0 }, // FREE
   2: { ton: 1, stars: 100 },
   3: { ton: 3, stars: 300 },
   4: { ton: 5, stars: 500 },
@@ -75,11 +75,6 @@ export default function CasesScreen({ onNavigate }) {
   }, []);
 
   const handleCaseClick = (caseItem) => {
-    // В демо-режиме первый кейс (FREE) отключен
-    if (isDemoMode && caseItem.id === 1) {
-      alert('FREE case is not available in demo mode');
-      return;
-    }
     setSelectedCase(caseItem);
   };
 
@@ -141,12 +136,11 @@ export default function CasesScreen({ onNavigate }) {
               {cases.map((caseItem) => {
                 const price = getCasePrice(caseItem);
                 const isFreeCase = caseItem.id === 1;
-                const isDisabled = isDemoMode && isFreeCase;
                 
                 return (
                   <div 
                     key={caseItem.id} 
-                    className={`case-card ${isDisabled ? 'case-card-disabled' : ''}`}
+                    className="case-card"
                     onClick={() => handleCaseClick(caseItem)}
                   >
                     <h3 className="case-title">{caseItem.name}</h3>
@@ -161,7 +155,7 @@ export default function CasesScreen({ onNavigate }) {
                       // Для первого кейса одна кнопка FREE
                       <div className="case-price-single free-box">
                         <span className="price-value free-value">
-                          {isDemoMode ? 'LOCKED' : 'FREE'}
+                          FREE
                         </span>
                       </div>
                     ) : (

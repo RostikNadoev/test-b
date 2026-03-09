@@ -196,7 +196,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
 
   // Проверка, можно ли открыть первый кейс
   const canOpenFreeCase = () => {
-    if (isDemoMode) return false;
+    if (isDemoMode) return false; // В демо-режиме всегда недоступно
     // Кейс можно открыть если: есть право на открытие (eligible = true) И еще не открыт (opened = false)
     const canOpen = freeCaseStatus.eligible && !freeCaseStatus.opened;
     console.log('🔍 canOpenFreeCase:', canOpen, 'eligible:', freeCaseStatus.eligible, 'opened:', freeCaseStatus.opened);
@@ -229,7 +229,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
 
   // Получение текста подсказки для первого кейса
   const getFreeCaseTooltip = () => {
-    if (isDemoMode) return '';
+    if (isDemoMode) return 'Disabled in demo'; // В демо-режиме своя подсказка
 
     // 1. Если условия НЕ выполнены (eligible: false)
     if (!freeCaseStatus.eligible) {
@@ -252,7 +252,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
     const price = getCasePrice();
     
     if (isDemoMode) {
-      // В демо-режиме первый кейс недоступен
+      // В демо-режиме первый кейс недоступен - просто ничего не делаем
       return;
     }
     
@@ -656,7 +656,8 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
     freeCaseStatusText, 
     freeCaseTooltip, 
     isFreeCaseDisabled,
-    rawStatus: freeCaseStatus 
+    rawStatus: freeCaseStatus,
+    isDemoMode
   });
 
   return (
