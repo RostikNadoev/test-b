@@ -633,3 +633,39 @@
   color: rgba(52, 190, 149, 0.6); /* Полупрозрачный зеленый */
   -webkit-text-stroke: 0.3px rgba(32, 146, 112, 0.2);
 }
+
+
+/* Стили для заблокированной кнопки FREE */
+.modal-free-button-disabled {
+  opacity: 0.5;
+  filter: blur(1px);
+  cursor: not-allowed !important;
+  pointer-events: auto !important; /* Чтобы работал title */
+  position: relative;
+}
+
+.modal-free-button-disabled:hover {
+  opacity: 0.5;
+}
+
+.modal-lock-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  object-fit: contain;
+}
+
+.modal-free-value-disabled {
+  opacity: 0.8;
+}
+
+/* Подсказка для первого кейса */
+.modal-free-tooltip {
+  text-align: center;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 8px;
+  padding: 0 10px;
+  line-height: 1.4;
+}

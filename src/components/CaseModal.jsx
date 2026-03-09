@@ -8,6 +8,7 @@ import { useBalance } from '../contexts/BalanceContext';
 import tonIcon from '../assets/MainPage/cases/tonicon.png';
 import starsIcon from '../assets/MainPage/cases/starsicon.png';
 import cardton1 from '../assets/MainPage/chest1/ton.png';
+import lockIcon from '../assets/MainPage/cases/lockicon.png'; // Нужно добавить иконку замка
 
 // Импортируем фоны для рамок
 import back1 from '../assets/MainPage/cases/back1case.png';
@@ -32,6 +33,11 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
   const [caseItems, setCaseItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [freeCaseStatus, setFreeCaseStatus] = useState({
+    eligible: false,
+    opened: false
+  });
+  
   const { isDemoMode, demoBalance, removeFromDemoBalance } = useDemo();
   const { balances, checkBalance, loadBalances } = useBalance();
 
@@ -143,6 +149,14 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
         
         setCaseData(response.case);
         setCaseItems(response.items || []);
+        
+        // Для первого кейса сохраняем статус
+        if (caseItem.id === 1 && response.case) {
+          setFreeCaseStatus({
+            eligible: response.case.free_case_eligible_today || false,
+            opened: response.case.free_case_opened_today || false
+          });
+        }
       } catch (error) {
         console.error('❌ Ошибка загрузки данных кейса:', error);
         setCaseData({ 
@@ -167,6 +181,53 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
       document.body.style.overflow = 'unset';
     };
   }, []);
+
+  // Проверка, можно ли открыть первый кейс
+  const canOpenFreeCase = () => {
+    if (isDemoMode) return false;
+    return freeCaseStatus.eligible && !freeCaseStatus.opened;
+  };
+
+  // Получение статуса для первого кейса
+  const getFreeCaseStatus = () => {
+    if (isDemoMode) return 'LOCKED';
+    if (freeCaseStatus.opened) return 'OPENED';
+    if (!freeCaseStatus.eligible) return 'LOCKED';
+    return 'FREE';
+  };
+
+  // Получение текста подсказки для первого кейса
+  const getFreeCaseTooltip = () => {
+    if (isDemoMode) return '';
+    if (freeCaseStatus.opened) return 'Already opened today';
+    if (!freeCaseStatus.eligible) return 'Complete daily tasks to unlock';
+    return '';
+  };
+
+  const handleFreeCaseClick = async () => {
+    if (!canOpenFreeCase()) return;
+    
+    console.log(`Case ${caseItem.id} FREE clicked!`);
+    const price = getCasePrice();
+    
+    if (isDemoMode) {
+      // В демо-режиме первый кейс недоступен
+      return;
+    }
+    
+    // Реальный режим - открываем бесплатный кейс
+    if (!caseData) {
+      alert('Case data not loaded. Please try again.');
+      return;
+    }
+    
+    try {
+      await handleOpenCase('ton'); // Для бесплатного кейса используем ton как валюту
+    } catch (error) {
+      console.error('❌ Error opening free case:', error);
+      alert('Error opening free case. Please try again.');
+    }
+  };
 
   const handleTonClick = async () => {
     console.log(`Case ${caseItem.id} TON clicked!`);
@@ -501,19 +562,19 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
   const frameContents = getFrameContents();
   const price = getCasePrice();
 
- // Функция для получения класса цены
-const getPriceClass = (priceStr) => {
-  // Если это звезды - всегда обычный класс без градиентов
-  if (priceStr.includes('Stars')) {
+  // Функция для получения класса цены
+  const getPriceClass = (priceStr) => {
+    // Если это звезды - всегда обычный класс без градиентов
+    if (priceStr.includes('Stars')) {
+      return 'modal-item-price';
+    }
+    
+    const priceValue = parseFloat(priceStr.replace(/[^\d.-]/g, ''));
+    if (priceValue >= 501) return 'modal-item-price-gradient-3';
+    if (priceValue >= 51) return 'modal-item-price-gradient-2';
+    if (priceValue >= 11) return 'modal-item-price-gradient-1';
     return 'modal-item-price';
-  }
-  
-  const priceValue = parseFloat(priceStr.replace(/[^\d.-]/g, ''));
-  if (priceValue >= 501) return 'modal-item-price-gradient-3';
-  if (priceValue >= 51) return 'modal-item-price-gradient-2';
-  if (priceValue >= 11) return 'modal-item-price-gradient-1';
-  return 'modal-item-price';
-};
+  };
 
   const getTonButtonClass = () => {
     const caseId = caseItem.id;
@@ -544,6 +605,11 @@ const getPriceClass = (priceStr) => {
   const tonButtonClass = getTonButtonClass();
   const starsButtonClass = getStarsButtonClass();
   const frameBackground = getFrameBackground();
+
+  // Определяем статус для первого кейса
+  const freeCaseStatusText = getFreeCaseStatus();
+  const freeCaseTooltip = getFreeCaseTooltip();
+  const isFreeCaseDisabled = freeCaseStatusText !== 'FREE';
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -597,18 +663,27 @@ const getPriceClass = (priceStr) => {
           <div className="modal-footer">
             <div className="modal-button-container">
               {caseItem.id === 1 ? (
-                // Для первого кейса одна кнопка FREE/LOCKED
+                // Для первого кейса кнопка с разными состояниями
                 <div 
-                  className={`modal-button modal-free-button ${isDemoMode ? 'modal-button-disabled' : ''}`}
-                  onClick={isDemoMode ? null : handleTonClick}
+                  className={`modal-button modal-free-button 
+                    ${isFreeCaseDisabled ? 'modal-free-button-disabled' : ''} 
+                    ${isProcessing ? 'modal-button-disabled' : ''}
+                  `}
+                  onClick={!isFreeCaseDisabled && !isProcessing ? handleFreeCaseClick : null}
+                  title={freeCaseTooltip}
                 >
                   <span className="modal-button-text">
                     {isProcessing ? (
                       <span className="modal-processing-text">Wait...</span>
                     ) : (
-                      <span className="modal-free-value">
-                        {isDemoMode ? 'LOCKED' : 'FREE'}
-                      </span>
+                      <>
+                        {isFreeCaseDisabled && (
+                          <img src={lockIcon} alt="Lock" className="modal-lock-icon" />
+                        )}
+                        <span className={`modal-free-value ${isFreeCaseDisabled ? 'modal-free-value-disabled' : ''}`}>
+                          {freeCaseStatusText}
+                        </span>
+                      </>
                     )}
                   </span>
                 </div>
@@ -653,6 +728,13 @@ const getPriceClass = (priceStr) => {
                 </>
               )}
             </div>
+            
+            {/* Подсказка для первого кейса */}
+            {caseItem.id === 1 && freeCaseTooltip && (
+              <div className="modal-free-tooltip">
+                {freeCaseTooltip}
+              </div>
+            )}
           </div>
         </div>
       </div>
