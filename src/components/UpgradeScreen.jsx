@@ -164,13 +164,24 @@ export default function UpgradeScreen({ onNavigate }) {
       setIsLoadingInventory(true);
       
       // Преобразуем демо-инвентарь в нужный формат
-      const demoItems = demoInventory.map((item, index) => ({
-        ...item,
-        inventory_id: item.id || `demo_${index}`,
-        index: item.index || `demo_${index}`,
-        price_ton: parseFloat(item.price?.replace(/[^\d.-]/g, '')) || item.price_ton || 1,
-        isDemo: true
-      }));
+      const demoItems = demoInventory.map((item, index) => {
+        // Парсим цену из строки типа "X TON"
+        let priceValue = item.price_ton || 1;
+        if (item.price && typeof item.price === 'string') {
+          const match = item.price.match(/[\d.]+/);
+          if (match) {
+            priceValue = parseFloat(match[0]);
+          }
+        }
+        
+        return {
+          ...item,
+          inventory_id: item.id || `demo_${index}`,
+          index: item.index || `demo_${index}`,
+          price_ton: priceValue,
+          isDemo: true
+        };
+      });
       
       // Сортируем от дешевого к дорогому
       const sortedInventory = demoItems.sort((a, b) => {
@@ -476,8 +487,26 @@ export default function UpgradeScreen({ onNavigate }) {
         if (isWin) {
           console.log('🎉 ПОБЕДА! Добавляем выигранный предмет в инвентарь');
           
+          // СОЗДАЕМ ПРАВИЛЬНУЮ СТРУКТУРУ ДЛЯ ДЕМО-ИНВЕНТАРЯ (как в SpinScreen)
+          const itemForInventory = {
+            id: targetItem.id || `win_${Date.now()}`,
+            name: targetItem.name || 'Won Item',
+            price: targetItem.price || `${targetItem.price_ton || 0} TON`,
+            price_ton: targetItem.price_ton || 0,
+            image_url: targetItem.image_url || targetItem.img,
+            img: targetItem.img || targetItem.image_url,
+            item_type: targetItem.item_type || 'tg_gift',
+            rarity: targetItem.rarity || 'common',
+            index: targetItem.index || targetItem.item_index || `win_${Date.now()}`,
+            inventory_id: `win_${Date.now()}`,
+            isDemo: true,
+            fromUpgrade: true
+          };
+          
+          console.log('📦 Добавляем в инвентарь (правильный формат):', itemForInventory);
+          
           // Сохраняем целевой предмет в демо-инвентарь
-          addToDemoInventory(targetItem);
+          addToDemoInventory(itemForInventory);
           setShowWinModal(true);
           
           // Удаляем исходный предмет из демо-инвентаря
