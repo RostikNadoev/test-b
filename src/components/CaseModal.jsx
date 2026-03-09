@@ -192,36 +192,44 @@ export default function CaseModal({ caseItem, onClose, onNavigate }) {
   // Проверка, можно ли открыть первый кейс
   const canOpenFreeCase = () => {
     if (isDemoMode) return false;
-    // Кейс можно открыть если: есть право на открытие (eligible) И еще не открыт (opened = false)
+    // Кейс можно открыть если: есть право на открытие (eligible = true) И еще не открыт (opened = false)
     return freeCaseStatus.eligible && !freeCaseStatus.opened;
   };
 
-  // Получение статуса для первого кейса
+  // Получение статуса для первого кейса - ИСПРАВЛЕНО!
   const getFreeCaseStatus = () => {
     if (isDemoMode) return 'LOCKED';
     
-    // Если уже открыт сегодня
-    if (freeCaseStatus.opened) return 'OPENED';
+    // Сначала проверяем eligible
+    if (!freeCaseStatus.eligible) {
+      return 'LOCKED'; // Задания не выполнены
+    }
     
-    // Если есть право на открытие (выполнены задания)
-    if (freeCaseStatus.eligible) return 'FREE';
+    // Если eligible = true, проверяем opened
+    if (freeCaseStatus.opened) {
+      return 'OPENED'; // Уже открыто сегодня
+    }
     
-    // Если нет права на открытие
-    return 'LOCKED';
+    // Если eligible = true И opened = false
+    return 'FREE'; // Можно открыть
   };
 
-  // Получение текста подсказки для первого кейса
+  // Получение текста подсказки для первого кейса - ИСПРАВЛЕНО!
   const getFreeCaseTooltip = () => {
     if (isDemoMode) return '';
     
-    // Если уже открыт сегодня
-    if (freeCaseStatus.opened) return 'Already opened today';
+    // Сначала проверяем eligible
+    if (!freeCaseStatus.eligible) {
+      return 'Complete daily tasks to unlock'; // Задания не выполнены
+    }
     
-    // Если есть право на открытие (выполнены задания), но еще не открыт - подсказка не нужна
-    if (freeCaseStatus.eligible) return '';
+    // Если eligible = true, проверяем opened
+    if (freeCaseStatus.opened) {
+      return 'Already opened today'; // Уже открыто сегодня
+    }
     
-    // Если нет права на открытие (задания не выполнены)
-    return 'Complete daily tasks to unlock';
+    // Если eligible = true И opened = false - подсказка не нужна
+    return '';
   };
 
   const handleFreeCaseClick = async () => {
