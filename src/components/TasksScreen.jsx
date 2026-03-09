@@ -259,7 +259,7 @@ export default function TasksScreen({ onNavigate }) {
               {otherQuests.length > 0 && (
                 <>
                   <div className="completed-tasks-header-container">
-                    <h2 className="completed-tasks-header">Tasks</h2>
+                    <h2 className="completed-tasks-header">General tasks</h2>
                   </div>
                   <div className="active-tasks-list">
                     {otherQuests.map(quest => (
