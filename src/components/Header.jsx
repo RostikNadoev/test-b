@@ -172,7 +172,7 @@ export default function Header({ onNavigate, variant = 'default' }) {
 
   const handleOpenBalanceModal = () => {
     if (isDemoMode) {
-      alert('Demo mode is active. Connect wallet to use real TON.');
+      alert('Disabled in demo mode');
       return;
     }
     
