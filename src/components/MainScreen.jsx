@@ -17,6 +17,7 @@ import { referralsApi } from '../utils/api';
 
 // Константы
 const BOT_USERNAME = 'Bouncecase_bot';
+const DEMO_MODE = true; // Флаг демо-режима
 
 export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
@@ -57,6 +58,11 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
   };
 
   const handleImageButtonClick = (buttonNumber) => {
+    // Блокируем кнопку Rocket (номер 5) в демо-режиме
+    if (DEMO_MODE && buttonNumber === 5) {
+      return; // Ничего не делаем при нажатии
+    }
+    
     if (buttonNumber === 1) {
       onNavigate('plinko');
     } else if (buttonNumber === 2) {
@@ -327,7 +333,7 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
           </div>
           
           <div 
-            className="game-button half-button"
+            className={`game-button half-button ${DEMO_MODE ? 'game-button-disabled' : ''}`}
             onClick={() => handleImageButtonClick(5)}
           >
             <img 

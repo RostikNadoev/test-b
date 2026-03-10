@@ -1307,3 +1307,10 @@
     font-size: 11px;
   }
 }
+
+/* Стиль для отключенной кнопки */
+.game-button-disabled {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
