@@ -682,7 +682,7 @@
 
 /* Предотвращаем изменение высоты элементов */
 .game-info-panel {
-  height: 140px;
+  height: 170px;
   overflow: hidden;
 }
 
