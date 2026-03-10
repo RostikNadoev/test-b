@@ -14,12 +14,14 @@ import lockIcon from '../assets/MainPage/lock.png';
 import referralsIcon from '../assets/MainPage/refferals.svg';
 // Импортируем API
 import { referralsApi } from '../utils/api';
+// Импортируем хук демо-режима
+import { useDemo } from '../contexts/DemoContext';
 
 // Константы
 const BOT_USERNAME = 'Bouncecase_bot';
-const DEMO_MODE = true; // Флаг демо-режима
 
 export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
+  const { isDemoMode } = useDemo(); // Используем контекст для проверки демо-режима
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isReferralModalOpen, setIsReferralModalOpen] = useState(false);
   const [referralData, setReferralData] = useState(null);
@@ -59,7 +61,7 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
 
   const handleImageButtonClick = (buttonNumber) => {
     // Блокируем кнопку Rocket (номер 5) в демо-режиме
-    if (DEMO_MODE && buttonNumber === 5) {
+    if (isDemoMode && buttonNumber === 5) {
       return; // Ничего не делаем при нажатии
     }
     
@@ -333,7 +335,7 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
           </div>
           
           <div 
-            className={`game-button half-button ${DEMO_MODE ? 'game-button-disabled' : ''}`}
+            className={`game-button half-button ${isDemoMode ? 'game-button-disabled' : ''}`}
             onClick={() => handleImageButtonClick(5)}
           >
             <img 
