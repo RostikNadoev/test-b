@@ -46,6 +46,10 @@ export const useCrashGame = () => {
   const hasBetThisRoundRef = useRef(false);
   const timeOffsetRef = useRef(0);
   const stageRef = useRef('timer');
+  
+  // Refs для автокешаута (только на фронте)
+  const autoCashoutTargetRef = useRef(null); // { multiplier: 1.5 }
+  const autoCashoutTriggeredRef = useRef(false);
 
   // Синхронизация ref со стейтом
   useEffect(() => {
@@ -119,7 +123,54 @@ export const useCrashGame = () => {
     };
   }, [roundStartsAt, roundStatus, getServerTime]);
 
-  // --- 3. HELPERS ДЛЯ ФОРМАТИРОВАНИЯ ---
+  // --- 3. ЛОГИКА АВТОКЕШАУТА (ТОЛЬКО НА ФРОНТЕ) ---
+  useEffect(() => {
+    // Проверяем, нужно ли сделать автокешаут
+    if (stage === 'rocket' && 
+        myActiveBetRef.current && 
+        myActiveBetRef.current.status === 'placed' &&
+        autoCashoutTargetRef.current !== null && 
+        !autoCashoutTriggeredRef.current) {
+      
+      const currentMultiplier = multiplierNow;
+      const targetMultiplier = autoCashoutTargetRef.current;
+      
+      // Если текущий множитель достиг или превысил целевой
+      if (currentMultiplier >= targetMultiplier) {
+        console.log(`🎯 Auto-cashout triggered at x${currentMultiplier.toFixed(2)} (target: x${targetMultiplier})`);
+        autoCashoutTriggeredRef.current = true;
+        
+        // Вызываем кешаут
+        crashWebSocket.cashout(myActiveBetRef.current.bet_id);
+      }
+    }
+  }, [multiplierNow, stage, myActiveBetRef.current]);
+
+  // Сброс автокешаута при смене раунда
+  useEffect(() => {
+    if (currentRoundId) {
+      autoCashoutTargetRef.current = null;
+      autoCashoutTriggeredRef.current = false;
+    }
+  }, [currentRoundId]);
+
+  // Сброс автокешаута при кешауте
+  useEffect(() => {
+    if (engineEvents.cashout_ok) {
+      autoCashoutTargetRef.current = null;
+      autoCashoutTriggeredRef.current = false;
+    }
+  }, [engineEvents.cashout_ok]);
+
+  // Сброс автокешаута при краше
+  useEffect(() => {
+    if (engineEvents.crash) {
+      autoCashoutTargetRef.current = null;
+      autoCashoutTriggeredRef.current = false;
+    }
+  }, [engineEvents.crash]);
+
+  // --- 4. HELPERS ДЛЯ ФОРМАТИРОВАНИЯ ---
 
   const formatBet = useCallback((rawBet) => {
     const winMultiplier = rawBet.x || rawBet.multiplier || rawBet.cashout_multiplier || rawBet.payout_multiplier || null;
@@ -149,11 +200,11 @@ export const useCrashGame = () => {
       current_amount: currentAmount,
       status: status,
       x: winMultiplier ? parseFloat(winMultiplier) : null,
-      auto_cashout: rawBet.auto_cashout
+      // Не сохраняем auto_cashout, так как это только на фронте
     };
   }, []);
 
-  // --- 4. УПРАВЛЕНИЕ ДАННЫМИ РАУНДА ---
+  // --- 5. УПРАВЛЕНИЕ ДАННЫМИ РАУНДА ---
 
   const updateStageFromStatus = useCallback((status) => {
     switch (status) {
@@ -210,7 +261,7 @@ export const useCrashGame = () => {
     }
   }, [currentRoundId, syncTime, updateStageFromStatus]);
 
-  // --- 5. WS INIT ---
+  // --- 6. WS INIT ---
 
   const initializeWebSocket = useCallback(async () => {
     try {
@@ -346,6 +397,9 @@ export const useCrashGame = () => {
         myActiveBetRef.current = bet;
         userIdRef.current = data.bet.user_id;
         hasBetThisRoundRef.current = true;
+        
+        // НЕ устанавливаем автокешаут из данных бэка
+        // Автокешаут управляется только на фронте
       });
 
       crashWebSocket.on('cashout_ok', (data) => {
@@ -475,14 +529,31 @@ export const useCrashGame = () => {
     return roundStatus === 'running' && wsConnected && !!myActiveBetRef.current;
   }, [roundStatus, wsConnected]);
 
-  const placeBet = useCallback((currency, amount, autoCashout) => {
+  const placeBet = useCallback((currency, amount, autoCashoutTarget) => {
     if (!canPlaceBet()) return false;
     hasBetThisRoundRef.current = true;
-    return crashWebSocket.placeBet(currency, amount, autoCashout);
+    
+    // Если включен автокешаут, сохраняем цель
+    if (autoCashoutTarget && autoCashoutTarget > 1.0) {
+      console.log(`🤖 Auto-cashout will trigger at x${autoCashoutTarget}`);
+      autoCashoutTargetRef.current = autoCashoutTarget;
+      autoCashoutTriggeredRef.current = false;
+    } else {
+      autoCashoutTargetRef.current = null;
+      autoCashoutTriggeredRef.current = false;
+    }
+    
+    // Отправляем обычную ставку БЕЗ auto_cashout
+    return crashWebSocket.placeBet(currency, amount, null);
   }, [canPlaceBet]);
 
   const cashoutBet = useCallback(() => {
     if (!myActiveBetRef.current) return false;
+    
+    // Отключаем автокешаут при ручном кешауте
+    autoCashoutTargetRef.current = null;
+    autoCashoutTriggeredRef.current = false;
+    
     return crashWebSocket.cashout(myActiveBetRef.current.bet_id);
   }, []);
 
