@@ -17,13 +17,13 @@ const DEMO_MULTIPLIERS = [30, 15, 8, 3, 1.5, 0.6, 0.2, 0.6, 1.5, 3, 8, 15, 30];
 
 // Веса для демо-режима (сумма = 100)
 const DEMO_WEIGHTS = {
-  30: 1,    // 2% шанс на x30
-  15: 2,    // 4% шанс на x15
-  8: 4,     // 8% шанс на x8
-  3: 8,    // 12% шанс на x3
-  1.5: 16,  // 15% шанс на x1.5
-  0.6: 27,  // 24% шанс на x0.6
-  0.2: 42   // 35% шанс на x0.2
+  30: 1,    // 1% шанс на x30
+  15: 2,    // 2% шанс на x15
+  8: 4,     // 4% шанс на x8
+  3: 8,     // 8% шанс на x3
+  1.5: 16,  // 16% шанс на x1.5
+  0.6: 27,  // 27% шанс на x0.6
+  0.2: 42   // 42% шанс на x0.2
 };
 
 // Функция для получения случайного множителя в демо-режиме
@@ -110,7 +110,14 @@ export default function BounceFallScreen({ onNavigate }) {
   const [winEffect, setWinEffect] = useState(null);
   
   const { checkBalance, setNewBalances, loadBalances } = useBalance();
-  const { isDemoMode, demoBalance, removeFromDemoBalance, addToDemoBalance } = useDemo();
+  const { 
+    isDemoMode, 
+    demoBalances, 
+    removeFromDemoBalance, 
+    addToDemoBalance,
+    checkDemoBalance,
+    getDemoBalance 
+  } = useDemo();
 
   // Обработчики для слайдера
   const handleSliderStart = (e) => {
@@ -220,16 +227,19 @@ export default function BounceFallScreen({ onNavigate }) {
     }
 
     const totalBet = parseFloat(betAmount) * ballCount;
+    const currency = selectedCurrency.toLowerCase();
 
-    // ДЕМО РЕЖИМ - проверяем демо-баланс
+    // ДЕМО РЕЖИМ - проверяем соответствующий демо-баланс
     if (isDemoMode) {
-      if (demoBalance < totalBet) {
-        alert(`Insufficient TON in demo balance! You need ${totalBet} TON`);
+      const currentBalance = getDemoBalance(currency);
+      
+      if (currentBalance < totalBet) {
+        alert(`Insufficient ${selectedCurrency} in demo balance! You need ${totalBet} ${selectedCurrency}`);
         return;
       }
       
-      // Списываем с демо-баланса
-      removeFromDemoBalance(totalBet);
+      // Списываем с соответствующего демо-баланса
+      removeFromDemoBalance(totalBet, currency);
       
       setIsLoading(true);
       
@@ -249,7 +259,7 @@ export default function BounceFallScreen({ onNavigate }) {
         });
       }
       
-      console.log('🎮 Демо-режим: результаты:', demoResults);
+      console.log(`🎮 Демо-режим (${selectedCurrency}): результаты:`, demoResults);
       
       setTotalWinnings(0);
       setBallsDropped(0);
@@ -279,7 +289,7 @@ export default function BounceFallScreen({ onNavigate }) {
     }
 
     // РЕАЛЬНЫЙ РЕЖИМ - проверяем реальный баланс
-    if (!checkBalance(selectedCurrency.toLowerCase(), totalBet)) {
+    if (!checkBalance(currency, totalBet)) {
       alert(`Insufficient ${selectedCurrency} balance`);
       return;
     }
@@ -337,9 +347,9 @@ export default function BounceFallScreen({ onNavigate }) {
   };
 
   const handleTakeWinnings = async () => {
-    // В демо-режиме добавляем выигрыш к демо-балансу
+    // В демо-режиме добавляем выигрыш к соответствующему демо-балансу
     if (isDemoMode && totalWinnings > 0) {
-      addToDemoBalance(totalWinnings);
+      addToDemoBalance(totalWinnings, selectedCurrency.toLowerCase());
     }
     
     setGameState('idle');

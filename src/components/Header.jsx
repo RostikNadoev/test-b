@@ -23,7 +23,7 @@ export default function Header({ onNavigate, variant = 'default' }) {
   const modalRef = useRef(null);
   const inputRef = useRef(null);
   
-  const { isDemoMode, demoBalance } = useDemo();
+  const { isDemoMode, demoBalances } = useDemo();
   const { balances, loadBalances } = useBalance();
 
   const [activeCurrency, setActiveCurrency] = useState('ton');
@@ -64,20 +64,27 @@ export default function Header({ onNavigate, variant = 'default' }) {
     return user.username || user.name || 'User';
   }, [user, isDemoMode]);
 
+  // Получение TON баланса (демо или реальный)
   const getBalance = useCallback(() => {
-    if (isDemoMode) return formatBalance(demoBalance);
+    if (isDemoMode) return formatBalance(demoBalances.ton || 100);
     return formatBalance(balances.ton || 0);
-  }, [isDemoMode, demoBalance, balances]);
+  }, [isDemoMode, demoBalances.ton, balances]);
 
+  // Получение STARS баланса (демо или реальный)
   const getStarsBalance = useCallback(() => {
-    if (isDemoMode) return '0';
+    if (isDemoMode) {
+      const starsValue = demoBalances.stars || 1000;
+      const stringValue = starsValue.toString();
+      const integerPart = stringValue.split('.')[0];
+      return integerPart || '1000';
+    }
     
     const starsValue = balances.stars || 0;
     const stringValue = starsValue.toString();
     const integerPart = stringValue.split('.')[0];
     
     return integerPart || '0';
-  }, [isDemoMode, balances]);
+  }, [isDemoMode, demoBalances.stars, balances]);
 
   const isWalletConnected = !!walletInfo;
   const walletName = walletInfo?.device?.appName || walletInfo?.name || 'Wallet';
@@ -172,7 +179,7 @@ export default function Header({ onNavigate, variant = 'default' }) {
 
   const handleOpenBalanceModal = () => {
     if (isDemoMode) {
-      alert('Disabled in demo mode');
+      alert('Demo mode - Balance management is disabled');
       return;
     }
     
@@ -702,7 +709,7 @@ export default function Header({ onNavigate, variant = 'default' }) {
             <div 
               className="add_balance-button" 
               onClick={handleOpenBalanceModal}
-              title={isDemoMode ? "Demo mode - Connect wallet for real TON" : "Top up balance"}
+              title={isDemoMode ? "Demo mode - Balance management is disabled" : "Top up balance"}
               style={{ cursor: 'pointer' }}
             >
               <img src={addBalanceIcon} alt="Add balance" className="add_balance-icon" />
