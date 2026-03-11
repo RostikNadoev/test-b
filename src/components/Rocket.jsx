@@ -357,10 +357,10 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       
       // Показываем сообщение о настройке автокешаута
       if (autoPayoutEnabled) {
-        showUiError(`⚡ Auto-cashout will trigger at x${payoutMultiplier.toFixed(1)}`, 2000);
+        
       }
     } else {
-      showUiError('Failed to place bet. Betting might be closed.');
+      
     }
   };
 
@@ -566,7 +566,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
                             </div>
                             <div className="participant-info">
                               <div className="participant-nickname">
-                                {username} {isMyBetFlag && '(You)'}
+                                {username} 
                                 {/* Иконка автокешаута не показывается, так как это только на фронте */}
                               </div>
                               <div className="participant-bet-currency">

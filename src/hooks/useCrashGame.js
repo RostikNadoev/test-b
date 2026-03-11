@@ -48,8 +48,11 @@ export const useCrashGame = () => {
   const stageRef = useRef('timer');
   
   // Refs для автокешаута (только на фронте)
-  const autoCashoutTargetRef = useRef(null); // { multiplier: 1.5 }
+  const autoCashoutTargetRef = useRef(null); // целевой множитель (например, 1.2)
   const autoCashoutTriggeredRef = useRef(false);
+  
+  // Константа для буфера автокешаута (срабатываем на 0.02 раньше)
+  const AUTO_CASHOUT_BUFFER = 0.02;
 
   // Синхронизация ref со стейтом
   useEffect(() => {
@@ -135,9 +138,13 @@ export const useCrashGame = () => {
       const currentMultiplier = multiplierNow;
       const targetMultiplier = autoCashoutTargetRef.current;
       
-      // Если текущий множитель достиг или превысил целевой
-      if (currentMultiplier >= targetMultiplier) {
-        console.log(`🎯 Auto-cashout triggered at x${currentMultiplier.toFixed(2)} (target: x${targetMultiplier})`);
+      // Используем БУФЕР: срабатываем, когда текущий множитель достиг (target - buffer)
+      // Это компенсирует задержку сети
+      const triggerMultiplier = targetMultiplier - AUTO_CASHOUT_BUFFER;
+      
+      // Если текущий множитель достиг или превысил порог срабатывания
+      if (currentMultiplier >= triggerMultiplier) {
+        console.log(`🎯 Auto-cashout triggered at x${currentMultiplier.toFixed(2)} (target: x${targetMultiplier}, buffer: ${AUTO_CASHOUT_BUFFER})`);
         autoCashoutTriggeredRef.current = true;
         
         // Вызываем кешаут
@@ -535,7 +542,7 @@ export const useCrashGame = () => {
     
     // Если включен автокешаут, сохраняем цель
     if (autoCashoutTarget && autoCashoutTarget > 1.0) {
-      console.log(`🤖 Auto-cashout will trigger at x${autoCashoutTarget}`);
+      console.log(`🤖 Auto-cashout will trigger at x${autoCashoutTarget} (with buffer ${AUTO_CASHOUT_BUFFER})`);
       autoCashoutTargetRef.current = autoCashoutTarget;
       autoCashoutTriggeredRef.current = false;
     } else {
