@@ -130,7 +130,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     }
   }, [engineEvents.crash]);
 
-  // Управление Lottie плеером для взрыва
+  // Управление Lottie плеером для взрыва (Исправление №2)
   useEffect(() => {
     if (stage === 'explosion') {
       explosionHandledRef.current = false;
@@ -149,7 +149,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     };
   }, [stage]);
 
-  // --- ЛОГИКА ЗАВЕРШЕНИЯ ВЗРЫВА ---
+  // --- ЛОГИКА ЗАВЕРШЕНИЯ ВЗРЫВА (Исправление №2) ---
   const handleExplosionComplete = useCallback(() => {
     if (explosionHandledRef.current) return;
     explosionHandledRef.current = true;
@@ -493,6 +493,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
                         speed={1.2}
                         lottieRef={(ref) => { explosionAnimationRef.current = ref; }}
                         onComplete={handleExplosionComplete}
+                        // onLoopComplete УДАЛЕН (Исправление №3)
                       />
                     </div>
                   )}

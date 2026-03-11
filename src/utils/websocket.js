@@ -131,10 +131,6 @@ class CrashWebSocket {
     }
   }
 
-  clearAllHandlers() {
-    this.messageHandlers.clear();
-  }
-
   handleMessage(data) {
     const handlers = this.messageHandlers.get(data.type) || [];
     handlers.forEach(handler => handler(data));
