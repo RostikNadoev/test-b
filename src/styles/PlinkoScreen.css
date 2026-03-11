@@ -525,10 +525,10 @@
 }
 
 .effect-insane .win-multiplier-text { 
-  font-size: 95px; 
+  font-size: 90px; 
   color: #ef4444; 
-  -webkit-text-stroke: 3px white;
-  text-shadow: 0 0 50px #ef4444, 0 0 100px #ef4444;
+  -webkit-text-stroke: 2.5px white;
+  text-shadow: 0 0 45px #ef4444, 0 0 90px #ef4444;
 }
 
 /* Эффект Блика (Shimmer) */
