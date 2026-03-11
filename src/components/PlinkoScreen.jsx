@@ -82,6 +82,9 @@ export default function BounceFallScreen({ onNavigate }) {
   const [isLoading, setIsLoading] = useState(false);
   const [roundData, setRoundData] = useState(null);
   
+  // СОСТОЯНИЕ ДЛЯ ЭФФЕКТА ВЫИГРЫША
+  const [winEffect, setWinEffect] = useState(null);
+  
   const { checkBalance, setNewBalances, loadBalances } = useBalance();
   const { isDemoMode, demoBalance, removeFromDemoBalance, addToDemoBalance } = useDemo();
 
@@ -140,6 +143,23 @@ export default function BounceFallScreen({ onNavigate }) {
     if (multiplier > 0) {
       const bet = parseFloat(betAmount) || 0;
       const ballWinnings = bet * multiplier;
+      
+      // --- ЛОГИКА ЭФФЕКТОВ (КАК В КАЗИНО) ---
+      // Если множитель >= 8x, показываем спецэффект
+      if (multiplier >= 8) {
+        const effectId = Date.now();
+        // Определяем тип эффекта по силе множителя
+        let type = 'medium'; // для x8
+        if (multiplier >= 15) type = 'high'; // для x15
+        if (multiplier >= 30) type = 'insane'; // для x30
+
+        setWinEffect({ id: effectId, multiplier, type });
+
+        // Убираем эффект через 2 секунды
+        setTimeout(() => {
+          setWinEffect(prev => (prev?.id === effectId ? null : prev));
+        }, 2000);
+      }
 
       setTotalWinnings(prev => {
         return selectedCurrency === 'STARS' 
@@ -351,6 +371,18 @@ export default function BounceFallScreen({ onNavigate }) {
       <main className="plinko-content">
         <div className="plinko-container">
           <div className="plinko-game-area">
+            {/* СЛОЙ С ЭФФЕКТАМИ ПОВЕРХ ИГРЫ */}
+            {winEffect && (
+              <div className={`win-overlay-effect effect-${winEffect.type}`}>
+                <div className="win-shimmer"></div>
+                <div className="win-multiplier-text">
+                  <span className="x-prefix">X</span>
+                  {winEffect.multiplier}
+                </div>
+                <div className="win-flare"></div>
+              </div>
+            )}
+
             <NeonPlinko 
               ref={plinkoRef} 
               onBallLand={handleBallLand}
