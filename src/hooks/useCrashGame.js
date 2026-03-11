@@ -46,6 +46,10 @@ export const useCrashGame = () => {
   const hasBetThisRoundRef = useRef(false);
   const timeOffsetRef = useRef(0);
   const stageRef = useRef('timer');
+  
+  // Refs для автокешаута
+  const autoCashoutRef = useRef(null); // { multiplier: 1.5, betId: 123 }
+  const autoCashoutTriggeredRef = useRef(false);
 
   // Синхронизация ref со стейтом
   useEffect(() => {
@@ -119,7 +123,54 @@ export const useCrashGame = () => {
     };
   }, [roundStartsAt, roundStatus, getServerTime]);
 
-  // --- 3. HELPERS ДЛЯ ФОРМАТИРОВАНИЯ ---
+  // --- 3. ЛОГИКА АВТОКЕШАУТА ---
+  useEffect(() => {
+    // Проверяем, нужно ли сделать автокешаут
+    if (stage === 'rocket' && 
+        myActiveBetRef.current && 
+        myActiveBetRef.current.status === 'placed' &&
+        autoCashoutRef.current && 
+        !autoCashoutTriggeredRef.current) {
+      
+      const currentMultiplier = multiplierNow;
+      const targetMultiplier = autoCashoutRef.current.multiplier;
+      
+      // Если текущий множитель достиг или превысил целевой
+      if (currentMultiplier >= targetMultiplier) {
+        console.log(`🎯 Auto-cashout triggered at x${currentMultiplier.toFixed(2)} (target: x${targetMultiplier})`);
+        autoCashoutTriggeredRef.current = true;
+        
+        // Вызываем кешаут
+        crashWebSocket.cashout(myActiveBetRef.current.bet_id);
+      }
+    }
+  }, [multiplierNow, stage, myActiveBetRef.current]);
+
+  // Сброс автокешаута при смене раунда
+  useEffect(() => {
+    if (currentRoundId) {
+      autoCashoutRef.current = null;
+      autoCashoutTriggeredRef.current = false;
+    }
+  }, [currentRoundId]);
+
+  // Сброс автокешаута при кешауте
+  useEffect(() => {
+    if (engineEvents.cashout_ok) {
+      autoCashoutRef.current = null;
+      autoCashoutTriggeredRef.current = false;
+    }
+  }, [engineEvents.cashout_ok]);
+
+  // Сброс автокешаута при краше
+  useEffect(() => {
+    if (engineEvents.crash) {
+      autoCashoutRef.current = null;
+      autoCashoutTriggeredRef.current = false;
+    }
+  }, [engineEvents.crash]);
+
+  // --- 4. HELPERS ДЛЯ ФОРМАТИРОВАНИЯ ---
 
   const formatBet = useCallback((rawBet) => {
     const winMultiplier = rawBet.x || rawBet.multiplier || rawBet.cashout_multiplier || rawBet.payout_multiplier || null;
@@ -153,7 +204,7 @@ export const useCrashGame = () => {
     };
   }, []);
 
-  // --- 4. УПРАВЛЕНИЕ ДАННЫМИ РАУНДА ---
+  // --- 5. УПРАВЛЕНИЕ ДАННЫМИ РАУНДА ---
 
   const updateStageFromStatus = useCallback((status) => {
     switch (status) {
@@ -210,7 +261,7 @@ export const useCrashGame = () => {
     }
   }, [currentRoundId, syncTime, updateStageFromStatus]);
 
-  // --- 5. WS INIT ---
+  // --- 6. WS INIT ---
 
   const initializeWebSocket = useCallback(async () => {
     try {
@@ -346,6 +397,16 @@ export const useCrashGame = () => {
         myActiveBetRef.current = bet;
         userIdRef.current = data.bet.user_id;
         hasBetThisRoundRef.current = true;
+        
+        // Если в ставке есть auto_cashout, устанавливаем автокешаут
+        if (data.bet.auto_cashout && data.bet.auto_cashout > 1.0) {
+          console.log(`🤖 Auto-cashout set for x${data.bet.auto_cashout}`);
+          autoCashoutRef.current = {
+            multiplier: data.bet.auto_cashout,
+            betId: bet.bet_id
+          };
+          autoCashoutTriggeredRef.current = false;
+        }
       });
 
       crashWebSocket.on('cashout_ok', (data) => {
@@ -478,11 +539,18 @@ export const useCrashGame = () => {
   const placeBet = useCallback((currency, amount, autoCashout) => {
     if (!canPlaceBet()) return false;
     hasBetThisRoundRef.current = true;
+    
+    // Отправляем ставку с auto_cashout если он включен
     return crashWebSocket.placeBet(currency, amount, autoCashout);
   }, [canPlaceBet]);
 
   const cashoutBet = useCallback(() => {
     if (!myActiveBetRef.current) return false;
+    
+    // Отключаем автокешаут при ручном кешауте
+    autoCashoutRef.current = null;
+    autoCashoutTriggeredRef.current = false;
+    
     return crashWebSocket.cashout(myActiveBetRef.current.bet_id);
   }, []);
 

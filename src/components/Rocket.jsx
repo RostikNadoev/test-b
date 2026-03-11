@@ -130,7 +130,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     }
   }, [engineEvents.crash]);
 
-  // Управление Lottie плеером для взрыва (Исправление №2)
+  // Управление Lottie плеером для взрыва
   useEffect(() => {
     if (stage === 'explosion') {
       explosionHandledRef.current = false;
@@ -149,7 +149,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     };
   }, [stage]);
 
-  // --- ЛОГИКА ЗАВЕРШЕНИЯ ВЗРЫВА (Исправление №2) ---
+  // --- ЛОГИКА ЗАВЕРШЕНИЯ ВЗРЫВА ---
   const handleExplosionComplete = useCallback(() => {
     if (explosionHandledRef.current) return;
     explosionHandledRef.current = true;
@@ -320,7 +320,11 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       showUiError(`Insufficient ${selectedCurrency.toUpperCase()} balance`);
       return;
     }
-    const success = placeBet(selectedCurrency, betAmountNum, autoPayoutEnabled ? payoutMultiplier : null);
+    
+    // Передаем payoutMultiplier только если автокешаут включен
+    const autoCashoutValue = autoPayoutEnabled ? payoutMultiplier : null;
+    const success = placeBet(selectedCurrency, betAmountNum, autoCashoutValue);
+    
     if (success) {
       if (updateBalanceImmediately) updateBalanceImmediately(selectedCurrency, -betAmountNum);
       hasPlacedBetThisRoundRef.current = true;
@@ -332,6 +336,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
         amount: betAmountNum,
         status: 'placed',
         x: null,
+        auto_cashout: autoCashoutValue, // Сохраняем для отображения
         user: userData ? { id: userData.id, username: userData.username, photo_url: userData.photo_url } : null
       };
       lastTempBetIdRef.current = tempBet.bet_id;
@@ -348,6 +353,11 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
           return prevBetId === lastTempBetIdRef.current ? null : prev;
         });
       }, 5000);
+      
+      // Показываем сообщение о настройке автокешаута
+      if (autoPayoutEnabled) {
+        showUiError(`Auto-cashout set at x${payoutMultiplier.toFixed(1)}`, 2000);
+      }
     } else {
       showUiError('Failed to place bet. Betting might be closed.');
     }
@@ -457,6 +467,14 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     return myActiveBetId && participantId === myActiveBetId;
   };
 
+  // Показываем иконку автокешаута если есть
+  const getAutoCashoutIcon = (participant) => {
+    if (participant.auto_cashout && participant.auto_cashout > 1.0) {
+      return <span className="auto-cashout-icon" title={`Auto at x${participant.auto_cashout}`}>⚡</span>;
+    }
+    return null;
+  };
+
   return (
     <div className="rocket-screen">
       <Header onNavigate={onNavigate} />
@@ -493,7 +511,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
                         speed={1.2}
                         lottieRef={(ref) => { explosionAnimationRef.current = ref; }}
                         onComplete={handleExplosionComplete}
-                        // onLoopComplete УДАЛЕН (Исправление №3)
                       />
                     </div>
                   )}
@@ -535,6 +552,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
                       const username = getParticipantUsername(participant);
                       const betKey = participant.bet_id ?? participant.id ?? `temp-${participant.user_id}`;
                       const currentAmount = getCurrentBetAmount(participant);
+                      const autoCashoutIcon = getAutoCashoutIcon(participant);
                       
                       let multiplierColor = '';
                       let statusIcon = null;
@@ -555,7 +573,9 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
                               {avatarElement || <span className="fallback">{username?.[0]?.toUpperCase() || 'U'}</span>}
                             </div>
                             <div className="participant-info">
-                              <div className="participant-nickname">{username} {isMyBetFlag}</div>
+                              <div className="participant-nickname">
+                                {username} {isMyBetFlag && '(You)'} {autoCashoutIcon}
+                              </div>
                               <div className="participant-bet-currency">
                                 <img src={participant.currency === 'ton' ? tonSvg : starSvg} alt={participant.currency} className="currency-icon-small" style={{ marginTop: '-1px' }} />
                                 <span className="participant-bet">{currentAmount}</span>
