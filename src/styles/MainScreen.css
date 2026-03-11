@@ -1,8 +1,6 @@
-/* styles/MainScreen.css - оптимизированная версия */
+/* styles/MainScreen.css - полная версия с восстановленными стилями */
 
-/* --- Глобальные переменные и сбросы --- */
-.main-screen,
-.main-screen-no-bg {
+.main-screen {
   width: 100%;
   height: var(--app-height, 100vh);
   display: flex;
@@ -11,17 +9,13 @@
   overflow: hidden;
 }
 
-.main-screen-no-bg {
-  background-image: none;
-}
-
 .main-content {
   flex: 1;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0;
+  padding: 0px 0;
   box-sizing: border-box;
   overflow-y: auto;
 }
@@ -37,36 +31,7 @@
   gap: 21px;
 }
 
-/* --- Общие стили для интерактивных элементов --- */
-.game-button,
-.referral-top-button,
-.referral-button,
-.footer-block-item,
-.inf_info_button,
-.ref-close-btn,
-.info-close-btn {
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.game-button:active,
-.referral-top-button:active,
-.referral-button:active,
-.footer-block-item:active:not(.footer-block-item--disabled),
-.inf_info_button:active,
-.ref-close-btn:active,
-.info-close-btn:active {
-  transform: scale(0.98);
-}
-
-.game-button-disabled {
-  opacity: 0.5;
-  cursor: not-allowed !important;
-  pointer-events: none;
-}
-
-/* --- ВЕРХНЯЯ РЕФЕРАЛЬНАЯ КНОПКА --- */
+/* --- НОВАЯ КНОПКА РЕФЕРАЛОВ ВВЕРХУ --- */
 .referral-top-button {
   width: 280px;
   height: 43px;
@@ -83,6 +48,13 @@
   position: relative;
   margin: 0 auto 34px auto;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 0.2s ease;
+}
+
+.referral-top-button:active {
+  transform: scale(0.98);
 }
 
 .referral-top-text {
@@ -90,15 +62,15 @@
   font-weight: 800;
   font-size: 22px;
   line-height: 140%;
+  letter-spacing: 0%;
   background: linear-gradient(90deg, #35A3F2, #37BDF3);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   -webkit-text-stroke: 1px white;
+  text-stroke: 1px white;
   margin-left: 28px;
   white-space: nowrap;
-  background-size: 200% auto;
-  animation: shine-text 3s linear infinite;
 }
 
 .referral-top-icon {
@@ -112,11 +84,14 @@
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
   font-size: 18px;
+  line-height: 140%;
+  letter-spacing: 0%;
   background: linear-gradient(90deg, #35A3F2, #37BDF3);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   -webkit-text-stroke: 1px white;
+  text-stroke: 1px white;
   margin-left: 5px;
 }
 
@@ -131,10 +106,9 @@
   border: 2px solid white;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   pointer-events: none;
-  animation: pulse-glow 1.5s infinite;
 }
 
-/* --- ИГРОВЫЕ КНОПКИ --- */
+/* --- Ряды с кнопками --- */
 .buttons-row {
   width: 100%;
   display: flex;
@@ -143,6 +117,11 @@
   gap: 11px;
 }
 
+.buttons-row:first-of-type {
+  margin-top: 0;
+}
+
+/* --- Стили для игровых кнопок --- */
 .game-button {
   cursor: pointer;
   padding: 0;
@@ -152,6 +131,13 @@
   background: none;
   border: none;
   border-radius: 12px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 0.2s ease;
+}
+
+.game-button:active {
+  transform: scale(0.98);
 }
 
 .game-image {
@@ -162,32 +148,24 @@
   object-fit: cover;
 }
 
+/* Кнопки на половину ширины (215x204 на 480px) */
 .half-button {
   width: calc(50% - 5.5px);
   aspect-ratio: 215 / 204;
 }
 
+/* Кнопка на полную ширину (441x78 на 480px) */
 .full-button {
   width: 100%;
   aspect-ratio: 441 / 78;
   margin-bottom: -4px;
 }
 
-.shine-effect {
-  position: absolute;
-  top: 0;
-  left: -150%;
-  width: 50%;
-  height: 100%;
-  background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
-  transform: skewX(-25deg);
-  animation: shine 5s infinite;
-  pointer-events: none;
-}
-
-/* --- РЕФЕРАЛЬНЫЙ БЛОК --- */
+/* --- Стили для реферального блока (оригинальные цвета) --- */
 .referral-block {
   width: 100%;
+  margin-top: 0px;
+  margin-bottom: 0px;
 }
 
 .referral-frame {
@@ -204,7 +182,7 @@
 .referral-content {
   width: 100%;
   height: 100%;
-  padding: 15px 14px 0;
+  padding: 15px 14px 0 14px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -215,12 +193,14 @@
   font-weight: 800;
   font-size: 18px;
   line-height: 1.2;
+  letter-spacing: 0%;
   background: linear-gradient(90deg, #35A3F2, #37BDF3);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   -webkit-text-stroke: 2px white;
   paint-order: stroke fill;
+  text-stroke: 2px white;
   white-space: nowrap;
 }
 
@@ -230,6 +210,7 @@
   color: white;
   -webkit-text-fill-color: white;
   -webkit-text-stroke: 0;
+  text-stroke: 0;
   padding: 0 4px;
   height: 34px;
   line-height: 34px;
@@ -239,16 +220,17 @@
   font-size: 18px;
   font-weight: 800;
   vertical-align: middle;
-  animation: accent-pulse 2s infinite ease-in-out;
-  box-shadow: 0 0 10px rgba(53, 163, 242, 0.3);
 }
 
+/* Контейнер для верхних надписей (дата и Invited) */
 .referral-stats-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
   margin-top: 15px;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .inf_date_container {
@@ -258,11 +240,13 @@
   white-space: nowrap;
 }
 
-.referral-date-label,
-.referral-invited-text {
+/* Стиль для текста "You'll get" */
+.referral-date-label {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
   font-size: 16px;
+  line-height: 140%;
+  letter-spacing: 0%;
   background: linear-gradient(90deg, #80CAF4, #7BCFFF);
   -webkit-background-clip: text;
   background-clip: text;
@@ -270,24 +254,46 @@
   white-space: nowrap;
 }
 
+/* Стиль для самой даты */
 .referral-date-value {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
   font-size: 16px;
+  line-height: 140%;
+  letter-spacing: 0%;
   background: linear-gradient(90deg, #35A3F2, #37BDF3);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+/* Стиль для текста Invited */
+.referral-invited-text {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  line-height: 140%;
+  letter-spacing: 0%;
+  background: linear-gradient(90deg, #80CAF4, #7BCFFF);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   white-space: nowrap;
 }
 
+/* Контейнер для полей со значениями */
 .referral-stats-values {
   display: flex;
   gap: 10px;
   width: 100%;
   margin-top: 8px;
+  padding: 0;
+  box-sizing: border-box;
 }
 
+/* Стиль для каждого поля */
 .referral-stat-field {
   background: linear-gradient(15deg, #D8EDFF, #FFFFFF);
   border: 2px solid #FFFFFF;
@@ -299,26 +305,33 @@
   box-sizing: border-box;
 }
 
+/* Первое поле (75% ширины) */
 .referral-stat-field:first-child {
   width: calc(75% - 5px);
 }
 
+/* Второе поле (25% ширины) */
 .referral-stat-field:last-child {
   width: calc(25% - 5px);
 }
 
+/* Стиль для чисел внутри полей */
 .referral-stat-number {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
   font-size: 18px;
+  line-height: 1.3;
+  letter-spacing: 0%;
   background: linear-gradient(90deg, #35A3F2, #37BDF3);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   -webkit-text-stroke: 1.5px white;
+  text-stroke: 1.5px white;
   paint-order: stroke fill;
 }
 
+/* Кнопка с вопросиком */
 .inf_info_button {
   width: 21px;
   height: 21px;
@@ -335,19 +348,29 @@
   color: white;
   line-height: 1;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   user-select: none;
   flex-shrink: 0;
   padding-top: 3px;
 }
 
-/* --- КНОПКИ ПОД РЕФЕРАЛЬНЫМ БЛОКОМ --- */
+.inf_info_button:active {
+  transform: scale(0.95);
+  opacity: 0.9;
+}
+
+/* --- Стили для кнопок под реферальным блоком --- */
 .referral-buttons-row {
   display: flex;
   gap: 15px;
   width: 100%;
   margin-top: 10px;
+  box-sizing: border-box;
 }
 
+/* Общие стили для обеих кнопок */
 .referral-button {
   height: 49px;
   border: 1px solid #FFFFFF;
@@ -358,33 +381,26 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
+/* Левая кнопка (75% ширины) */
 .invite-button {
   width: calc(75% - 7.5px);
+  position: relative;
   padding: 0;
   background: none;
 }
 
-.invite-button::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -150%;
-  width: 50%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-  transform: skewX(-20deg);
-  animation: button-shine 4s infinite;
-  z-index: 2;
-  pointer-events: none;
-}
-
+/* Правая кнопка (25% ширины) */
 .link-button {
   width: calc(25% - 7.5px);
   background: linear-gradient(135deg, #D8EDFF, #FFFFFF);
+  border: 1px solid #FFFFFF;
 }
 
+/* Фоновое изображение для левой кнопки */
 .invite-button-bg {
   position: absolute;
   top: 0;
@@ -396,20 +412,24 @@
   pointer-events: none;
 }
 
+/* Текст INVITE */
 .invite-button-text {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
   font-size: 20px;
   line-height: 100%;
+  letter-spacing: 0%;
   text-transform: uppercase;
   color: #FFFFFF;
   -webkit-text-stroke: 1.5px #3AABED;
+  text-stroke: 1.5px #3AABED;
   paint-order: stroke fill;
   position: relative;
   z-index: 2;
   text-shadow: 0 3px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* Иконка ссылки */
 .link-icon {
   width: 39px;
   height: 39px;
@@ -418,57 +438,55 @@
   position: relative;
 }
 
-/* --- МОДАЛКИ (общие стили) --- */
-.ref-overlay,
-.info-overlay {
+/* Эффекты при нажатии */
+.invite-button:active,
+.link-button:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
+
+/* --- УНИКАЛЬНЫЕ КЛАССЫ ДЛЯ МОДАЛОК --- */
+
+/* Оверлей для реферальной модалки */
+.ref-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
+  animation: refOverlayFadeIn 0.6s ease;
 }
 
-.ref-overlay {
-  background: rgba(0, 0, 0, 0);
-  backdrop-filter: blur(0px);
-  transition: all 0.5s ease;
+.ref-overlay-closing {
+  animation: refOverlayFadeOut 0.6s ease forwards;
 }
 
-.ref-overlay:not(.ref-overlay-closing) {
-  backdrop-filter: blur(8px);
-  background: rgba(0, 0, 0, 0.6);
-}
-
-.info-overlay {
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(8px);
-  z-index: 10000;
-  animation: infoOverlayFadeIn 0.2s ease;
-}
-
-/* --- РЕФЕРАЛЬНАЯ МОДАЛКА --- */
+/* Контент реферальной модалки */
 .ref-modal {
   width: 90%;
   max-width: 400px;
   background: transparent;
   position: relative;
   margin: 0 auto;
-  transform-origin: left bottom;
+  transform-origin: center;
   will-change: transform, opacity;
 }
 
 .ref-modal-in {
-  animation: refModalArcIn 0.6s cubic-bezier(0.23, 1.25, 0.46, 1.04) forwards;
+  animation: refModalSlideIn 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.1);
 }
 
 .ref-modal-out {
-  animation: refModalArcOut 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation: refModalSlideOut 0.3s ease forwards;
 }
 
+/* Кнопка закрытия для реферальной модалки */
 .ref-close-btn {
   position: absolute;
   top: -45px;
@@ -487,19 +505,45 @@
   font-weight: 300;
   line-height: 1;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   z-index: 10001;
   padding: 0;
   font-family: Arial, sans-serif;
 }
 
-/* --- ИНФОРМАЦИОННАЯ МОДАЛКА --- */
+.ref-close-btn:active {
+  transform: scale(0.95);
+  background: linear-gradient(135deg, #2a8fd9, #2ca5d9);
+}
+
+/* --- ИНФОРМАЦИОННАЯ МОДАЛКА (полностью восстановленные стили) --- */
+
+/* Оверлей для информационной модалки */
+.info-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: infoOverlayFadeIn 0.2s ease;
+}
+
+/* Контент информационной модалки */
 .info-modal {
   width: auto;
   max-width: 300px;
   background: linear-gradient(135deg, #ffffff, #f5fbff);
   border: 3px solid white;
   border-radius: 20px;
-  padding: 28px 20px 20px;
+  padding: 28px 20px 20px 20px;
   box-shadow: 0 12px 30px rgba(53, 163, 242, 0.25);
   animation: infoModalFadeIn 0.3s ease;
   position: relative;
@@ -507,6 +551,7 @@
   z-index: 10001;
 }
 
+/* Кнопка закрытия для информационной модалки */
 .info-close-btn {
   position: absolute;
   top: 12px;
@@ -525,10 +570,18 @@
   font-weight: bold;
   line-height: 1;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   font-family: Arial, sans-serif;
   padding-bottom: 2px;
 }
 
+.info-close-btn:active {
+  transform: scale(0.95);
+}
+
+/* Контейнер для контента информационной модалки */
 .inf_content {
   display: flex;
   flex-direction: column;
@@ -536,41 +589,40 @@
   margin-top: 4px;
 }
 
-.inf_item,
-.inf_item_with_icon {
+.inf_item {
   background: rgba(216, 237, 255, 0.4);
   padding: 14px 16px;
   border-radius: 14px;
   border: 1.5px solid rgba(255, 255, 255, 0.9);
 }
 
-.inf_item_with_icon {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.inf_text,
-.inf_text_with_icon {
+.inf_text {
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 600;
   font-size: 15px;
   line-height: 1.5;
   color: #89c8f5;
+  display: block;
 }
 
-.inf_text_with_icon {
-  flex: 1;
-}
-
-.inf_text strong,
-.inf_text_with_icon strong {
+.inf_text strong {
   color: #35A3F2;
   font-weight: 800;
   background: linear-gradient(90deg, #35A3F2, #37BDF3);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+.inf_item_with_icon {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(216, 237, 255, 0.4);
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
 }
 
 .inf_icon {
@@ -581,10 +633,28 @@
   margin-top: 2px;
 }
 
-/* --- TOAST УВЕДОМЛЕНИЕ --- */
+.inf_text_with_icon {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #89c8f5;
+  flex: 1;
+}
+
+.inf_text_with_icon strong {
+  color: #35A3F2;
+  font-weight: 800;
+  background: linear-gradient(90deg, #35A3F2, #37BDF3);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* --- Toast уведомление --- */
 .toast_notification {
   position: fixed;
-  top: 110px;
+  top: 160px;
   left: 50%;
   transform: translateX(-50%);
   background: linear-gradient(135deg, #35A3F2, #37BDF3);
@@ -624,7 +694,83 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* --- ФУТЕР --- */
+/* --- Анимации для модалок --- */
+@keyframes refOverlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes refOverlayFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes refModalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(70px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes refModalSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(70px);
+  }
+}
+
+@keyframes infoOverlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes infoModalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes toastSlideDown {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -190px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes toastSlideUp {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -190px);
+  }
+}
+
+/* --- ВСЕ СТИЛИ ФУТЕРА ПОЛНОСТЬЮ СОХРАНЕНЫ --- */
+.main-footer {
+  width: 100%;
+  height: 60px;
+}
+
 .main-footer {
   width: 100%;
   height: auto;
@@ -651,6 +797,9 @@
   gap: 10px;
   position: relative;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
   user-select: none;
   padding: 15px 10px;
   margin: -15px -10px;
@@ -712,7 +861,8 @@
   font-weight: 800;
   font-size: 18px;
   line-height: 1;
-  background: linear-gradient(90deg, #35A3F2, #37BDF3);
+  letter-spacing: 0%;
+  background: linear-gradient(90deg, rgba(53, 163, 242, 1), rgba(55, 189, 243, 1));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -733,112 +883,54 @@
   opacity: 0.7;
 }
 
-.footer-block-item--active .footer-block-icon {
-  animation: footer-icon-float 2.5s ease-in-out infinite;
-}
-
-/* --- АНИМАЦИИ --- */
-@keyframes shine-text {
-  to { background-position: 200% center; }
-}
-
-@keyframes pulse-glow {
-  0% { box-shadow: 0 0 0 0 rgba(30, 247, 120, 0.7); }
-  70% { box-shadow: 0 0 0 10px rgba(30, 247, 120, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(30, 247, 120, 0); }
-}
-
-@keyframes shine {
-  0% { left: -150%; }
-  20% { left: 150%; }
-  100% { left: 150%; }
-}
-
-@keyframes button-shine {
-  0% { left: -150%; }
-  20% { left: 150%; }
-  100% { left: 150%; }
-}
-
-@keyframes accent-pulse {
-  0%, 100% { transform: scale(1); filter: brightness(1); }
-  50% { transform: scale(1.02); filter: brightness(1.15); box-shadow: 0 0 15px rgba(53, 163, 242, 0.6); }
-}
-
-@keyframes refModalArcIn {
-  0% {
-    opacity: 0;
-    transform: translate(-120%, 50%) rotate(-25deg) scale(0.8);
-  }
-  60% {
-    transform: translate(5%, -5%) rotate(2deg) scale(1.02);
-  }
-  100% {
-    opacity: 1;
-    transform: translate(0, 0) rotate(0deg) scale(1);
-  }
-}
-
-@keyframes refModalArcOut {
-  0% {
-    opacity: 1;
-    transform: translate(0, 0) rotate(0deg) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-100%, 30%) rotate(-15deg) scale(0.9);
-  }
-}
-
-@keyframes infoOverlayFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes infoModalFadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes toastSlideDown {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -100px);
-  }
-  100% {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
-}
-
-@keyframes toastSlideUp {
-  0% {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -100px);
-  }
-}
-
+/* Анимация для иконки активного пункта */
 @keyframes footer-icon-float {
   0% { transform: translate(-50%, -50%) translateY(0px); }
   50% { transform: translate(-50%, -50%) translateY(-4px); }
   100% { transform: translate(-50%, -50%) translateY(0px); }
 }
 
-/* --- МЕДИАЗАПРОСЫ --- */
+.footer-block-item--active .footer-block-icon {
+  animation: footer-icon-float 2.5s ease-in-out infinite;
+}
+
+/* У кнопки MAIN (вторая по счету) свои координаты в твоем коде, адаптируем: */
+.footer-block-item--active:nth-child(2) .footer-block-icon {
+  animation: footer-icon-float-main 2.5s ease-in-out infinite;
+}
+
+@keyframes footer-icon-float-main {
+  0% { transform: translate(-50%, -50%) translateY(0px); }
+  50% { transform: translate(-50%, -50%) translateY(-4px); }
+  100% { transform: translate(-50%, -50%) translateY(0px); }
+}
+
+.footer-block-item {
+  transition: transform 0.2s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+.footer-block-item:active:not(.footer-block-item--disabled) {
+  transform: scale(0.9);
+}
+
+
+
+.main-screen-no-bg {
+  width: 100%;
+  height: var(--app-height, 100vh);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-image: none;
+  overflow: hidden;
+}
+
+/* --- Адаптивные стили --- */
 @media (max-width: 450px) {
   .banner-images-container {
     width: 100%;
     padding: 0 10px;
+    max-width: 100%;
     gap: 18px;
   }
   
@@ -856,6 +948,7 @@
     width: 17px;
     height: 20px;
     margin-left: 25px;
+    margin-bottom: 4px;
   }
   
   .referral-top-count {
@@ -867,6 +960,14 @@
     height: 22px;
     bottom: -8px;
     right: -8px;
+  }
+  
+  .buttons-row {
+    gap: 10px;
+  }
+  
+  .half-button {
+    width: calc(50% - 5px);
   }
   
   .referral-frame {
@@ -921,13 +1022,24 @@
     font-size: 28px;
   }
   
-  .info-modal {
-    max-width: 270px;
-    padding: 24px 18px 18px;
+  .ref-modal {
+    width: 95%;
   }
   
-  .inf_item,
-  .inf_item_with_icon {
+  .info-modal {
+    max-width: 270px;
+    padding: 24px 18px 18px 18px;
+  }
+  
+  .inf_text {
+    font-size: 14px;
+  }
+  
+  .inf_text_with_icon {
+    font-size: 14px;
+  }
+  
+  .inf_item, .inf_item_with_icon {
     padding: 12px 14px;
   }
 }
@@ -967,6 +1079,18 @@
     gap: 16px;
   }
   
+  .buttons-row {
+    gap: 9px;
+  }
+  
+  .half-button {
+    width: calc(50% - 4.5px);
+  }
+  
+  .referral-frame {
+    height: 160px;
+  }
+  
   .referral-text {
     font-size: 15.5px;
   }
@@ -1004,7 +1128,7 @@
   .referral-button {
     height: 42px;
   }
-  
+
   .referral-top-button {
     width: 220px;
     height: 32px;
@@ -1012,11 +1136,14 @@
   
   .referral-top-text {
     font-size: 16px;
+    margin-left: 25px;
   }
   
   .referral-top-icon {
     width: 16px;
     height: 19px;
+    margin-left: 25px;
+    margin-bottom: 4px;
   }
   
   .referral-top-count {
@@ -1026,6 +1153,8 @@
   .referral-top-badge {
     width: 20px;
     height: 20px;
+    bottom: -8px;
+    right: -8px;
   }
   
   .ref-close-btn {
@@ -1039,6 +1168,14 @@
 @media (max-width: 375px) {
   .banner-images-container {
     gap: 15px;
+  }
+  
+  .buttons-row {
+    gap: 8px;
+  }
+  
+  .half-button {
+    width: calc(50% - 4px);
   }
   
   .referral-text {
@@ -1081,10 +1218,13 @@
   
   .info-modal {
     max-width: 250px;
-    padding: 22px 16px 16px;
+    padding: 22px 16px 16px 16px;
   }
   
-  .inf_text,
+  .inf_text {
+    font-size: 13px;
+  }
+  
   .inf_text_with_icon {
     font-size: 13px;
   }
@@ -1097,11 +1237,31 @@
   }
 }
 
+@media (max-width: 370px) {
+  .toast_text {
+    font-weight: 600;
+    font-size: 13px;
+  }
+}
+
 @media (max-width: 353px) {
   .banner-images-container {
     gap: 14px;
   }
   
+  .buttons-row {
+    gap: 7px;
+  }
+  
+  .half-button {
+    width: calc(50% - 3.5px);
+  }
+  
+  .toast_text {
+    font-weight: 600;
+    font-size: 12px;
+  }
+
   .referral-top-button {
     width: 200px;
     height: 30px;
@@ -1109,12 +1269,14 @@
   
   .referral-top-text {
     font-size: 14px;
+    margin-left: 25px;
   }
   
   .referral-top-icon {
     width: 15px;
     height: 18px;
     margin-left: 20px;
+    margin-bottom: 4px;
   }
   
   .referral-top-count {
@@ -1124,10 +1286,8 @@
   .referral-top-badge {
     width: 19px;
     height: 19px;
-  }
-  
-  .toast_text {
-    font-size: 12px;
+    bottom: -8px;
+    right: -8px;
   }
   
   .ref-close-btn {
@@ -1175,6 +1335,68 @@
 
 @media (max-width: 337px) {
   .toast_text {
+    font-weight: 600;
     font-size: 11px;
   }
+}
+
+/* Стиль для отключенной кнопки */
+.game-button-disabled {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
+
+.referral-top-badge {
+  /* ... твои стили ... */
+  animation: pulse-glow 1.5s infinite;
+}
+
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 0 0 rgba(30, 247, 120, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(30, 247, 120, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(30, 247, 120, 0); }
+}
+
+/* Мягкий перелив текста */
+.referral-top-text {
+  background-size: 200% auto;
+  animation: shine-text 3s linear infinite;
+}
+
+@keyframes shine-text {
+  to { background-position: 200% center; }
+}
+
+
+/* Для игровых кнопок и реферальной кнопки */
+.game-button, .referral-top-button, .referral-button {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Эффект пружины */
+}
+
+.game-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.shine-effect {
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-25deg);
+  animation: shine 5s infinite;
+}
+
+@keyframes shine {
+  0% { left: -150%; }
+  20% { left: 150%; }
+  100% { left: 150%; }
 }
