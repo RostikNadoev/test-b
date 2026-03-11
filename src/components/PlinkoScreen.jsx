@@ -66,6 +66,30 @@ const getOutcomeIndexByMultiplier = (multiplier) => {
   return 8; // fallback на x0.2
 };
 
+// Функция для вибрации в Telegram Mini App
+const triggerHapticFeedback = (multiplier) => {
+  if (window.Telegram?.WebApp?.HapticFeedback) {
+    const haptic = window.Telegram.WebApp.HapticFeedback;
+    
+    if (multiplier >= 30) {
+      // Для x30 - очень сильная вибрация (notification error)
+      haptic.notificationOccurred('error');
+    } else if (multiplier >= 15) {
+      // Для x15 - сильная вибрация (notification warning)
+      haptic.notificationOccurred('warning');
+    } else if (multiplier >= 8) {
+      // Для x8 - средняя вибрация (impact heavy)
+      haptic.impactOccurred('heavy');
+    } else if (multiplier >= 3) {
+      // Для x3 - легкая вибрация (impact medium)
+      haptic.impactOccurred('medium');
+    } else {
+      // Для остальных - очень легкая (impact light)
+      haptic.impactOccurred('light');
+    }
+  }
+};
+
 export default function BounceFallScreen({ onNavigate }) {
   const plinkoRef = useRef();
   const currencyDropdownRef = useRef(null);
@@ -132,6 +156,9 @@ export default function BounceFallScreen({ onNavigate }) {
   }, [isDragging, handleSliderMove, handleSliderEnd]);
 
   const handleBallLand = useCallback((multiplier) => {
+    // Вибрация при каждом попадании
+    triggerHapticFeedback(multiplier);
+    
     setBallsDropped(prev => {
       const newDropped = prev + 1;
       if (newDropped >= ballCount) {
@@ -144,21 +171,33 @@ export default function BounceFallScreen({ onNavigate }) {
       const bet = parseFloat(betAmount) || 0;
       const ballWinnings = bet * multiplier;
       
-      // --- ЛОГИКА ЭФФЕКТОВ (КАК В КАЗИНО) ---
-      // Если множитель >= 8x, показываем спецэффект
-      if (multiplier >= 8) {
+      // --- ЛОГИКА ЭФФЕКТОВ ---
+      // Показываем эффект для множителей >= 3x
+      if (multiplier >= 3) {
         const effectId = Date.now();
         // Определяем тип эффекта по силе множителя
-        let type = 'medium'; // для x8
+        let type = 'small'; // для x3
+        if (multiplier >= 8) type = 'medium'; // для x8
         if (multiplier >= 15) type = 'high'; // для x15
         if (multiplier >= 30) type = 'insane'; // для x30
 
         setWinEffect({ id: effectId, multiplier, type });
 
-        // Убираем эффект через 2 секунды
+        // Убираем эффект через 1 секунду с анимацией
         setTimeout(() => {
-          setWinEffect(prev => (prev?.id === effectId ? null : prev));
-        }, 2000);
+          setWinEffect(prev => {
+            if (prev?.id === effectId) {
+              // Добавляем класс для плавного исчезновения
+              return { ...prev, fading: true };
+            }
+            return prev;
+          });
+          
+          // Полностью убираем через 300мс (длительность анимации)
+          setTimeout(() => {
+            setWinEffect(prev => (prev?.id === effectId ? null : prev));
+          }, 300);
+        }, 1000);
       }
 
       setTotalWinnings(prev => {
@@ -373,7 +412,7 @@ export default function BounceFallScreen({ onNavigate }) {
           <div className="plinko-game-area">
             {/* СЛОЙ С ЭФФЕКТАМИ ПОВЕРХ ИГРЫ */}
             {winEffect && (
-              <div className={`win-overlay-effect effect-${winEffect.type}`}>
+              <div className={`win-overlay-effect effect-${winEffect.type} ${winEffect.fading ? 'fading' : ''}`}>
                 <div className="win-shimmer"></div>
                 <div className="win-multiplier-text">
                   <span className="x-prefix">X</span>
