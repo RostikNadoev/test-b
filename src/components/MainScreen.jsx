@@ -290,6 +290,7 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
               className="game-image"
               loading="lazy"
             />
+            <div className="shine-effect"></div> 
           </div>
           
           <div 
@@ -302,6 +303,7 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
               className="game-image"
               loading="lazy"
             />
+            <div className="shine-effect"></div> 
           </div>
         </div>
 
@@ -317,6 +319,7 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
               className="game-image"
               loading="lazy"
             />
+            <div className="shine-effect"></div> 
           </div>
         </div>
 
@@ -332,6 +335,7 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
               className="game-image"
               loading="lazy"
             />
+            <div className="shine-effect"></div> 
           </div>
           
           <div 
@@ -344,6 +348,7 @@ export default function MainScreen({ onNavigate, initialCardIndex = 2 }) {
               className="game-image"
               loading="lazy"
             />
+            <div className="shine-effect"></div> 
           </div>
         </div>
       </div>

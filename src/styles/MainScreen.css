@@ -883,6 +883,38 @@
   opacity: 0.7;
 }
 
+/* Анимация для иконки активного пункта */
+@keyframes footer-icon-float {
+  0% { transform: translate(-50%, -50%) translateY(0px); }
+  50% { transform: translate(-50%, -50%) translateY(-4px); }
+  100% { transform: translate(-50%, -50%) translateY(0px); }
+}
+
+.footer-block-item--active .footer-block-icon {
+  animation: footer-icon-float 2.5s ease-in-out infinite;
+}
+
+/* У кнопки MAIN (вторая по счету) свои координаты в твоем коде, адаптируем: */
+.footer-block-item--active:nth-child(2) .footer-block-icon {
+  animation: footer-icon-float-main 2.5s ease-in-out infinite;
+}
+
+@keyframes footer-icon-float-main {
+  0% { transform: translate(-50%, -50%) translateY(0px); }
+  50% { transform: translate(-50%, -50%) translateY(-4px); }
+  100% { transform: translate(-50%, -50%) translateY(0px); }
+}
+
+.footer-block-item {
+  transition: transform 0.2s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+.footer-block-item:active:not(.footer-block-item--disabled) {
+  transform: scale(0.9);
+}
+
+
+
 .main-screen-no-bg {
   width: 100%;
   height: var(--app-height, 100vh);
@@ -1313,4 +1345,58 @@
   opacity: 0.5;
   cursor: not-allowed !important;
   pointer-events: none;
+}
+
+.referral-top-badge {
+  /* ... твои стили ... */
+  animation: pulse-glow 1.5s infinite;
+}
+
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 0 0 rgba(30, 247, 120, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(30, 247, 120, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(30, 247, 120, 0); }
+}
+
+/* Мягкий перелив текста */
+.referral-top-text {
+  background-size: 200% auto;
+  animation: shine-text 3s linear infinite;
+}
+
+@keyframes shine-text {
+  to { background-position: 200% center; }
+}
+
+
+/* Для игровых кнопок и реферальной кнопки */
+.game-button, .referral-top-button, .referral-button {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Эффект пружины */
+}
+
+.game-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.shine-effect {
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-25deg);
+  animation: shine 5s infinite;
+}
+
+@keyframes shine {
+  0% { left: -150%; }
+  20% { left: 150%; }
+  100% { left: 150%; }
 }
