@@ -441,7 +441,7 @@ export default function UpgradeScreen({ onNavigate }) {
       if (isWin) {
         if (winChance <= 10) {
           tier = 'high';
-        } else if (winChance <= 30) {
+        } else if (winChance <= 70) {
           tier = 'medium';
         } else {
           tier = 'low';
