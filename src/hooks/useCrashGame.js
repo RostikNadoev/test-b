@@ -8,7 +8,7 @@ export const useCrashGame = () => {
   const [multiplierNow, setMultiplierNow] = useState(1.0);
   const [roundStatus, setRoundStatus] = useState('waiting');
   
-  // --- Таймеры и время (ЛОКАЛЬНЫЙ ТАЙМЕР) ---
+  // --- Таймеры и время (СЕРВЕРНЫЙ ТАЙМЕР) ---
   const [timeLeft, setTimeLeft] = useState(15);
   const [stage, setStage] = useState('timer');
   
@@ -46,14 +46,13 @@ export const useCrashGame = () => {
   const hasBetThisRoundRef = useRef(false);
   const timeOffsetRef = useRef(0);
   const stageRef = useRef('timer');
-  const localTimerRef = useRef(15); // Локальный счетчик таймера
 
   // Синхронизация ref со стейтом
   useEffect(() => {
     stageRef.current = stage;
   }, [stage]);
 
-  // --- 1. ЛОГИКА СИНХРОНИЗАЦИИ ВРЕМЕНИ (для ставок) ---
+  // --- 1. ЛОГИКА СИНХРОНИЗАЦИИ ВРЕМЕНИ ---
 
   const syncTime = useCallback((serverTimeMs) => {
     if (!serverTimeMs) return;
@@ -62,6 +61,7 @@ export const useCrashGame = () => {
     
     // Сглаживание: обновляем только если рассинхрон больше 500мс или это первая синхронизация
     if (Math.abs(newOffset - timeOffsetRef.current) > 500 || timeOffsetRef.current === 0) {
+      console.log(`⏱️ Time sync: server=${serverTimeMs}, local=${localNow}, offset=${newOffset}ms`);
       timeOffsetRef.current = newOffset;
       setTimeOffset(newOffset);
     }
@@ -71,49 +71,53 @@ export const useCrashGame = () => {
     return Date.now() + timeOffsetRef.current;
   }, []);
 
-  // --- 2. ЛОКАЛЬНЫЙ ТАЙМЕР (НОВЫЙ) ---
+  // --- 2. ТАЙМЕР ОБРАТНОГО ОТСЧЕТА (СЕРВЕРНЫЙ) ---
   useEffect(() => {
     // Очищаем предыдущий интервал
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
     }
 
-    // Функция обновления локального таймера
-    const updateLocalTimer = () => {
-      // Если мы в стадии таймера
-      if (stageRef.current === 'timer') {
-        // Уменьшаем таймер
-        if (localTimerRef.current > 0) {
-          localTimerRef.current -= 1;
-          setTimeLeft(localTimerRef.current);
+    // Функция обновления таймера
+    const updateTimer = () => {
+      const now = getServerTime();
+      
+      if (roundStartsAt) {
+        const diff = roundStartsAt - now;
+        const sec = Math.max(0, Math.ceil(diff / 1000));
+        
+        // Обновляем timeLeft
+        setTimeLeft(sec);
+        
+        // Логируем для отладки (можно убрать в продакшене)
+        if (sec <= 5 && sec > 0) {
+          console.log(`⏱️ Server timer: ${sec}s remaining (starts at ${new Date(roundStartsAt).toISOString()})`);
         }
         
-        // Если таймер дошел до 0 и статус все еще betting/countdown
-        if (localTimerRef.current <= 0) {
-          // Сбрасываем на 15 для следующего цикла
-          localTimerRef.current = 15;
-          setTimeLeft(15);
+        // Определяем stage на основе diff и roundStatus
+        if (diff > 0 && (roundStatus === 'betting' || roundStatus === 'countdown')) {
+          if (stageRef.current !== 'timer') {
+            setStage('timer');
+          }
         }
+      } else {
+        // Fallback если нет времени старта
+        setTimeLeft(15);
       }
     };
 
-    // Запускаем интервал с частотой 1000мс (1 секунда)
-    timerIntervalRef.current = setInterval(updateLocalTimer, 1000);
+    // Запускаем интервал с частотой 100мс для плавности
+    timerIntervalRef.current = setInterval(updateTimer, 100);
+
+    // Первоначальное обновление
+    updateTimer();
 
     return () => {
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
       }
     };
-  }, []); // Пустой массив зависимостей - запускается один раз
-
-  // Сброс таймера при смене стадии на timer
-  useEffect(() => {
-    if (stage === 'timer') {
-      localTimerRef.current = 15;
-      setTimeLeft(15);
-    }
-  }, [stage]);
+  }, [roundStartsAt, roundStatus, getServerTime]);
 
   // --- 3. HELPERS ДЛЯ ФОРМАТИРОВАНИЯ ---
 
@@ -191,7 +195,9 @@ export const useCrashGame = () => {
     }
 
     if (roundData.starts_at) {
-      setRoundStartsAt(new Date(roundData.starts_at).getTime());
+      const startsAtTime = new Date(roundData.starts_at).getTime();
+      console.log(`⏱️ Round starts at: ${new Date(startsAtTime).toISOString()} (${startsAtTime})`);
+      setRoundStartsAt(startsAtTime);
     }
 
     if (roundData.bets_close_at) {
