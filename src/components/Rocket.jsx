@@ -35,9 +35,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
   const betInputRef = useRef(null);
   const historyUpdateIntervalRef = useRef(null);
   const explosionAnimationRef = useRef(null);
-  // --- НОВЫЙ ref для таймера взрыва (Пункт 2A) ---
-  const explosionTimeoutRef = useRef(null);
-  
   const lastTempBetIdRef = useRef(null);
   const uiErrorTimeoutRef = useRef(null);
   const hasPlacedBetThisRoundRef = useRef(false);
@@ -57,7 +54,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     isCrashGameActive,
     engineEvents,
     stage,
-    // Убираем setStage из деструктуризации (Пункт 2B)
+    setStage, 
     myActiveBet,
     lastMultipliers,
     crashMultiplier,
@@ -72,15 +69,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       hasPlacedBetThisRoundRef.current = false;
     }
   }, [currentRoundId]);
-
-  // --- ОЧИСТКА ТАЙМЕРА ВЗРЫВА ПРИ РАЗМОНТИРОВАНИИ (Пункт 2A) ---
-  useEffect(() => {
-    return () => {
-      if (explosionTimeoutRef.current) {
-        clearTimeout(explosionTimeoutRef.current);
-      }
-    };
-  }, []);
 
   const showUiError = (message, duration = 3000) => {
     setUiErrorMessage(message);
@@ -149,19 +137,19 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     }
   }, [stage]);
 
-  // --- ИСПРАВЛЕННАЯ ЛОГИКА ЗАВЕРШЕНИЯ ВЗРЫВА (Пункт 2A) ---
+  // --- ЛОГИКА ЗАВЕРШЕНИЯ ВЗРЫВА (Исправление проблемы №1) ---
   const handleExplosionComplete = () => {
     console.log('💥 Animation completed. Waiting 500ms before clearing...');
-
-    if (explosionTimeoutRef.current) {
-      clearTimeout(explosionTimeoutRef.current);
-    }
-
-    explosionTimeoutRef.current = setTimeout(() => {
-      console.log('🧹 Clearing bets after explosion');
+    
+    // Добавляем задержку 500мс (полсекунды) перед переключением
+    setTimeout(() => {
+      console.log('🧹 Switching to Timer and Clearing bets');
+      setStage('timer');
+      
+      // Очищаем таблицу ИМЕННО ЗДЕСЬ, сразу после задержки
       if (clearBetsOnCrash) clearBetsOnCrash();
-      // ВАЖНО: НЕ вызываем setStage('timer') здесь
-    }, 500);
+      
+    }, 500); 
   };
 
   // Вибрация
@@ -493,6 +481,8 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
                         speed={1.2}
                         lottieRef={(ref) => { explosionAnimationRef.current = ref; }}
                         onComplete={handleExplosionComplete}
+                        // Дублируем для надежности
+                        onLoopComplete={handleExplosionComplete}
                       />
                     </div>
                   )}
