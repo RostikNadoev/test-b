@@ -8,7 +8,7 @@ export const useCrashGame = () => {
   const [multiplierNow, setMultiplierNow] = useState(1.0);
   const [roundStatus, setRoundStatus] = useState('waiting');
   
-  // --- Таймеры и время (Синхронизация) ---
+  // --- Таймеры и время (ЛОКАЛЬНЫЙ ТАЙМЕР) ---
   const [timeLeft, setTimeLeft] = useState(15);
   const [stage, setStage] = useState('timer');
   
@@ -46,14 +46,14 @@ export const useCrashGame = () => {
   const hasBetThisRoundRef = useRef(false);
   const timeOffsetRef = useRef(0);
   const stageRef = useRef('timer');
-  const forceTimerUpdateRef = useRef(false); // Новый ref для принудительного обновления таймера
+  const localTimerRef = useRef(15); // Локальный счетчик таймера
 
   // Синхронизация ref со стейтом
   useEffect(() => {
     stageRef.current = stage;
   }, [stage]);
 
-  // --- 1. ЛОГИКА СИНХРОНИЗАЦИИ ВРЕМЕНИ ---
+  // --- 1. ЛОГИКА СИНХРОНИЗАЦИИ ВРЕМЕНИ (для ставок) ---
 
   const syncTime = useCallback((serverTimeMs) => {
     if (!serverTimeMs) return;
@@ -71,50 +71,51 @@ export const useCrashGame = () => {
     return Date.now() + timeOffsetRef.current;
   }, []);
 
-  // Таймер обратного отсчета - УПРОЩЕННАЯ ВЕРСИЯ
+  // --- 2. ЛОКАЛЬНЫЙ ТАЙМЕР (НОВЫЙ) ---
   useEffect(() => {
     // Очищаем предыдущий интервал
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
     }
 
-    // Функция обновления таймера
-    const updateTimer = () => {
-      const now = getServerTime();
-      
-      if (roundStartsAt) {
-        const diff = roundStartsAt - now;
-        const sec = Math.max(0, Math.ceil(diff / 1000));
-        
-        // Всегда обновляем timeLeft, даже если нет изменений
-        setTimeLeft(sec);
-        
-        // Определяем stage на основе diff и roundStatus
-        if (diff > 0 && (roundStatus === 'betting' || roundStatus === 'countdown')) {
-          if (stageRef.current !== 'timer') {
-            setStage('timer');
-          }
+    // Функция обновления локального таймера
+    const updateLocalTimer = () => {
+      // Если мы в стадии таймера
+      if (stageRef.current === 'timer') {
+        // Уменьшаем таймер
+        if (localTimerRef.current > 0) {
+          localTimerRef.current -= 1;
+          setTimeLeft(localTimerRef.current);
         }
-      } else {
-        // Fallback если нет времени старта
-        setTimeLeft(15);
+        
+        // Если таймер дошел до 0 и статус все еще betting/countdown
+        if (localTimerRef.current <= 0) {
+          // Сбрасываем на 15 для следующего цикла
+          localTimerRef.current = 15;
+          setTimeLeft(15);
+        }
       }
     };
 
-    // Запускаем интервал с частотой 100мс
-    timerIntervalRef.current = setInterval(updateTimer, 100);
-
-    // Первоначальное обновление
-    updateTimer();
+    // Запускаем интервал с частотой 1000мс (1 секунда)
+    timerIntervalRef.current = setInterval(updateLocalTimer, 1000);
 
     return () => {
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
       }
     };
-  }, [roundStartsAt, roundStatus, getServerTime]);
+  }, []); // Пустой массив зависимостей - запускается один раз
 
-  // --- 2. HELPERS ДЛЯ ФОРМАТИРОВАНИЯ ---
+  // Сброс таймера при смене стадии на timer
+  useEffect(() => {
+    if (stage === 'timer') {
+      localTimerRef.current = 15;
+      setTimeLeft(15);
+    }
+  }, [stage]);
+
+  // --- 3. HELPERS ДЛЯ ФОРМАТИРОВАНИЯ ---
 
   const formatBet = useCallback((rawBet) => {
     const winMultiplier = rawBet.x || rawBet.multiplier || rawBet.cashout_multiplier || rawBet.payout_multiplier || null;
@@ -148,7 +149,7 @@ export const useCrashGame = () => {
     };
   }, []);
 
-  // --- 3. УПРАВЛЕНИЕ ДАННЫМИ РАУНДА ---
+  // --- 4. УПРАВЛЕНИЕ ДАННЫМИ РАУНДА ---
 
   const updateStageFromStatus = useCallback((status) => {
     switch (status) {
@@ -184,7 +185,7 @@ export const useCrashGame = () => {
       // СБРОС ФЛАГА ПРИ НОВОМ РАУНДЕ
       hasBetThisRoundRef.current = false;
       
-      // ОЧИЩАЕМ ТАБЛИЦУ ПРИ НОВОМ РАУНДЕ (исправление проблемы №1)
+      // ОЧИЩАЕМ ТАБЛИЦУ ПРИ НОВОМ РАУНДЕ
       clearAllBets();
       clearActiveBet();
     }
@@ -203,7 +204,7 @@ export const useCrashGame = () => {
     }
   }, [currentRoundId, syncTime, updateStageFromStatus]);
 
-  // --- 4. WS INIT ---
+  // --- 5. WS INIT ---
 
   const initializeWebSocket = useCallback(async () => {
     try {
@@ -369,7 +370,6 @@ export const useCrashGame = () => {
         hasBetThisRoundRef.current = true;
       });
 
-      // Исправление №5: Обновление myActiveBet в bet_result
       crashWebSocket.on('bet_result', (data) => {
         if (data.server_time_ms) syncTime(data.server_time_ms);
         
@@ -387,7 +387,7 @@ export const useCrashGame = () => {
             return map;
         });
         
-        // Исправление: Обновляем myActiveBet, если это наша ставка
+        // Обновляем myActiveBet, если это наша ставка
         if (myActiveBetRef.current && myActiveBetRef.current.bet_id === data.bet_id) {
           const updated = formatBet({
             ...myActiveBetRef.current,
@@ -429,13 +429,11 @@ export const useCrashGame = () => {
     betsRef.current = new Map();
   };
 
-  // Исправление №4: clearBetsOnCrash не трогает myActiveBet
   const clearBetsOnCrash = useCallback(() => {
     console.log('🧹 Clearing table after explosion');
     setBetsById(new Map());
     betsRef.current = new Map();
-    // setMyActiveBet(null);       // УДАЛЕНО
-    // myActiveBetRef.current = null; // УДАЛЕНО
+    // Не трогаем myActiveBet
   }, []);
 
   const getHistoryFromBackend = useCallback(async () => {
