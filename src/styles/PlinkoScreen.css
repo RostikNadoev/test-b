@@ -502,7 +502,7 @@
   margin-right: 5px;
 }
 
-/* Настройка размеров и свечения под разные множители */
+/* x3 (Small) - Небесно-голубой */
 .effect-small .win-multiplier-text { 
   font-size: 45px; 
   color: #a5f3fc; 
@@ -510,6 +510,7 @@
   text-shadow: 0 0 20px #79acff, 0 0 40px #508ff3;
 }
 
+/* x8 (Medium) - Яркий синий */
 .effect-medium .win-multiplier-text { 
   font-size: 60px; 
   color: #3b82f6; 
@@ -517,18 +518,25 @@
   text-shadow: 0 0 30px #3b82f6, 0 0 60px #3b82f6;
 }
 
+/* x15 (High) - Эпический Фиолетовый */
 .effect-high .win-multiplier-text { 
   font-size: 80px; 
-  color: #f59e0b; 
+  color: #a855f7; /* Purple */
   -webkit-text-stroke: 2px white;
-  text-shadow: 0 0 40px #f59e0b, 0 0 80px #f59e0b;
+  text-shadow: 0 0 40px #a855f7, 0 0 80px #a855f7;
 }
 
+/* x30 (Insane) - Легендарный Золотой */
 .effect-insane .win-multiplier-text { 
-  font-size: 90px; 
-  color: #ef4444; 
+  font-size: 90px; /* Сделал чуть больше для веса */
+  color: #fbbf24; /* Gold/Amber */
   -webkit-text-stroke: 2.5px white;
-  text-shadow: 0 0 45px #ef4444, 0 0 90px #ef4444;
+  text-shadow: 0 0 45px #f59e0b, 0 0 90px #fbbf24, 0 0 120px #fff7ed;
+}
+
+/* Дополнительная вспышка для золотого эффекта */
+.effect-insane .win-flare {
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.8) 0%, transparent 70%);
 }
 
 /* Эффект Блика (Shimmer) */
