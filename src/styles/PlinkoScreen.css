@@ -528,10 +528,10 @@
 
 /* x30 (Insane) - Легендарный Золотой */
 .effect-insane .win-multiplier-text { 
-  font-size: 90px; /* Сделал чуть больше для веса */
+  font-size: 85px; /* Сделал чуть больше для веса */
   color: #fbbf24; /* Gold/Amber */
   -webkit-text-stroke: 2.5px white;
-  text-shadow: 0 0 45px #f59e0b, 0 0 90px #fbbf24;
+  text-shadow: 0 0 45px #f59e0b, 0 0 80px #fbbf24;
 }
 
 
