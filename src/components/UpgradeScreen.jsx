@@ -22,6 +22,7 @@ export default function UpgradeScreen({ onNavigate }) {
   const [arrowRotation, setArrowRotation] = useState(0);
   const [showWinModal, setShowWinModal] = useState(false);
   const [winChance, setWinChance] = useState(0);
+  const [winTier, setWinTier] = useState('low'); // 'low', 'medium', 'high'
 
   // Состояния для данных из API
   const [myInventory, setMyInventory] = useState([]);
@@ -56,6 +57,8 @@ export default function UpgradeScreen({ onNavigate }) {
           tg.HapticFeedback.impactOccurred('light');
         } else if (type === 'notification') {
           tg.HapticFeedback.notificationOccurred('success');
+        } else if (type === 'heavy') {
+          tg.HapticFeedback.impactOccurred('heavy');
         } else {
           tg.HapticFeedback.impactOccurred('medium');
         }
@@ -143,14 +146,7 @@ export default function UpgradeScreen({ onNavigate }) {
   const calculateDemoChance = (sourcePrice, targetPrice) => {
     if (!sourcePrice || !targetPrice) return 0;
     
-    // Простой процент: (цена источника / цена цели) * 100
-    // Если предмет стоит 1, цель 100 → шанс 1%
-    // Если предмет стоит 80, цель 100 → шанс 80%
-    // Если предмет стоит 100, цель 100 → шанс 100%
     let chance = (sourcePrice / targetPrice) * 100;
-    
-    // НЕ ОГРАНИЧИВАЕМ шанс - показываем как есть (может быть 99%, 100% и т.д.)
-    // Только если targetPrice = 0, чтобы избежать деления на ноль
     if (targetPrice === 0) return 0;
     
     console.log(`📊 Расчет шанса: ${sourcePrice} / ${targetPrice} * 100 = ${chance}%`);
@@ -163,9 +159,7 @@ export default function UpgradeScreen({ onNavigate }) {
       console.log('🎮 Демо-режим: загружаем инвентарь из DemoContext');
       setIsLoadingInventory(true);
       
-      // Преобразуем демо-инвентарь в нужный формат
       const demoItems = demoInventory.map((item, index) => {
-        // Парсим цену из строки типа "X TON"
         let priceValue = item.price_ton || 1;
         if (item.price && typeof item.price === 'string') {
           const match = item.price.match(/[\d.]+/);
@@ -183,7 +177,6 @@ export default function UpgradeScreen({ onNavigate }) {
         };
       });
       
-      // Сортируем от дешевого к дорогому
       const sortedInventory = demoItems.sort((a, b) => {
         const priceA = parseFloat(a.price_ton || 0);
         const priceB = parseFloat(b.price_ton || 0);
@@ -213,7 +206,6 @@ export default function UpgradeScreen({ onNavigate }) {
       
       console.log('📦 Processed items:', items);
       
-      // Сортируем от дешевого к дорогому
       const sortedInventory = items.sort((a, b) => {
         const priceA = parseFloat(a.price_ton || a.item_value || 0);
         const priceB = parseFloat(b.price_ton || b.item_value || 0);
@@ -233,7 +225,6 @@ export default function UpgradeScreen({ onNavigate }) {
   const loadUpgradeOptions = async (id) => {
     if (!id) return;
     
-    // В демо-режиме используем специальный метод demo-options
     if (isDemoMode) {
       console.log('🎮 Демо-режим: загружаем демо-опции для апгрейда');
       setIsLoadingOptions(true);
@@ -242,7 +233,6 @@ export default function UpgradeScreen({ onNavigate }) {
         const data = await upgradeApi.getDemoOptions();
         console.log('📦 Demo options received:', data);
         
-        // data - это массив предметов доступных для апгрейда в демо-режиме
         let options = [];
         if (Array.isArray(data)) {
           options = data;
@@ -254,16 +244,14 @@ export default function UpgradeScreen({ onNavigate }) {
         
         console.log('📦 Processed demo options:', options);
         
-        // Фильтруем только те предметы, которые дороже выбранного
         const myItemPrice = myItem?.price_ton || 0;
         const filteredOptions = options.filter(item => {
           const itemPrice = parseFloat(item.price_ton || 0);
-          return itemPrice > myItemPrice; // Только дороже
+          return itemPrice > myItemPrice;
         });
         
         console.log('📦 Filtered options (more expensive):', filteredOptions);
         
-        // Сортируем цели от дешевого к дорогому
         const sortedOptions = filteredOptions.sort((a, b) => {
           const priceA = parseFloat(a.price_ton || 0);
           const priceB = parseFloat(b.price_ton || 0);
@@ -281,13 +269,11 @@ export default function UpgradeScreen({ onNavigate }) {
       return;
     }
 
-    // Обычный режим - используем обычный метод
     setIsLoadingOptions(true);
     try {
       const data = await upgradeApi.getOptions(id);
       console.log('📦 Upgrade options received:', data);
       
-      // data содержит { inventory_id, source_item, options }
       let options = [];
       if (data?.options) {
         options = data.options;
@@ -297,7 +283,6 @@ export default function UpgradeScreen({ onNavigate }) {
       
       console.log('📦 Processed options:', options);
       
-      // Сортируем цели от дешевого к дорогому
       const sortedOptions = options.sort((a, b) => {
         const priceA = parseFloat(a.price_ton || 0);
         const priceB = parseFloat(b.price_ton || 0);
@@ -317,7 +302,6 @@ export default function UpgradeScreen({ onNavigate }) {
   const loadChance = async (id, targetIndex) => {
     if (!id || !targetIndex) return;
     
-    // В демо-режиме рассчитываем шанс на основе цен
     if (isDemoMode && myItem && targetItem) {
       console.log('🎮 Демо-режим: рассчитываем шанс на основе цен');
       
@@ -327,19 +311,16 @@ export default function UpgradeScreen({ onNavigate }) {
       const chance = calculateDemoChance(sourcePrice, targetPrice);
       console.log(`📊 Демо шанс: ${sourcePrice} -> ${targetPrice} = ${chance.toFixed(2)}%`);
       
-      // Устанавливаем шанс сразу, без задержки загрузки
       setWinChance(chance);
       
       return;
     }
 
-    // Обычный режим - запрашиваем шанс через API
     setIsLoadingChance(true);
     try {
       const data = await upgradeApi.calcChance(id, targetIndex);
       console.log('📦 Chance data:', data);
       
-      // data содержит { theoretical_chance }
       const chance = data?.theoretical_chance || 0;
       setWinChance(chance);
     } catch (error) {
@@ -355,7 +336,6 @@ export default function UpgradeScreen({ onNavigate }) {
     setIsClosing(false);
     setActiveModal(type);
 
-    // Загружаем данные в зависимости от типа модалки
     if (type === 'my') {
       loadInventory();
     } else if (type === 'target' && myItem) {
@@ -377,7 +357,6 @@ export default function UpgradeScreen({ onNavigate }) {
     setIsClosing(true);
 
     if (type === 'my') {
-      // Выбран свой предмет
       setMyItem({
         ...item,
         inventory_id: item.inventory_id || item.id,
@@ -389,7 +368,6 @@ export default function UpgradeScreen({ onNavigate }) {
       setTargetItem(null);
       setWinChance(0);
     } else {
-      // Выбран целевой предмет
       setTargetItem({
         ...item,
         image_url: getItemImage(item),
@@ -397,16 +375,13 @@ export default function UpgradeScreen({ onNavigate }) {
         isDemo: item.isDemo || false
       });
       
-      // Сразу после выбора цели рассчитываем шанс
       if (isDemoMode && myItem) {
-        // Для демо-режима рассчитываем сразу
         const sourcePrice = myItem.price_ton || 0;
         const targetPrice = item.price_ton || 0;
         const chance = calculateDemoChance(sourcePrice, targetPrice);
         console.log(`📊 Мгновенный расчет шанса: ${sourcePrice} -> ${targetPrice} = ${chance.toFixed(2)}%`);
         setWinChance(chance);
       } else if (inventoryId && item.index) {
-        // Для обычного режима через API
         loadChance(inventoryId, item.index);
       }
     }
@@ -423,9 +398,7 @@ export default function UpgradeScreen({ onNavigate }) {
     
     console.log('🗑️ Удаляем предмет из демо-инвентаря:', itemToRemove);
     
-    // Ищем предмет в инвентаре
     const itemIndex = demoInventory.findIndex(item => {
-      // Сравниваем по разным возможным идентификаторам
       return (item.id && item.id === itemToRemove.id) || 
              (item.index && item.index === itemToRemove.index) ||
              (item.inventory_id && item.inventory_id === itemToRemove.inventory_id) ||
@@ -440,6 +413,15 @@ export default function UpgradeScreen({ onNavigate }) {
     }
   };
 
+  // Эффект встряски при проигрыше
+  const triggerShakeEffect = () => {
+    const container = document.querySelector('.upgrade-container');
+    if (container) {
+      container.classList.add('shake-effect');
+      setTimeout(() => container.classList.remove('shake-effect'), 500);
+    }
+  };
+
   // Обработчик нажатия кнопки UPGRADE
   const handleSpin = async () => {
     if (!myItem || !targetItem || isSpinning || !inventoryId) return;
@@ -451,18 +433,28 @@ export default function UpgradeScreen({ onNavigate }) {
       console.log('🎮 Демо-режим: симуляция апгрейда');
       console.log(`📊 Шанс победы: ${winChance.toFixed(2)}%`);
       
-      // Определяем победу случайно на основе шанса
       const random = Math.random() * 100;
       const isWin = random <= winChance;
       
-      console.log(`🎲 Рандом: ${random.toFixed(2)}%, Результат: ${isWin ? 'ПОБЕДА' : 'ПРОИГРЫШ'}`);
+      // Определяем уровень победы
+      let tier = 'low';
+      if (isWin) {
+        if (winChance <= 10) {
+          tier = 'high';
+        } else if (winChance <= 30) {
+          tier = 'medium';
+        } else {
+          tier = 'low';
+        }
+      }
+      setWinTier(tier);
+      
+      console.log(`🎲 Рандом: ${random.toFixed(2)}%, Результат: ${isWin ? 'ПОБЕДА' : 'ПРОИГРЫШ'}, Уровень: ${tier}`);
 
-      // Запускаем вибрацию
       setTimeout(() => {
         startSmartVibration();
       }, 50);
 
-      // Рассчитываем угол остановки
       const coloredDegrees = (winChance / 100) * 360;
       let finalAngle;
       if (isWin) {
@@ -475,19 +467,16 @@ export default function UpgradeScreen({ onNavigate }) {
       const targetRotation = rotations + finalAngle;
       setArrowRotation(targetRotation);
 
-      // Обрабатываем результат через 4.5 сек
       setTimeout(() => {
         if (vibIntervalRef.current) {
           clearTimeout(vibIntervalRef.current);
           vibIntervalRef.current = null;
         }
 
-        triggerVibration(isWin ? 'notification' : 'impact');
-
         if (isWin) {
+          triggerVibration('notification');
           console.log('🎉 ПОБЕДА! Добавляем выигранный предмет в инвентарь');
           
-          // СОЗДАЕМ ПРАВИЛЬНУЮ СТРУКТУРУ ДЛЯ ДЕМО-ИНВЕНТАРЯ (как в SpinScreen)
           const itemForInventory = {
             id: targetItem.id || `win_${Date.now()}`,
             name: targetItem.name || 'Won Item',
@@ -505,21 +494,17 @@ export default function UpgradeScreen({ onNavigate }) {
           
           console.log('📦 Добавляем в инвентарь (правильный формат):', itemForInventory);
           
-          // Сохраняем целевой предмет в демо-инвентарь
           addToDemoInventory(itemForInventory);
           setShowWinModal(true);
           
-          // Удаляем исходный предмет из демо-инвентаря
           removeItemFromDemoInventory(myItem);
-          
         } else {
           console.log('😢 ПРОИГРЫШ - предмет удаляется');
-          
-          // При проигрыше удаляем исходный предмет
+          triggerVibration('heavy');
+          triggerShakeEffect();
           removeItemFromDemoInventory(myItem);
         }
 
-        // Возврат стрелки
         setTimeout(() => {
           setIsReturning(true);
           const nextFullCircle = Math.ceil(targetRotation / 360) * 360;
@@ -529,7 +514,6 @@ export default function UpgradeScreen({ onNavigate }) {
             setIsReturning(false);
             setArrowRotation(0);
             setShowWinModal(false);
-            // Сбрасываем выбор для новой попытки
             setMyItem(null);
             setTargetItem(null);
             setInventoryId(null);
@@ -544,18 +528,28 @@ export default function UpgradeScreen({ onNavigate }) {
 
     // РЕАЛЬНЫЙ РЕЖИМ
     try {
-      // Вызываем метод play
       const data = await upgradeApi.playUpgrade(inventoryId, targetItem.index);
       console.log('📦 Play result:', data);
       
       const isWin = data?.win === true;
+      
+      // Определяем уровень победы
+      let tier = 'low';
+      if (isWin) {
+        if (winChance <= 10) {
+          tier = 'high';
+        } else if (winChance <= 30) {
+          tier = 'medium';
+        } else {
+          tier = 'low';
+        }
+      }
+      setWinTier(tier);
 
-      // Запускаем вибрацию
       setTimeout(() => {
         startSmartVibration();
       }, 50);
 
-      // Рассчитываем угол остановки
       const coloredDegrees = (winChance / 100) * 360;
       let finalAngle;
       if (isWin) {
@@ -568,20 +562,20 @@ export default function UpgradeScreen({ onNavigate }) {
       const targetRotation = rotations + finalAngle;
       setArrowRotation(targetRotation);
 
-      // Останавливаем вибрацию и обрабатываем результат через 4.5 сек
       setTimeout(() => {
         if (vibIntervalRef.current) {
           clearTimeout(vibIntervalRef.current);
           vibIntervalRef.current = null;
         }
 
-        triggerVibration(isWin ? 'notification' : 'impact');
-
         if (isWin) {
+          triggerVibration('notification');
           setShowWinModal(true);
+        } else {
+          triggerVibration('heavy');
+          triggerShakeEffect();
         }
 
-        // Возврат стрелки
         setTimeout(() => {
           setIsReturning(true);
           const nextFullCircle = Math.ceil(targetRotation / 360) * 360;
@@ -591,7 +585,6 @@ export default function UpgradeScreen({ onNavigate }) {
             setIsReturning(false);
             setArrowRotation(0);
             setShowWinModal(false);
-            // Сбрасываем выбор для новой попытки
             setMyItem(null);
             setTargetItem(null);
             setInventoryId(null);
@@ -861,11 +854,16 @@ export default function UpgradeScreen({ onNavigate }) {
         </div>
       )}
 
-      {/* Модалка победы */}
+      {/* Модалка победы с динамическим классом tier */}
       {showWinModal && targetItem && (
-        <div className="upgrade-win-modal-overlay">
+        <div className={`upgrade-win-modal-overlay win-tier-${winTier}`}>
+          {winTier === 'high' && <div className="win-epic-glow"></div>}
+          
           <div className="upgrade-win-modal">
-            <h2 className="upgrade-win-title">YOU WON!</h2>
+            <div className="win-light-rays"></div>
+            <h2 className="upgrade-win-title">
+              {winTier === 'high' ? 'EPIC WIN!' : 'YOU WON!'}
+            </h2>
             <img
               src={targetItem.image_url}
               alt="win"
