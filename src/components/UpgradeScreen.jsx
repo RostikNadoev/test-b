@@ -439,9 +439,9 @@ export default function UpgradeScreen({ onNavigate }) {
       // Определяем уровень победы
       let tier = 'low';
       if (isWin) {
-        if (winChance <= 80) {
+        if (winChance <= 25) {
           tier = 'high';
-        } else if (winChance <= 90) {
+        } else if (winChance <= 50) {
           tier = 'medium';
         } else {
           tier = 'low';
@@ -536,9 +536,9 @@ export default function UpgradeScreen({ onNavigate }) {
       // Определяем уровень победы
       let tier = 'low';
       if (isWin) {
-        if (winChance <= 10) {
+        if (winChance <= 25) {
           tier = 'high';
-        } else if (winChance <= 30) {
+        } else if (winChance <= 50) {
           tier = 'medium';
         } else {
           tier = 'low';
@@ -858,11 +858,13 @@ export default function UpgradeScreen({ onNavigate }) {
       {showWinModal && targetItem && (
         <div className={`upgrade-win-modal-overlay win-tier-${winTier}`}>
           {winTier === 'high' && <div className="win-epic-glow"></div>}
+          {winTier === 'medium' && <div className="win-big-glow"></div>}
+          {winTier === 'low' && <div className="win-simple-glow"></div>}
           
           <div className="upgrade-win-modal">
             <div className="win-light-rays"></div>
             <h2 className="upgrade-win-title">
-              {winTier === 'high' ? 'EPIC WIN!' : 'YOU WON!'}
+              {winTier === 'high' ? 'EPIC WIN!' : winTier === 'medium' ? 'BIG WIN!' : 'YOU WON!'}
             </h2>
             <img
               src={targetItem.image_url}

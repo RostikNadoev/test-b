@@ -605,28 +605,54 @@
 
 /* Стили для уровней победы */
 .win-tier-high .upgrade-win-modal {
-  width: 300px;
-  border-color: #ff00ff;
-  box-shadow: 0 0 60px rgba(255, 0, 255, 0.8);
-  animation: epicPopIn 0.5s cubic-bezier(.17,.89,.32,1.27);
+  width: 320px;
+  border: 3px solid #ff00ff;
+  box-shadow: 0 0 80px rgba(255, 0, 255, 0.9), 0 0 40px rgba(255, 0, 255, 0.5);
+  animation: epicPopIn 0.6s cubic-bezier(.17,.89,.32,1.27);
+  background: linear-gradient(145deg, #1a1a2e, #16213e);
 }
 
 .win-tier-medium .upgrade-win-modal {
-  box-shadow: 0 0 50px rgba(241, 191, 40, 0.9);
-  border-color: #f1bf28;
-  animation: epicPopIn 0.45s cubic-bezier(.17,.89,.32,1.27);
+  width: 300px;
+  border: 3px solid #ffaa00;
+  box-shadow: 0 0 60px rgba(255, 170, 0, 0.8), 0 0 30px rgba(255, 170, 0, 0.4);
+  animation: mediumPopIn 0.5s cubic-bezier(.17,.89,.32,1.27);
+  background: linear-gradient(145deg, #1e1e2f, #1a1a2e);
 }
 
+.win-tier-low .upgrade-win-modal {
+  width: 280px;
+  border: 2px solid #f1bf28;
+  box-shadow: 0 0 30px rgba(241, 191, 40, 0.5), 0 0 15px rgba(241, 191, 40, 0.3);
+  animation: lowPopIn 0.4s ease-out;
+  background: linear-gradient(145deg, #1f1f2e, #1a1a2a);
+}
+
+/* Специальные эффекты для каждого уровня */
 .win-tier-high .upgrade-win-title {
-  font-size: 32px;
-  animation: textPulse 1s infinite alternate;
+  font-size: 36px;
+  background: linear-gradient(45deg, #ff00ff, #ffaa00, #ff00ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: epicTextPulse 1.5s infinite alternate;
+  text-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
 }
 
 .win-tier-medium .upgrade-win-title {
-  font-size: 26px;
+  font-size: 30px;
+  color: #ffaa00;
+  animation: mediumTextPulse 1.2s infinite alternate;
+  text-shadow: 0 0 15px rgba(255, 170, 0, 0.5);
 }
 
-/* Фоновые лучи для элитного вида */
+.win-tier-low .upgrade-win-title {
+  font-size: 24px;
+  color: #f1bf28;
+  animation: lowTextPulse 1s infinite alternate;
+  text-shadow: 0 0 10px rgba(241, 191, 40, 0.3);
+}
+
+/* Фоновые лучи для всех уровней */
 .win-light-rays {
   position: absolute;
   top: 50%;
@@ -635,44 +661,148 @@
   height: 500px;
   background: conic-gradient(from 0deg, transparent, rgba(255,255,255,0.2), transparent 30deg);
   transform: translate(-50%, -50%);
-  animation: rotateRays 10s linear infinite;
   z-index: -1;
   opacity: 0;
 }
 
-.win-tier-high .win-light-rays,
-.win-tier-medium .win-light-rays {
-  opacity: 0.7;
+.win-tier-high .win-light-rays {
+  opacity: 0.8;
+  animation: rotateRays 8s linear infinite;
+  background: conic-gradient(from 0deg, transparent, rgba(255,0,255,0.3), rgba(255,170,0,0.3), transparent 30deg);
 }
 
+.win-tier-medium .win-light-rays {
+  opacity: 0.5;
+  animation: rotateRays 10s linear infinite;
+  background: conic-gradient(from 0deg, transparent, rgba(255,170,0,0.3), transparent 30deg);
+}
+
+.win-tier-low .win-light-rays {
+  opacity: 0.2;
+  animation: rotateRays 12s linear infinite;
+  background: conic-gradient(from 0deg, transparent, rgba(241,191,40,0.2), transparent 30deg);
+}
+
+/* Glow эффекты */
 .win-epic-glow {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(circle at center, rgba(255,0,255,0.3) 0%, transparent 70%);
-  animation: pulseGlow 2s ease-in-out infinite;
+  background: radial-gradient(circle at center, rgba(255,0,255,0.4) 0%, transparent 70%);
+  animation: pulseGlow 1.5s ease-in-out infinite;
 }
 
+.win-big-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at center, rgba(255,170,0,0.3) 0%, transparent 70%);
+  animation: mediumPulseGlow 1.8s ease-in-out infinite;
+}
+
+.win-simple-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at center, rgba(241,191,40,0.15) 0%, transparent 70%);
+  animation: lowPulseGlow 2s ease-in-out infinite;
+}
+
+/* Анимации */
 @keyframes rotateRays {
   from { transform: translate(-50%, -50%) rotate(0deg); }
   to { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
-@keyframes textPulse {
+@keyframes epicTextPulse {
+  from { transform: scale(1); text-shadow: 0 0 20px #ff00ff, 0 0 40px #ffaa00; }
+  to { transform: scale(1.15); text-shadow: 0 0 40px #ff00ff, 0 0 60px #ffaa00; }
+}
+
+@keyframes mediumTextPulse {
+  from { transform: scale(1); text-shadow: 0 0 15px #ffaa00; }
+  to { transform: scale(1.1); text-shadow: 0 0 30px #ffaa00; }
+}
+
+@keyframes lowTextPulse {
   from { transform: scale(1); text-shadow: 0 0 10px #f1bf28; }
-  to { transform: scale(1.1); text-shadow: 0 0 30px #f1bf28; }
+  to { transform: scale(1.05); text-shadow: 0 0 20px #f1bf28; }
 }
 
 @keyframes epicPopIn {
-  0% { transform: scale(0.5); opacity: 0; }
-  50% { transform: scale(1.1); }
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.2); }
+  75% { transform: scale(0.95); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes mediumPopIn {
+  0% { transform: scale(0.4); opacity: 0; }
+  60% { transform: scale(1.15); }
+  85% { transform: scale(0.98); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes lowPopIn {
+  0% { transform: scale(0.6); opacity: 0; }
+  70% { transform: scale(1.05); }
   100% { transform: scale(1); opacity: 1; }
 }
 
 @keyframes pulseGlow {
-  0% { opacity: 0.3; }
-  50% { opacity: 0.8; }
-  100% { opacity: 0.3; }
+  0% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.2); }
+  100% { opacity: 0.3; transform: scale(1); }
+}
+
+@keyframes mediumPulseGlow {
+  0% { opacity: 0.2; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.15); }
+  100% { opacity: 0.2; transform: scale(1); }
+}
+
+@keyframes lowPulseGlow {
+  0% { opacity: 0.1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.1); }
+  100% { opacity: 0.1; transform: scale(1); }
+}
+
+/* Эффект для предмета */
+.win-tier-high .upgrade-win-item-image {
+  animation: epicItemFloat 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 20px #ff00ff);
+}
+
+.win-tier-medium .upgrade-win-item-image {
+  animation: mediumItemFloat 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 15px #ffaa00);
+}
+
+.win-tier-low .upgrade-win-item-image {
+  animation: lowItemFloat 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px #f1bf28);
+}
+
+@keyframes epicItemFloat {
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-10px) scale(1.05); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes mediumItemFloat {
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-8px) scale(1.03); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes lowItemFloat {
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-5px) scale(1.02); }
+  100% { transform: translateY(0) scale(1); }
 }
