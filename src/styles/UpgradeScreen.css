@@ -631,7 +631,7 @@
 /* Специальные эффекты для каждого уровня - ИСПРАВЛЕНО */
 .win-tier-high .upgrade-win-title {
   font-size: 36px;
-  color: #ffaa00 !important; /* Яркий золотой цвет */
+  color: #ff00ff !important; /* Яркий золотой цвет */
   -webkit-text-stroke: 0 !important; /* Убираем обводку */
   paint-order: stroke fill;
   animation: epicTextPulse 1.5s infinite alternate;
