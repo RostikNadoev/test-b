@@ -224,11 +224,6 @@ export const useCrashGame = () => {
         if (hasBetThisRoundRef.current && !myActiveBetRef.current) {
             hasBetThisRoundRef.current = false;
         }
-        
-        // ✅ ЕДИНСТВЕННОЕ ИЗМЕНЕНИЕ: Очищаем таблицу ставок при старте таймера
-        setBetsById(new Map());
-        betsRef.current = new Map();
-        
         break;
       case 'running':
         setStage('rocket');
@@ -480,7 +475,7 @@ export const useCrashGame = () => {
       console.error('WebSocket Init Error', e);
       setWsConnected(false);
     }
-  }, [currentRoundId, handleRoundInfo, syncTime, formatBet, updateStageFromStatus, multiplierNow]);
+  }, [currentRoundId, handleRoundInfo, syncTime, formatBet, updateStageFromStatus]);
 
   useEffect(() => {
     initializeWebSocket();
