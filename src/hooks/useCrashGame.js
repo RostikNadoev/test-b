@@ -151,7 +151,7 @@ export const useCrashGame = () => {
         crashWebSocket.cashout(myActiveBetRef.current.bet_id);
       }
     }
-  }, [multiplierNow, stage]);
+  }, [multiplierNow, stage, myActiveBetRef.current]);
 
   // Сброс автокешаута при смене раунда
   useEffect(() => {
@@ -212,8 +212,7 @@ export const useCrashGame = () => {
   }, []);
 
   // --- 5. УПРАВЛЕНИЕ ДАННЫМИ РАУНДА ---
-  
-  // 🔧 ИСПРАВЛЕНО: Добавлена очистка ставок при переходе в режим таймера
+
   const updateStageFromStatus = useCallback((status) => {
     switch (status) {
       case 'betting':
@@ -221,26 +220,18 @@ export const useCrashGame = () => {
         setStage('timer');
         setCrashMultiplier(null);
         setMultiplierNow(1.0);
-        
-        // 🔥 ВАЖНО: Очищаем таблицу ставок при начале нового раунда (таймера)
-        console.log('🧹 TIMER START - Clearing bets table');
-        setBetsById(new Map());
-        betsRef.current = new Map();
-        
-        // Сбрасываем флаг ставки для нового раунда
-        hasBetThisRoundRef.current = false;
+        // При переходе в betting точно можно ставить
+        if (hasBetThisRoundRef.current && !myActiveBetRef.current) {
+            hasBetThisRoundRef.current = false;
+        }
         break;
-        
       case 'running':
         setStage('rocket');
         setMultiplierNow(1.0);
         break;
-        
       case 'crashed':
         // Не переключаем stage здесь, чтобы не прерывать анимацию взрыва
-        // Взрыв запускается из crash события
         break;
-        
       default:
         setStage('timer');
     }
@@ -253,15 +244,13 @@ export const useCrashGame = () => {
       console.log('🔄 New round detected:', roundData.id);
       setCurrentRoundId(roundData.id);
       
-      // Сброс флага при новом раунде
+      // СБРОС ФЛАГА ПРИ НОВОМ РАУНДЕ
       hasBetThisRoundRef.current = false;
       
-      // ✅ Очистка при смене ID раунда (для надежности)
-      console.log('🧹 NEW ROUND ID - clearing table', roundData.id);
-      setBetsById(new Map());
-      betsRef.current = new Map();
-      setMyActiveBet(null);
-      myActiveBetRef.current = null;
+      // ✅ ОЧИСТКА ТОЛЬКО ЗДЕСЬ (ровно начало 15-секундного отсчёта)
+      console.log('🧹 NEW ROUND START (15s countdown) - clearing table', roundData.id);
+      clearAllBets();
+      clearActiveBet();
     }
 
     if (roundData.starts_at) {
@@ -393,8 +382,7 @@ export const useCrashGame = () => {
         });
 
         if (myActiveBetRef.current?.status === 'placed') {
-          setMyActiveBet(null);
-          myActiveBetRef.current = null;
+          clearActiveBet();
         }
       });
 
@@ -404,8 +392,7 @@ export const useCrashGame = () => {
              setCurrentRoundId(data.round_id);
              // Сброс флага при чужой ставке в новом раунде
              hasBetThisRoundRef.current = false;
-             setBetsById(new Map());
-             betsRef.current = new Map();
+             clearAllBets();
         }
         const bet = formatBet(data.bet);
         setBetsById(prev => new Map(prev).set(bet.bet_id, bet));
@@ -488,7 +475,7 @@ export const useCrashGame = () => {
       console.error('WebSocket Init Error', e);
       setWsConnected(false);
     }
-  }, [currentRoundId, handleRoundInfo, syncTime, formatBet, updateStageFromStatus, multiplierNow]);
+  }, [currentRoundId, handleRoundInfo, syncTime, formatBet, updateStageFromStatus]);
 
   useEffect(() => {
     initializeWebSocket();
@@ -512,7 +499,7 @@ export const useCrashGame = () => {
 
   // ⚠️ Функция больше не используется, оставлена для совместимости
   const clearBetsOnCrash = useCallback(() => {
-    console.log('⚠️ clearBetsOnCrash called but should not be used - очистка теперь в status update');
+    console.log('⚠️ clearBetsOnCrash called but should not be used - очистка теперь в newRound');
     // Убрали очистку таблицы отсюда
   }, []);
 
