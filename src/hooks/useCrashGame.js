@@ -120,7 +120,7 @@ export const useCrashGame = () => {
         setMyActiveBet(null);
         myActiveBetRef.current = null;
         clearTableTimeoutRef.current = null;
-      }, 2500);
+      }, 2400);
     }
     
     // Cleanup при размонтировании или новом краше
