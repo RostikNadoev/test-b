@@ -628,28 +628,35 @@
   background: linear-gradient(145deg, #1f1f2e, #1a1a2a);
 }
 
-/* Специальные эффекты для каждого уровня - УМЕНЬШЕННОЕ СВЕЧЕНИЕ */
+/* Специальные эффекты для каждого уровня - ИСПРАВЛЕНО */
 .win-tier-high .upgrade-win-title {
   font-size: 36px;
-  background: linear-gradient(45deg, #ff00ff, #ffaa00, #ff00ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #ffaa00 !important; /* Яркий золотой цвет */
+  -webkit-text-stroke: 0 !important; /* Убираем обводку */
+  paint-order: stroke fill;
   animation: epicTextPulse 1.5s infinite alternate;
-  text-shadow: 0 0 2px rgba(255, 0, 255, 0.3); /* Уменьшено свечение */
+  text-shadow: 0 0 8px #ff00ff, 0 0 12px #ffaa00; /* Небольшое свечение */
+  background: none !important; /* Убираем градиент */
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: unset !important;
 }
 
 .win-tier-medium .upgrade-win-title {
   font-size: 30px;
-  color: #ffaa00;
+  color: #ffaa00 !important; /* Оранжевый */
+  -webkit-text-stroke: 0 !important;
   animation: mediumTextPulse 1.2s infinite alternate;
-  text-shadow: 0 0 2px rgba(255, 170, 0, 0.4); /* Уменьшено свечение */
+  text-shadow: 0 0 6px #ffaa00, 0 0 10px #ff8800; /* Небольшое свечение */
+  background: none !important;
 }
 
 .win-tier-low .upgrade-win-title {
   font-size: 24px;
-  color: #f1bf28;
+  color: #f1bf28 !important; /* Золотой */
+  -webkit-text-stroke: 0 !important;
   animation: lowTextPulse 1s infinite alternate;
-  text-shadow: 0 0 2px rgba(241, 191, 40, 0.3); /* Уменьшено свечение */
+  text-shadow: 0 0 4px #f1bf28, 0 0 8px #db7900; /* Небольшое свечение */
+  background: none !important;
 }
 
 /* Фоновые лучи для всех уровней */
@@ -714,25 +721,25 @@
   animation: lowPulseGlow 2s ease-in-out infinite;
 }
 
-/* Анимации - УМЕНЬШЕННОЕ СВЕЧЕНИЕ В ПУЛЬСАЦИЯХ */
+/* Анимации - ИСПРАВЛЕНО */
 @keyframes rotateRays {
   from { transform: translate(-50%, -50%) rotate(0deg); }
   to { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
 @keyframes epicTextPulse {
-  from { transform: scale(1); text-shadow: 0 0 2px #ff00ff, 0 0 4px #ffaa00; } /* Уменьшено */
-  to { transform: scale(1.15); text-shadow: 0 0 4px #ff00ff, 0 0 6px #ffaa00; } /* Уменьшено */
+  from { transform: scale(1); text-shadow: 0 0 8px #ff00ff, 0 0 12px #ffaa00; }
+  to { transform: scale(1.15); text-shadow: 0 0 12px #ff00ff, 0 0 18px #ffaa00; }
 }
 
 @keyframes mediumTextPulse {
-  from { transform: scale(1); text-shadow: 0 0 2px #ffaa00; } /* Уменьшено */
-  to { transform: scale(1.1); text-shadow: 0 0 4px #ffaa00; } /* Уменьшено */
+  from { transform: scale(1); text-shadow: 0 0 6px #ffaa00, 0 0 10px #ff8800; }
+  to { transform: scale(1.1); text-shadow: 0 0 10px #ffaa00, 0 0 14px #ff8800; }
 }
 
 @keyframes lowTextPulse {
-  from { transform: scale(1); text-shadow: 0 0 2px #f1bf28; } /* Уменьшено */
-  to { transform: scale(1.05); text-shadow: 0 0 3px #f1bf28; } /* Уменьшено */
+  from { transform: scale(1); text-shadow: 0 0 4px #f1bf28, 0 0 8px #db7900; }
+  to { transform: scale(1.05); text-shadow: 0 0 8px #f1bf28, 0 0 12px #db7900; }
 }
 
 @keyframes epicPopIn {
