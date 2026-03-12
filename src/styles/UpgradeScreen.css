@@ -648,6 +648,8 @@
   animation: mediumTextPulse 1.2s infinite alternate;
   text-shadow: 0 0 6px #ffaa00, 0 0 10px #ff8800; /* Небольшое свечение */
   background: none !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: unset !important;
 }
 
 .win-tier-low .upgrade-win-title {
@@ -657,6 +659,8 @@
   animation: lowTextPulse 1s infinite alternate;
   text-shadow: 0 0 4px #f1bf28, 0 0 8px #db7900; /* Небольшое свечение */
   background: none !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: unset !important;
 }
 
 /* Фоновые лучи для всех уровней */
