@@ -439,7 +439,7 @@ export default function UpgradeScreen({ onNavigate }) {
       // Определяем уровень победы
       let tier = 'low';
       if (isWin) {
-        if (winChance <= 25) {
+        if (winChance <= 95) {
           tier = 'high';
         } else if (winChance <= 50) {
           tier = 'medium';
