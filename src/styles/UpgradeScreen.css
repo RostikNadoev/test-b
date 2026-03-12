@@ -554,7 +554,7 @@
   font-size: 22px;
   color: #f1bf28;
   margin-bottom: 15px;
-  text-shadow: 0 0 15px rgba(241,191,40,0.8);
+  text-shadow: 0 0 5px rgba(241,191,40,0.8);
 }
 
 .upgrade-win-item-image {
@@ -635,21 +635,21 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: epicTextPulse 1.5s infinite alternate;
-  text-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+  text-shadow: 0 0 2px rgba(255, 0, 255, 0.3);
 }
 
 .win-tier-medium .upgrade-win-title {
   font-size: 30px;
   color: #ffaa00;
   animation: mediumTextPulse 1.2s infinite alternate;
-  text-shadow: 0 0 10px rgba(255, 170, 0, 0.5);
+  text-shadow: 0 0 2px rgba(255, 170, 0, 0.5);
 }
 
 .win-tier-low .upgrade-win-title {
   font-size: 24px;
   color: #f1bf28;
   animation: lowTextPulse 1s infinite alternate;
-  text-shadow: 0 0 5px rgba(241, 191, 40, 0.3);
+  text-shadow: 0 0 2px rgba(241, 191, 40, 0.3);
 }
 
 /* Фоновые лучи для всех уровней */
