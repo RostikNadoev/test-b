@@ -159,10 +159,10 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     }
 
     explosionTimeoutRef.current = setTimeout(() => {
-      if (clearBetsOnCrash) clearBetsOnCrash();
+      //if (clearBetsOnCrash) clearBetsOnCrash();
       explosionTimeoutRef.current = null;
     }, 500);
-  }, [clearBetsOnCrash]);
+  }, []);
 
   // Вибрация
   useEffect(() => {

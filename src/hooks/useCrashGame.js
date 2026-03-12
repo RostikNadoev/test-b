@@ -247,7 +247,8 @@ export const useCrashGame = () => {
       // СБРОС ФЛАГА ПРИ НОВОМ РАУНДЕ
       hasBetThisRoundRef.current = false;
       
-      // ОЧИЩАЕМ ТАБЛИЦУ ПРИ НОВОМ РАУНДЕ
+      // ✅ ОЧИСТКА ТОЛЬКО ЗДЕСЬ (ровно начало 15-секундного отсчёта)
+      console.log('🧹 NEW ROUND START (15s countdown) - clearing table', roundData.id);
       clearAllBets();
       clearActiveBet();
     }
@@ -496,11 +497,10 @@ export const useCrashGame = () => {
     betsRef.current = new Map();
   };
 
+  // ⚠️ Функция больше не используется, оставлена для совместимости
   const clearBetsOnCrash = useCallback(() => {
-    console.log('🧹 Clearing table after explosion');
-    setBetsById(new Map());
-    betsRef.current = new Map();
-    // Не трогаем myActiveBet
+    console.log('⚠️ clearBetsOnCrash called but should not be used - очистка теперь в newRound');
+    // Убрали очистку таблицы отсюда
   }, []);
 
   const getHistoryFromBackend = useCallback(async () => {
@@ -589,6 +589,6 @@ export const useCrashGame = () => {
     isBettingPhase: roundStatus === 'betting',
     isFlyingPhase: roundStatus === 'running',
     getHistoryFromBackend,
-    clearBetsOnCrash
+    clearBetsOnCrash  // ⚠️ Эта функция теперь ничего не очищает
   };
 };
