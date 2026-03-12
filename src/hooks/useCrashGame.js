@@ -34,7 +34,7 @@ export const useCrashGame = () => {
   
   // Refs
   const timerIntervalRef = useRef(null);
-  const clearTableTimeoutRef = useRef(null);
+  const clearTableTimeoutRef = useRef(null); // 🔧 Реф для таймера очистки таблицы
   const betsRef = useRef(new Map());
   const myActiveBetRef = useRef(null);
   const userIdRef = useRef(null);
@@ -67,24 +67,52 @@ export const useCrashGame = () => {
     return Date.now() + timeOffsetRef.current;
   }, []);
 
-  // --- 🔧 ИСПРАВЛЕНО: ТАЙМЕР ТЕПЕРЬ ИСПОЛЬЗУЕТ СОБЫТИЯ 'timer' ОТ СЕРВЕРА ---
-  // Убираем локальный интервал, так как таймер приходит с сервера
+  // --- 2. ТАЙМЕР ОБРАТНОГО ОТСЧЕТА (СЕРВЕРНЫЙ) — КАК В ОРИГИНАЛЕ ---
   useEffect(() => {
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
-      timerIntervalRef.current = null;
     }
-    // Интервал больше не нужен, таймер обновляется через WebSocket
-    return () => {};
-  }, []); // Пустые зависимости - запускается только при монтировании/размонтировании
+    
+    const updateTimer = () => {
+      const now = getServerTime();
+      if (roundStartsAt) {
+        const diff = roundStartsAt - now;
+        const sec = Math.max(0, Math.ceil(diff / 1000));
+        setTimeLeft(sec);
+        
+        if (sec <= 5 && sec > 0) {
+          console.log(`⏱️ Server timer: ${sec}s remaining (starts at ${new Date(roundStartsAt).toISOString()})`);
+        }
+        
+        if (diff > 0 && (roundStatus === 'betting' || roundStatus === 'countdown')) {
+          if (stageRef.current !== 'timer') {
+            setStage('timer');
+          }
+        }
+      } else {
+        setTimeLeft(15);
+      }
+    };
+    
+    timerIntervalRef.current = setInterval(updateTimer, 100);
+    updateTimer();
+    
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+    };
+  }, [roundStartsAt, roundStatus, getServerTime]); // ✅ Как в оригинале
 
   // --- 🔧 НОВЫЙ ЭФФЕКТ: Очистка таблицы через 2.5 секунды после краша ---
   useEffect(() => {
     if (engineEvents.crash) {
+      // Очищаем предыдущий таймер если есть
       if (clearTableTimeoutRef.current) {
         clearTimeout(clearTableTimeoutRef.current);
       }
       
+      // Запускаем таймер на 2.5 секунды
       clearTableTimeoutRef.current = setTimeout(() => {
         console.log('🧹 Clearing bets table 2.5s after crash');
         setBetsById(new Map());
@@ -95,6 +123,7 @@ export const useCrashGame = () => {
       }, 1900);
     }
     
+    // Cleanup при размонтировании или новом краше
     return () => {
       if (clearTableTimeoutRef.current) {
         clearTimeout(clearTableTimeoutRef.current);
@@ -164,6 +193,7 @@ export const useCrashGame = () => {
   }, []);
 
   // --- 5. УПРАВЛЕНИЕ ДАННЫМИ РАУНДА ---
+  // 🔧 УБРАЛИ очистку ставок отсюда — теперь только через 2.5с после краша
   const updateStageFromStatus = useCallback((status) => {
     switch (status) {
       case 'betting':
@@ -171,6 +201,7 @@ export const useCrashGame = () => {
         setStage('timer');
         setCrashMultiplier(null);
         setMultiplierNow(1.0);
+        // 🔧 НЕ очищаем ставки здесь
         if (hasBetThisRoundRef.current && !myActiveBetRef.current) {
           hasBetThisRoundRef.current = false;
         }
@@ -193,6 +224,7 @@ export const useCrashGame = () => {
       console.log('🔄 New round detected:', roundData.id);
       setCurrentRoundId(roundData.id);
       hasBetThisRoundRef.current = false;
+      // 🔧 НЕ очищаем ставки здесь — это делает таймер после краша
     }
     
     if (roundData.starts_at) {
@@ -255,29 +287,6 @@ export const useCrashGame = () => {
         }
       });
       
-      // 🔧 НОВЫЙ ОБРАБОТЧИК: timer события от сервера
-      crashWebSocket.on('timer', (data) => {
-        if (data.server_time_ms) syncTime(data.server_time_ms);
-        
-        // Обновляем timeLeft из серверного события
-        if (data.sec !== undefined) {
-          setTimeLeft(data.sec);
-        }
-        
-        // Обновляем roundId если пришел
-        if (data.round_id && data.round_id !== currentRoundId) {
-          setCurrentRoundId(data.round_id);
-        }
-        
-        // Обновляем статус betting_locked если нужно
-        if (data.betting_locked !== undefined) {
-          // Можно использовать для дополнительной логики
-        }
-        
-        // Сохраняем событие в engineEvents для отладки
-        setEngineEvents(prev => ({ ...prev, timer: data }));
-      });
-      
       crashWebSocket.on('tick', (data) => {
         if (data.server_time_ms) syncTime(data.server_time_ms);
         if (data.multiplier) {
@@ -315,6 +324,8 @@ export const useCrashGame = () => {
         setCrashMultiplier(mult);
         setLastMultipliers(prev => [mult, ...prev].slice(0, 10));
         
+        // 🔧 НЕ очищаем таблицу сразу — только обновляем статус на 'lose'
+        // Очистка произойдёт через 2.5с в отдельном useEffect
         setBetsById(prev => {
           const newMap = new Map(prev);
           newMap.forEach((bet, id) => {
@@ -337,6 +348,7 @@ export const useCrashGame = () => {
         if (data.round_id !== currentRoundId) {
           setCurrentRoundId(data.round_id);
           hasBetThisRoundRef.current = false;
+          // 🔧 НЕ очищаем таблицу при новом раунде здесь
         }
         const bet = formatBet(data.bet);
         setBetsById(prev => new Map(prev).set(bet.bet_id, bet));
@@ -403,7 +415,7 @@ export const useCrashGame = () => {
       console.error('WebSocket Init Error', e);
       setWsConnected(false);
     }
-  }, [currentRoundId, handleRoundInfo, syncTime, formatBet, updateStageFromStatus, multiplierNow]);
+  }, [currentRoundId, handleRoundInfo, syncTime, formatBet, updateStageFromStatus]);
 
   useEffect(() => {
     initializeWebSocket();
