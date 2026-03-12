@@ -631,22 +631,22 @@
 /* Специальные эффекты для каждого уровня - ИСПРАВЛЕНО */
 .win-tier-high .upgrade-win-title {
   font-size: 36px;
-  color: #ff00ff !important; /* Яркий золотой цвет */
-  -webkit-text-stroke: 0 !important; /* Убираем обводку */
+  color: #ffffff !important; /* Белый цвет для лучшей читаемости */
+  -webkit-text-stroke: 1px #ff00ff !important; /* Тонкая обводка */
   paint-order: stroke fill;
   animation: epicTextPulse 1.5s infinite alternate;
-  text-shadow: 0 0 8px #ff00ff, 0 0 12px #ffaa00; /* Небольшое свечение */
-  background: none !important; /* Убираем градиент */
+  text-shadow: 0 0 4px #ff00ff; /* Минимальное свечение */
+  background: none !important;
   -webkit-background-clip: unset !important;
   -webkit-text-fill-color: unset !important;
 }
 
 .win-tier-medium .upgrade-win-title {
   font-size: 30px;
-  color: #ffaa00 !important; /* Оранжевый */
-  -webkit-text-stroke: 0 !important;
+  color: #ffffff !important; /* Белый цвет */
+  -webkit-text-stroke: 1px #ffaa00 !important; /* Тонкая обводка */
   animation: mediumTextPulse 1.2s infinite alternate;
-  text-shadow: 0 0 6px #ffaa00, 0 0 10px #ff8800; /* Небольшое свечение */
+  text-shadow: 0 0 3px #ffaa00; /* Минимальное свечение */
   background: none !important;
   -webkit-background-clip: unset !important;
   -webkit-text-fill-color: unset !important;
@@ -654,10 +654,10 @@
 
 .win-tier-low .upgrade-win-title {
   font-size: 24px;
-  color: #f1bf28 !important; /* Золотой */
-  -webkit-text-stroke: 0 !important;
+  color: #ffffff !important; /* Белый цвет */
+  -webkit-text-stroke: 1px #f1bf28 !important; /* Тонкая обводка */
   animation: lowTextPulse 1s infinite alternate;
-  text-shadow: 0 0 4px #f1bf28, 0 0 8px #db7900; /* Небольшое свечение */
+  text-shadow: 0 0 2px #f1bf28; /* Минимальное свечение */
   background: none !important;
   -webkit-background-clip: unset !important;
   -webkit-text-fill-color: unset !important;
@@ -725,25 +725,25 @@
   animation: lowPulseGlow 2s ease-in-out infinite;
 }
 
-/* Анимации - ИСПРАВЛЕНО */
+/* Анимации - МИНИМАЛЬНОЕ СВЕЧЕНИЕ */
 @keyframes rotateRays {
   from { transform: translate(-50%, -50%) rotate(0deg); }
   to { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
 @keyframes epicTextPulse {
-  from { transform: scale(1); text-shadow: 0 0 8px #ff00ff, 0 0 12px #ffaa00; }
-  to { transform: scale(1.15); text-shadow: 0 0 12px #ff00ff, 0 0 18px #ffaa00; }
+  from { transform: scale(1); text-shadow: 0 0 4px #ff00ff; }
+  to { transform: scale(1.1); text-shadow: 0 0 8px #ff00ff; }
 }
 
 @keyframes mediumTextPulse {
-  from { transform: scale(1); text-shadow: 0 0 6px #ffaa00, 0 0 10px #ff8800; }
-  to { transform: scale(1.1); text-shadow: 0 0 10px #ffaa00, 0 0 14px #ff8800; }
+  from { transform: scale(1); text-shadow: 0 0 3px #ffaa00; }
+  to { transform: scale(1.05); text-shadow: 0 0 6px #ffaa00; }
 }
 
 @keyframes lowTextPulse {
-  from { transform: scale(1); text-shadow: 0 0 4px #f1bf28, 0 0 8px #db7900; }
-  to { transform: scale(1.05); text-shadow: 0 0 8px #f1bf28, 0 0 12px #db7900; }
+  from { transform: scale(1); text-shadow: 0 0 2px #f1bf28; }
+  to { transform: scale(1.03); text-shadow: 0 0 4px #f1bf28; }
 }
 
 @keyframes epicPopIn {
