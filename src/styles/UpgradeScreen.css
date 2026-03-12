@@ -628,28 +628,28 @@
   background: linear-gradient(145deg, #1f1f2e, #1a1a2a);
 }
 
-/* Специальные эффекты для каждого уровня */
+/* Специальные эффекты для каждого уровня - УМЕНЬШЕННОЕ СВЕЧЕНИЕ */
 .win-tier-high .upgrade-win-title {
   font-size: 36px;
   background: linear-gradient(45deg, #ff00ff, #ffaa00, #ff00ff);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: epicTextPulse 1.5s infinite alternate;
-  text-shadow: 0 0 2px rgba(255, 0, 255, 0.3);
+  text-shadow: 0 0 2px rgba(255, 0, 255, 0.3); /* Уменьшено свечение */
 }
 
 .win-tier-medium .upgrade-win-title {
   font-size: 30px;
   color: #ffaa00;
   animation: mediumTextPulse 1.2s infinite alternate;
-  text-shadow: 0 0 2px rgba(255, 170, 0, 0.5);
+  text-shadow: 0 0 2px rgba(255, 170, 0, 0.4); /* Уменьшено свечение */
 }
 
 .win-tier-low .upgrade-win-title {
   font-size: 24px;
   color: #f1bf28;
   animation: lowTextPulse 1s infinite alternate;
-  text-shadow: 0 0 2px rgba(241, 191, 40, 0.3);
+  text-shadow: 0 0 2px rgba(241, 191, 40, 0.3); /* Уменьшено свечение */
 }
 
 /* Фоновые лучи для всех уровней */
@@ -714,25 +714,25 @@
   animation: lowPulseGlow 2s ease-in-out infinite;
 }
 
-/* Анимации */
+/* Анимации - УМЕНЬШЕННОЕ СВЕЧЕНИЕ В ПУЛЬСАЦИЯХ */
 @keyframes rotateRays {
   from { transform: translate(-50%, -50%) rotate(0deg); }
   to { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
 @keyframes epicTextPulse {
-  from { transform: scale(1); text-shadow: 0 0 20px #ff00ff, 0 0 40px #ffaa00; }
-  to { transform: scale(1.15); text-shadow: 0 0 40px #ff00ff, 0 0 60px #ffaa00; }
+  from { transform: scale(1); text-shadow: 0 0 2px #ff00ff, 0 0 4px #ffaa00; } /* Уменьшено */
+  to { transform: scale(1.15); text-shadow: 0 0 4px #ff00ff, 0 0 6px #ffaa00; } /* Уменьшено */
 }
 
 @keyframes mediumTextPulse {
-  from { transform: scale(1); text-shadow: 0 0 15px #ffaa00; }
-  to { transform: scale(1.1); text-shadow: 0 0 30px #ffaa00; }
+  from { transform: scale(1); text-shadow: 0 0 2px #ffaa00; } /* Уменьшено */
+  to { transform: scale(1.1); text-shadow: 0 0 4px #ffaa00; } /* Уменьшено */
 }
 
 @keyframes lowTextPulse {
-  from { transform: scale(1); text-shadow: 0 0 10px #f1bf28; }
-  to { transform: scale(1.05); text-shadow: 0 0 20px #f1bf28; }
+  from { transform: scale(1); text-shadow: 0 0 2px #f1bf28; } /* Уменьшено */
+  to { transform: scale(1.05); text-shadow: 0 0 3px #f1bf28; } /* Уменьшено */
 }
 
 @keyframes epicPopIn {
