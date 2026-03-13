@@ -16,7 +16,8 @@ import { useBalance } from '../contexts/BalanceContext';
 export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
   const [animationData, setAnimationData] = useState(null);
   const [exAnimationData, setExAnimationData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Для загрузки анимаций
+  const [initialLoading, setInitialLoading] = useState(true); // НОВОЕ: для начальной загрузки страницы
   const [isBetModalOpen, setIsBetModalOpen] = useState(false);
   const [isModalClosing, setIsModalClosing] = useState(false);
   const [cashoutPending, setCashoutPending] = useState(false);
@@ -64,12 +65,19 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     currentRoundId
   } = useCrashGame();
 
-  // Сбрасываем локальный флаг при смене раунда
+  // НОВОЕ: отслеживаем подключение к WebSocket и загрузку данных
   useEffect(() => {
-    if (currentRoundId) {
-      hasPlacedBetThisRoundRef.current = false;
+    // Снимаем начальную загрузку, когда:
+    // 1. WebSocket подключен
+    // 2. Анимации загружены (или хотя бы попытались загрузиться)
+    // 3. Есть данные пользователя (или ошибка их загрузки)
+    if (wsConnected && !loading && userData !== null) {
+      // Даем небольшую задержку для плавности
+      setTimeout(() => {
+        setInitialLoading(false);
+      }, 500);
     }
-  }, [currentRoundId]);
+  }, [wsConnected, loading, userData]);
 
   const showUiError = (message, duration = 3000) => {
     setUiErrorMessage(message);
@@ -87,6 +95,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
         await loadBalances();
       } catch (error) {
         console.error('Error loading initial data:', error);
+        setUserData(null); // Даже с ошибкой, устанавливаем, чтобы снять загрузку
       }
     };
     loadInitialData();
@@ -135,7 +144,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     if (stage === 'explosion') {
       explosionHandledRef.current = false;
       if (explosionAnimationRef.current) {
-        explosionAnimationRef.current.setSpeed(1.3); // Увеличено с 1.2 до 1.3
+        explosionAnimationRef.current.setSpeed(1.3);
         explosionAnimationRef.current.goToAndPlay(0, true);
       }
     }
@@ -146,8 +155,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     if (explosionHandledRef.current) return;
     explosionHandledRef.current = true;
     
-    // Не делаем ничего, так как переход на таймер произойдет по timer сообщению
-    // Просто сбрасываем ref
     explosionTimeoutRef.current = setTimeout(() => {
       explosionTimeoutRef.current = null;
     }, 500);
@@ -216,18 +223,17 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     }
   };
 
-  // Ускоренная вибрация для синхронизации с анимацией взрыва (speed 1.3)
   const vibrateTriple = () => {
     if (!window.Telegram?.WebApp?.HapticFeedback) {
-      if (navigator.vibrate) navigator.vibrate([50, 800, 50, 80, 50, 80, 50, 80, 50, 80, 50]); // Уменьшены задержки
+      if (navigator.vibrate) navigator.vibrate([50, 800, 50, 80, 50, 80, 50, 80, 50, 80, 50]);
       return;
     }
     try {
-      let delay = 800; // Уменьшено с 900 до 800
+      let delay = 800;
       for (let i = 0; i < 6; i++) {
         setTimeout(() => {
           window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-        }, i === 0 ? 0 : delay + (i - 1) * 80); // Уменьшено с 100 до 80
+        }, i === 0 ? 0 : delay + (i - 1) * 80);
       }
     } catch (error) {
       console.error('Vibration error:', error);
@@ -288,7 +294,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
 
   const formatTime = (seconds) => {
     if (seconds === undefined || seconds === null || isNaN(seconds)) return '15';
-    // Показываем секунды как есть из WebSocket
     return seconds.toString().padStart(2, '0');
   };
 
@@ -452,164 +457,199 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     return (myActiveBetId && participantId === myActiveBetId) || (recentBetId && participantId === recentBetId);
   };
 
+  // НОВОЕ: компонент спиннера загрузки
+  const LoadingSpinner = () => (
+    <div className="rocket-loading-container">
+      <div className="rocket-spinner">
+        <div className="spinner-rocket">🚀</div>
+        <div className="spinner-ring"></div>
+      </div>
+      <div className="rocket-loading-text">
+        <span>L</span>
+        <span>o</span>
+        <span>a</span>
+        <span>d</span>
+        <span>i</span>
+        <span>n</span>
+        <span>g</span>
+        <span>&nbsp;</span>
+        <span>R</span>
+        <span>o</span>
+        <span>c</span>
+        <span>k</span>
+        <span>e</span>
+        <span>t</span>
+        <span>.</span>
+        <span>.</span>
+        <span>.</span>
+      </div>
+    </div>
+  );
+
   return (
     <div className="rocket-screen">
       <Header onNavigate={onNavigate} />
-      <main className="rocket-content">
-        <div className="rocket-container">
-          <div className="multiplier-container">
-            <span className="multiplier-text">{getDisplayMultiplier()}</span>
-          </div>
-  
-          <div className="rocket-game-area">
-            <div className="video-container">
-              {loading ? (
-                <div className="loading-animation">Loading...</div>
-              ) : (
-                <>
-                  {/* Таймер - показываем когда stage === 'timer' */}
-                  {stage === 'timer' && (
-                    <div className="timer-container">
-                      <img src={timerImg} alt="Timer" className="timer-image" />
-                      <div className="timer-text">{formatTime(timeLeft)}</div>
-                    </div>
-                  )}
-                  
-                  {/* Ракета - показываем когда stage === 'rocket' */}
-                  {stage === 'rocket' && animationData && (
-                    <div className="animation-container">
-                      <Lottie 
-                        animationData={animationData} 
-                        loop={true} 
-                        autoplay={true} 
-                        className="raketa-animation" 
-                        speed={1.5} 
-                      />
-                    </div>
-                  )}
-                  
-                  {/* Взрыв - показываем когда stage === 'explosion' */}
-                  {stage === 'explosion' && exAnimationData && (
-                    <div className="explosion-container">
-                      <Lottie 
-                        animationData={exAnimationData} 
-                        loop={false} 
-                        autoplay={true} 
-                        className="explosion-animation" 
-                        speed={1.3} // Увеличено с 1.2 до 1.3
-                        lottieRef={(ref) => { explosionAnimationRef.current = ref; }}
-                        onComplete={handleExplosionComplete}
-                      />
-                    </div>
-                  )}
-                  
-                  {/* Fallback если анимации не загрузились */}
-                  {!animationData && !exAnimationData && !loading && (
-                    <div className="error-message">Failed to load animation</div>
-                  )}
-                </>
-              )}
+      
+      {/* НОВОЕ: показываем спиннер пока initialLoading === true */}
+      {initialLoading ? (
+        <LoadingSpinner />
+      ) : (
+        <main className="rocket-content">
+          <div className="rocket-container">
+            <div className="multiplier-container">
+              <span className="multiplier-text">{getDisplayMultiplier()}</span>
             </div>
-  
-            <div className="last-multipliers-container">
-              <div className="last-multipliers-scroll">
-                {getDisplayMultipliers().map((m, i) => (
-                  <span key={i} className={`last-multiplier-item ${i === 0 && engineEvents.crash ? 'new' : ''}`}>
-                    x{m.toFixed(2)}
-                  </span>
-                ))}
+    
+            <div className="rocket-game-area">
+              <div className="video-container">
+                {loading ? (
+                  <div className="loading-animation">Loading...</div>
+                ) : (
+                  <>
+                    {/* Таймер - показываем когда stage === 'timer' */}
+                    {stage === 'timer' && (
+                      <div className="timer-container">
+                        <img src={timerImg} alt="Timer" className="timer-image" />
+                        <div className="timer-text">{formatTime(timeLeft)}</div>
+                      </div>
+                    )}
+                    
+                    {/* Ракета - показываем когда stage === 'rocket' */}
+                    {stage === 'rocket' && animationData && (
+                      <div className="animation-container">
+                        <Lottie 
+                          animationData={animationData} 
+                          loop={true} 
+                          autoplay={true} 
+                          className="raketa-animation" 
+                          speed={1.5} 
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Взрыв - показываем когда stage === 'explosion' */}
+                    {stage === 'explosion' && exAnimationData && (
+                      <div className="explosion-container">
+                        <Lottie 
+                          animationData={exAnimationData} 
+                          loop={false} 
+                          autoplay={true} 
+                          className="explosion-animation" 
+                          speed={1.3}
+                          lottieRef={(ref) => { explosionAnimationRef.current = ref; }}
+                          onComplete={handleExplosionComplete}
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Fallback если анимации не загрузились */}
+                    {!animationData && !exAnimationData && !loading && (
+                      <div className="error-message">Failed to load animation</div>
+                    )}
+                  </>
+                )}
+              </div>
+    
+              <div className="last-multipliers-container">
+                <div className="last-multipliers-scroll">
+                  {getDisplayMultipliers().map((m, i) => (
+                    <span key={i} className={`last-multiplier-item ${i === 0 && engineEvents.crash ? 'new' : ''}`}>
+                      x{m.toFixed(2)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+    
+              <div className="participants-table-container">
+                <table className="participants-table">
+                  <thead className="participants-thead">
+                    <tr>
+                      <th className="participants-header-cell bet-column">BET</th>
+                      <th className="participants-header-cell winning-column">WINNING</th>
+                    </tr>
+                  </thead>
+                  <tbody className="participants-tbody">
+                    {!wsConnected ? (
+                      <tr className="participants-row">
+                        <td colSpan="2" style={{ textAlign: 'center', color: '#333', padding: '20px' }}>Connecting to server...</td>
+                      </tr>
+                    ) : participants.length > 0 ? (
+                      participants.map((participant) => {
+                        const isMyBetFlag = isMyBet(participant);
+                        const avatarColor = getAvatarColor(participant.user_id);
+                        const avatarElement = getParticipantAvatar(participant);
+                        const username = getParticipantUsername(participant);
+                        const betKey = participant.bet_id ?? participant.id ?? `temp-${participant.user_id}`;
+                        const currentAmount = getCurrentBetAmount(participant);
+                        
+                        let multiplierColor = '';
+                        let statusIcon = null;
+                        if (participant.status === 'win' && participant.x) {
+                          multiplierColor = 'multiplier-green';
+                          statusIcon = <span className="check-icon">✓</span>;
+                        } else if (participant.status === 'lose') {
+                          multiplierColor = 'multiplier-red';
+                          statusIcon = <span className="cross-icon">✗</span>;
+                        } else if (isMyBetFlag) {
+                          multiplierColor = 'my-bet';
+                        }
+
+                        return (
+                          <tr key={betKey} className={`participants-row ${isMyBetFlag ? 'my-bet-row' : ''}`}>
+                            <td className="participant-bet-cell">
+                              <div className="participant-avatar" style={{ backgroundColor: avatarElement ? 'transparent' : avatarColor }}>
+                                {avatarElement || <span className="fallback">{username?.[0]?.toUpperCase() || 'U'}</span>}
+                              </div>
+                              <div className="participant-info">
+                                <div className="participant-nickname">
+                                  {username}
+                                </div>
+                                <div className="participant-bet-currency">
+                                  <img src={participant.currency === 'ton' ? tonSvg : starSvg} alt={participant.currency} className="currency-icon-small" style={{ marginTop: '-1px' }} />
+                                  <span className="participant-bet">{currentAmount}</span>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="participant-winning-cell">
+                              {participant.status === 'placed' ? (
+                                <span className="participant-multiplier">
+                                  <span className={`live-multiplier ${isMyBetFlag ? 'my-multiplier' : ''}`}>x{multiplierNow.toFixed(2)}</span>
+                                </span>
+                              ) : (
+                                <span className={`participant-multiplier ${multiplierColor}`}>
+                                  x{participant.x?.toFixed(2) || '0.00'} {statusIcon}
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr className="participants-row no-bets-row">
+                        <td colSpan="2" className="no-bets-message">
+                          {'No bets yet'.split('').map((char, index) => (
+                            <span key={index} className={char === ' ' ? 'space' : 'char'} style={char === ' ' ? { width: '0.3em' } : {}}>{char === ' ' ? '\u00A0' : char}</span>
+                          ))}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+    
+              <div className="make-bet-button-container">
+                <button 
+                  className={getButtonClass()} 
+                  onClick={handleMainButtonClick} 
+                  disabled={!isMainButtonActive()}
+                >
+                  <span className="make-bet-text">{getButtonText()}</span>
+                </button>
               </div>
             </div>
-  
-            <div className="participants-table-container">
-              <table className="participants-table">
-                <thead className="participants-thead">
-                  <tr>
-                    <th className="participants-header-cell bet-column">BET</th>
-                    <th className="participants-header-cell winning-column">WINNING</th>
-                  </tr>
-                </thead>
-                <tbody className="participants-tbody">
-                  {!wsConnected ? (
-                    <tr className="participants-row">
-                      <td colSpan="2" style={{ textAlign: 'center', color: '#333', padding: '20px' }}>Connecting to server...</td>
-                    </tr>
-                  ) : participants.length > 0 ? (
-                    participants.map((participant) => {
-                      const isMyBetFlag = isMyBet(participant);
-                      const avatarColor = getAvatarColor(participant.user_id);
-                      const avatarElement = getParticipantAvatar(participant);
-                      const username = getParticipantUsername(participant);
-                      const betKey = participant.bet_id ?? participant.id ?? `temp-${participant.user_id}`;
-                      const currentAmount = getCurrentBetAmount(participant);
-                      
-                      let multiplierColor = '';
-                      let statusIcon = null;
-                      if (participant.status === 'win' && participant.x) {
-                        multiplierColor = 'multiplier-green';
-                        statusIcon = <span className="check-icon">✓</span>;
-                      } else if (participant.status === 'lose') {
-                        multiplierColor = 'multiplier-red';
-                        statusIcon = <span className="cross-icon">✗</span>;
-                      } else if (isMyBetFlag) {
-                        multiplierColor = 'my-bet';
-                      }
-
-                      return (
-                        <tr key={betKey} className={`participants-row ${isMyBetFlag ? 'my-bet-row' : ''}`}>
-                          <td className="participant-bet-cell">
-                            <div className="participant-avatar" style={{ backgroundColor: avatarElement ? 'transparent' : avatarColor }}>
-                              {avatarElement || <span className="fallback">{username?.[0]?.toUpperCase() || 'U'}</span>}
-                            </div>
-                            <div className="participant-info">
-                              <div className="participant-nickname">
-                                {username}
-                              </div>
-                              <div className="participant-bet-currency">
-                                <img src={participant.currency === 'ton' ? tonSvg : starSvg} alt={participant.currency} className="currency-icon-small" style={{ marginTop: '-1px' }} />
-                                <span className="participant-bet">{currentAmount}</span>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="participant-winning-cell">
-                            {participant.status === 'placed' ? (
-                              <span className="participant-multiplier">
-                                <span className={`live-multiplier ${isMyBetFlag ? 'my-multiplier' : ''}`}>x{multiplierNow.toFixed(2)}</span>
-                              </span>
-                            ) : (
-                              <span className={`participant-multiplier ${multiplierColor}`}>
-                                x{participant.x?.toFixed(2) || '0.00'} {statusIcon}
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr className="participants-row no-bets-row">
-                      <td colSpan="2" className="no-bets-message">
-                        {'No bets yet'.split('').map((char, index) => (
-                          <span key={index} className={char === ' ' ? 'space' : 'char'} style={char === ' ' ? { width: '0.3em' } : {}}>{char === ' ' ? '\u00A0' : char}</span>
-                        ))}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-  
-            <div className="make-bet-button-container">
-              <button 
-                className={getButtonClass()} 
-                onClick={handleMainButtonClick} 
-                disabled={!isMainButtonActive()}
-              >
-                <span className="make-bet-text">{getButtonText()}</span>
-              </button>
-            </div>
           </div>
-        </div>
-      </main>
+        </main>
+      )}
   
       {uiErrorMessage && (
         <div className="ui-error-message">

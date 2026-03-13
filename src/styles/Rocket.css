@@ -1191,3 +1191,130 @@
   display: inline-block;
   width: 0.3em;
 }
+
+
+/* ===== НОВЫЕ СТИЛИ ДЛЯ ЗАГРУЗОЧНОГО ЭКРАНА ===== */
+
+.rocket-loading-container {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 70px); /* Вычитаем высоту Header */
+  background: transparent;
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.rocket-spinner {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin-bottom: 30px;
+}
+
+.spinner-rocket {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 48px;
+  animation: rocketShake 0.5s ease-in-out infinite;
+  z-index: 2;
+  filter: drop-shadow(0 0 10px rgba(105, 113, 255, 0.5));
+}
+
+@keyframes rocketShake {
+  0%, 100% {
+    transform: translate(-50%, -50%) rotate(-2deg);
+  }
+  50% {
+    transform: translate(-50%, -50%) rotate(2deg);
+  }
+}
+
+.spinner-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 4px solid transparent;
+  border-top-color: #6971FF;
+  border-right-color: #45B7D1;
+  border-bottom-color: #96CEB4;
+  border-left-color: #FF6B6B;
+  border-radius: 50%;
+  animation: spin 1.5s linear infinite;
+  box-shadow: 0 0 20px rgba(105, 113, 255, 0.3);
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.rocket-loading-text {
+  display: flex;
+  gap: 2px;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 24px;
+  margin-top: 20px;
+}
+
+.rocket-loading-text span {
+  display: inline-block;
+  animation: bounce 1.5s ease-in-out infinite;
+  /* Градиентный текст */
+  background: linear-gradient(135deg, #6971FF, #45B7D1, #96CEB4, #FF6B6B);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* Белая окантовка */
+  -webkit-text-stroke: 1px white;
+  paint-order: stroke fill;
+  text-shadow: 0 0 10px rgba(105, 113, 255, 0.5);
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Автоматическая задержка для каждой буквы */
+.rocket-loading-text span:nth-child(1) { animation-delay: 0.0s; }
+.rocket-loading-text span:nth-child(2) { animation-delay: 0.1s; }
+.rocket-loading-text span:nth-child(3) { animation-delay: 0.2s; }
+.rocket-loading-text span:nth-child(4) { animation-delay: 0.3s; }
+.rocket-loading-text span:nth-child(5) { animation-delay: 0.4s; }
+.rocket-loading-text span:nth-child(6) { animation-delay: 0.5s; }
+.rocket-loading-text span:nth-child(7) { animation-delay: 0.6s; }
+.rocket-loading-text span:nth-child(8) { animation-delay: 0.7s; }
+.rocket-loading-text span:nth-child(9) { animation-delay: 0.8s; }
+.rocket-loading-text span:nth-child(10) { animation-delay: 0.9s; }
+.rocket-loading-text span:nth-child(11) { animation-delay: 1.0s; }
+.rocket-loading-text span:nth-child(12) { animation-delay: 1.1s; }
+.rocket-loading-text span:nth-child(13) { animation-delay: 1.2s; }
+.rocket-loading-text span:nth-child(14) { animation-delay: 1.3s; }
+.rocket-loading-text span:nth-child(15) { animation-delay: 1.4s; }
+.rocket-loading-text span:nth-child(16) { animation-delay: 1.5s; }
+.rocket-loading-text span:nth-child(17) { animation-delay: 1.6s; }
