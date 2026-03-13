@@ -154,7 +154,7 @@ export const useCrashGame = () => {
         setMyActiveBet(null);
         myActiveBetRef.current = null;
         clearTableTimeoutRef.current = null;
-      }, 2000);
+      }, 1920);
     }
     
     return () => {
