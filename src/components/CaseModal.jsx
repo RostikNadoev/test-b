@@ -429,7 +429,8 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
           rarity: randomItem.rarity,
           isDemo: true,
           stars_amount: randomItem.price_stars,
-          price_ton: randomItem.price_ton
+          price_ton: randomItem.price_ton,
+          paymentCurrency: 'ton'
         };
       } else {
         demoWinningItem = {
@@ -438,7 +439,8 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
           name: `${price.ton} TON`,
           item_type: 'reward_ton',
           isDemo: true,
-          price_ton: price.ton
+          price_ton: price.ton,
+          paymentCurrency: 'ton'
         };
       }
       
@@ -492,6 +494,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
         return;
       }
       
+      // Списываем звезды
       removeFromDemoBalance(price.stars, 'stars');
       
       let demoWinningItem = null;
@@ -509,37 +512,27 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
         }
         
         let displayPrice;
-        let originalValue;
-        
         if (randomItem.item_type === 'reward_stars') {
           displayPrice = formatStarsPrice(randomItem.price_stars);
-          originalValue = randomItem.price_stars;
         } else if (randomItem.item_type === 'tg_gift') {
-          // Конвертируем TON в STARS для демо-режима
-          const convertedValue = randomItem.price_ton * TON_TO_STARS_RATE;
-          displayPrice = formatStarsPrice(convertedValue);
-          originalValue = convertedValue;
+          displayPrice = `${randomItem.price_ton} TON`; // Показываем в TON
         } else if (randomItem.item_type === 'reward_ton') {
-          // Конвертируем TON в STARS для демо-режима
-          const convertedValue = randomItem.price_ton * TON_TO_STARS_RATE;
-          displayPrice = formatStarsPrice(convertedValue);
-          originalValue = convertedValue;
+          displayPrice = `${randomItem.price_ton} TON`; // Показываем в TON
         } else {
-          displayPrice = '0 Stars';
-          originalValue = 0;
+          displayPrice = '0 TON';
         }
         
         demoWinningItem = {
           img: itemImg,
-          price: displayPrice,
+          price: displayPrice, // Всегда показываем оригинальную цену (TON для TON наград)
           name: randomItem.name,
           item_type: randomItem.item_type,
           index: randomItem.item_index,
           rarity: randomItem.rarity,
           isDemo: true,
-          stars_amount: originalValue,
+          stars_amount: randomItem.price_stars,
           price_ton: randomItem.price_ton,
-          wasConverted: randomItem.item_type === 'reward_ton' || randomItem.item_type === 'tg_gift'
+          paymentCurrency: 'stars' // Указываем, что платили звездами
         };
       } else {
         demoWinningItem = {
@@ -548,7 +541,8 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
           name: `${price.ton} TON`,
           item_type: 'reward_ton',
           isDemo: true,
-          price_ton: price.ton
+          price_ton: price.ton,
+          paymentCurrency: 'stars'
         };
       }
       
