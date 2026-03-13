@@ -707,10 +707,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
             {(isLoading || !imagesLoaded) ? (
               <div className="modal-loading-items">
                 <div className="modal-spinner"></div>
-                <p>Loading items and images...</p>
-                {!imagesLoaded && caseItems.length > 0 && (
-                  <p className="modal-loading-progress">Loading case data...</p>
-                )}
+                <p>Loading case data...</p>
               </div>
             ) : (
               <div className="modal-items-grid">
