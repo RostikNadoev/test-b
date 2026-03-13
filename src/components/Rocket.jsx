@@ -40,13 +40,14 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
   const lastTempBetIdRef = useRef(null);
   const uiErrorTimeoutRef = useRef(null);
   const hasPlacedBetThisRoundRef = useRef(false);
+  const timerCheckRef = useRef(null);
   
   const { balances, checkBalance, loadBalances, updateBalanceImmediately } = useBalance();
 
   const {
     multiplierNow,
     roundStatus,
-    timeLeft,
+    timerSeconds, // Теперь это значение прямо из сокета!
     wsConnected,
     bets: participants,
     placeBet,
@@ -60,7 +61,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     lastMultipliers,
     crashMultiplier,
     getHistoryFromBackend,
-    clearBetsOnCrash,
     currentRoundId
   } = useCrashGame();
 
@@ -121,47 +121,52 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     }
   }, [engineEvents.bet_result, myActiveBet, recentlyPlacedBet, loadBalances]);
 
-  // Обработка события КРАША (только вибрация)
+  // Обработка события КРАША
   useEffect(() => {
     if (engineEvents.crash) {
       setRecentlyPlacedBet(null);
       lastTempBetIdRef.current = null;
       vibrateTriple();
+      
+      // Устанавливаем таймер на возврат к таймеру после взрыва
+      if (explosionTimeoutRef.current) {
+        clearTimeout(explosionTimeoutRef.current);
+      }
+      
+      // Взрыв длится около 2 секунд, после чего мы ждем первое сообщение таймера
+      // (оно само переключит stage через handleTimerMessage)
+      explosionTimeoutRef.current = setTimeout(() => {
+        // Если через 3 секунды всё ещё во взрыве, принудительно переключаем
+        if (stage === 'explosion') {
+          console.log('⚠️ Forcing timer after explosion timeout');
+          // Но stage переключится сам при получении timer сообщения
+        }
+      }, 3000);
     }
-  }, [engineEvents.crash]);
+    
+    return () => {
+      if (explosionTimeoutRef.current) {
+        clearTimeout(explosionTimeoutRef.current);
+      }
+    };
+  }, [engineEvents.crash, stage]);
 
   // Управление Lottie плеером для взрыва
   useEffect(() => {
     if (stage === 'explosion') {
       explosionHandledRef.current = false;
-
       if (explosionAnimationRef.current) {
         explosionAnimationRef.current.setSpeed(1);
         explosionAnimationRef.current.goToAndPlay(0, true);
       }
     }
-
-    return () => {
-      if (explosionTimeoutRef.current) {
-        clearTimeout(explosionTimeoutRef.current);
-        explosionTimeoutRef.current = null;
-      }
-    };
   }, [stage]);
 
   // --- ЛОГИКА ЗАВЕРШЕНИЯ ВЗРЫВА ---
   const handleExplosionComplete = useCallback(() => {
     if (explosionHandledRef.current) return;
     explosionHandledRef.current = true;
-
-    if (explosionTimeoutRef.current) {
-      clearTimeout(explosionTimeoutRef.current);
-    }
-
-    explosionTimeoutRef.current = setTimeout(() => {
-      //if (clearBetsOnCrash) clearBetsOnCrash();
-      explosionTimeoutRef.current = null;
-    }, 500);
+    console.log('💥 Explosion animation complete');
   }, []);
 
   // Вибрация
@@ -257,7 +262,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       return;
     }
     
-    // canBet теперь корректно обновляется после взрыва
     if (!canBet) {
       if (stage === 'rocket' || stage === 'explosion') {
         showUiError('Wait for next round!');
@@ -299,6 +303,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
 
   const formatTime = (seconds) => {
     if (seconds === undefined || seconds === null || isNaN(seconds)) return '15';
+    // Просто форматируем число с ведущим нулём
     return seconds.toString().padStart(2, '0');
   };
 
@@ -321,8 +326,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       return;
     }
     
-    // Передаем payoutMultiplier в placeBet для настройки автокешаута на фронте
-    // но сам placeBet НЕ отправляет это на бэкенд
     const autoCashoutTarget = autoPayoutEnabled ? payoutMultiplier : null;
     const success = placeBet(selectedCurrency, betAmountNum, autoCashoutTarget);
     
@@ -337,7 +340,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
         amount: betAmountNum,
         status: 'placed',
         x: null,
-        // Не сохраняем auto_cashout в tempBet, так как это только на фронте
         user: userData ? { id: userData.id, username: userData.username, photo_url: userData.photo_url } : null
       };
       lastTempBetIdRef.current = tempBet.bet_id;
@@ -354,13 +356,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
           return prevBetId === lastTempBetIdRef.current ? null : prev;
         });
       }, 5000);
-      
-      // Показываем сообщение о настройке автокешаута
-      if (autoPayoutEnabled) {
-        
-      }
-    } else {
-      
     }
   };
 
@@ -412,7 +407,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
 
   const getDisplayMultiplier = () => {
     if (stage === 'explosion' && crashMultiplier) return `x${crashMultiplier.toFixed(2)}`;
-    if (stage === 'timer' && roundStatus === 'betting') return 'Waiting...';
+    if (stage === 'timer') return 'Waiting...';
     if (!wsConnected || !isCrashGameActive) return 'x1.00';
     return `x${(multiplierNow || 1.0).toFixed(2)}`;
   };
@@ -435,7 +430,6 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       if (myActiveBet?.status === 'win') return false;
       return (canCashout || (multiplierNow > 1.0 && hasAnyActiveBet)) && !cashoutPending;
     }
-    // Кнопка активна, если canBet true (который обновляется сразу после взрыва)
     return canBet;
   };
 
@@ -450,11 +444,9 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
   const getDisplayMultipliers = () => lastMultipliersHistory.length > 0 ? lastMultipliersHistory : (lastMultipliers || []);
 
   const getCurrentBetAmount = (participant) => {
-    // ВАЖНО: При перезагрузке статус 'win' теперь корректно обрабатывается здесь
     if (participant.status === 'win' && participant.x) return (participant.amount * participant.x).toFixed(2);
     if (participant.status === 'placed') return (participant.amount * multiplierNow).toFixed(2);
     if (participant.status === 'lose') return (participant.amount * participant.x).toFixed(2);
-    // Fallback для выигранных ставок без multiplier (если вдруг)
     if (participant.status === 'win' && participant.current_amount) return participant.current_amount.toFixed(2);
     
     return participant.amount.toFixed(2);
@@ -486,7 +478,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
                   {stage === 'timer' && (
                     <div className="timer-container">
                       <img src={timerImg} alt="Timer" className="timer-image" />
-                      <div className="timer-text">{formatTime(timeLeft)}</div>
+                      <div className="timer-text">{formatTime(timerSeconds)}</div>
                     </div>
                   )}
                   {stage === 'rocket' && animationData && (
@@ -565,10 +557,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
                               {avatarElement || <span className="fallback">{username?.[0]?.toUpperCase() || 'U'}</span>}
                             </div>
                             <div className="participant-info">
-                              <div className="participant-nickname">
-                                {username} 
-                                {/* Иконка автокешаута не показывается, так как это только на фронте */}
-                              </div>
+                              <div className="participant-nickname">{username}</div>
                               <div className="participant-bet-currency">
                                 <img src={participant.currency === 'ton' ? tonSvg : starSvg} alt={participant.currency} className="currency-icon-small" style={{ marginTop: '-1px' }} />
                                 <span className="participant-bet">{currentAmount}</span>
