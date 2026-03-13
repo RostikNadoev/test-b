@@ -40,7 +40,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
   const lastTempBetIdRef = useRef(null);
   const uiErrorTimeoutRef = useRef(null);
   const hasPlacedBetThisRoundRef = useRef(false);
-  const timerAnimationRef = useRef(null); // Для контроля анимации таймера
+  const timerAnimationRef = useRef(null);
   
   const { balances, checkBalance, loadBalances, updateBalanceImmediately } = useBalance();
 
@@ -135,7 +135,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     if (stage === 'explosion') {
       explosionHandledRef.current = false;
       if (explosionAnimationRef.current) {
-        explosionAnimationRef.current.setSpeed(1.2);
+        explosionAnimationRef.current.setSpeed(1.3); // Увеличено с 1.2 до 1.3
         explosionAnimationRef.current.goToAndPlay(0, true);
       }
     }
@@ -216,17 +216,18 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     }
   };
 
+  // Ускоренная вибрация для синхронизации с анимацией взрыва (speed 1.3)
   const vibrateTriple = () => {
     if (!window.Telegram?.WebApp?.HapticFeedback) {
-      if (navigator.vibrate) navigator.vibrate([50, 900, 50, 100, 50, 100, 50, 100, 50, 100, 50]);
+      if (navigator.vibrate) navigator.vibrate([50, 800, 50, 80, 50, 80, 50, 80, 50, 80, 50]); // Уменьшены задержки
       return;
     }
     try {
-      let delay = 900;
+      let delay = 800; // Уменьшено с 900 до 800
       for (let i = 0; i < 6; i++) {
         setTimeout(() => {
           window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-        }, i === 0 ? 0 : delay + (i - 1) * 100);
+        }, i === 0 ? 0 : delay + (i - 1) * 80); // Уменьшено с 100 до 80
       }
     } catch (error) {
       console.error('Vibration error:', error);
@@ -397,7 +398,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
 
   const getDisplayMultiplier = () => {
     if (stage === 'explosion' && crashMultiplier) return `x${crashMultiplier.toFixed(2)}`;
-    if (stage === 'timer') return `x1.00`; // Показываем 1.00 во время таймера как в оригинале
+    if (stage === 'timer') return `x1.00`;
     if (!wsConnected || !isCrashGameActive) return 'x1.00';
     return `x${(multiplierNow || 1.0).toFixed(2)}`;
   };
@@ -495,7 +496,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
                         loop={false} 
                         autoplay={true} 
                         className="explosion-animation" 
-                        speed={1.2}
+                        speed={1.3} // Увеличено с 1.2 до 1.3
                         lottieRef={(ref) => { explosionAnimationRef.current = ref; }}
                         onComplete={handleExplosionComplete}
                       />
