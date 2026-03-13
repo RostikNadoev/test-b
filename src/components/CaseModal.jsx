@@ -7,7 +7,7 @@ import { useBalance } from '../contexts/BalanceContext';
 // Импортируем иконки
 import tonIcon from '../assets/MainPage/cases/tonicon.png';
 import starsIcon from '../assets/MainPage/cases/starsicon.png';
-import lockIcon from '../assets/MainPage/lock.png';
+import lockIcon from '../assets/MainPage/lock2.svg';
 
 // Импортируем фоны для рамок
 import back1 from '../assets/MainPage/cases/back1case.png';
