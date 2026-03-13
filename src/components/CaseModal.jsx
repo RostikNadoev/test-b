@@ -7,7 +7,7 @@ import { useBalance } from '../contexts/BalanceContext';
 // Импортируем иконки
 import tonIcon from '../assets/MainPage/cases/tonicon.png';
 import starsIcon from '../assets/MainPage/cases/starsicon.png';
-import lockIcon from '../assets/MainPage/lock.png'; // Нужно добавить иконку замка
+import lockIcon from '../assets/MainPage/lock.png';
 
 // Импортируем фоны для рамок
 import back1 from '../assets/MainPage/cases/back1case.png';
@@ -31,6 +31,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
   const [caseData, setCaseData] = useState(null);
   const [caseItems, setCaseItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [freeCaseStatus, setFreeCaseStatus] = useState({
     eligible: false,
@@ -49,14 +50,200 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
     }
   }, [caseItem.id, initialFreeCaseStatus]);
 
+  // Функция для получения URL изображения
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return tonIcon;
+    
+    if (imagePath.startsWith('/static/')) {
+      return `https://shamefully-gifted-catbird.cloudpub.ru${imagePath}`;
+    }
+    
+    if (imagePath.trim() === '') {
+      return tonIcon;
+    }
+    
+    return imagePath;
+  };
+
+  // Функция для форматирования цены звезд
+  const formatStarsPrice = (starsCount) => {
+    return `${starsCount} Stars`;
+  };
+
+  // Функция для получения содержимого рамок
+  const getFrameContents = () => {
+    if (caseItems.length > 0) {
+      return caseItems.map((item) => {
+        let img;
+        let price;
+        
+        if (item.item_type === 'tg_gift') {
+          img = getImageUrl(item.image_url);
+          price = `${item.price_ton} TON`;
+        } else if (item.item_type === 'reward_stars') {
+          img = starsIcon;
+          price = formatStarsPrice(item.price_stars);
+        } else if (item.item_type === 'reward_ton') {
+          img = tonIcon;
+          price = `${item.price_ton} TON`;
+        } else {
+          img = tonIcon;
+          price = '0 TON';
+        }
+        
+        return { 
+          img, 
+          price, 
+          itemType: item.item_type, 
+          imageUrl: item.image_url,
+          id: item.id,
+          index: item.index || item.item_index,
+          name: item.name,
+          stars_amount: item.price_stars,
+          originalItem: item
+        };
+      });
+    }
+    
+    return Array(9).fill().map((_, index) => ({
+      img: tonIcon,
+      price: '0 TON',
+      itemType: 'reward_ton',
+      id: index,
+      index: `default_${index}`,
+      name: 'Default Item'
+    }));
+  };
+
+  // Функция для получения фона рамки
+  const getFrameBackground = () => {
+    const caseId = caseItem.id;
+    
+    switch(caseId) {
+      case 1: return back1;
+      case 2: return back2;
+      case 3: return back3;
+      case 4: return back4;
+      case 5: return back5;
+      case 6: return back6;
+      default: return back1;
+    }
+  };
+
+  // Функция для предзагрузки изображений
+  const preloadImages = (imageUrls) => {
+    return Promise.all(
+      imageUrls.map((url) => {
+        return new Promise((resolve) => {
+          if (!url || url === tonIcon || url === starsIcon) {
+            resolve();
+            return;
+          }
+          
+          const img = new Image();
+          img.src = url;
+          img.onload = resolve;
+          img.onerror = resolve; // Даже при ошибке продолжаем
+        });
+      })
+    );
+  };
+
+  // Загружаем данные кейса по ID
+  useEffect(() => {
+    const loadCaseData = async () => {
+      try {
+        setIsLoading(true);
+        setImagesLoaded(false);
+        console.log(`📦 Загрузка данных кейса ID: ${caseItem.id}`);
+        
+        const response = await casesApi.getCaseById(caseItem.id);
+        console.log('✅ Данные кейса загружены:', response);
+        
+        setCaseData(response.case);
+        setCaseItems(response.items || []);
+        
+        // Для первого кейса сохраняем статус
+        if (caseItem.id === 1 && response.case && !initialFreeCaseStatus) {
+          const status = {
+            eligible: response.case.free_case_eligible_today || false,
+            opened: response.case.free_case_opened_today || false,
+            available: response.case.free_case_available_today || false
+          };
+          
+          setFreeCaseStatus(status);
+          console.log('📊 Статус бесплатного кейса из getCaseById:', status);
+        }
+      } catch (error) {
+        console.error('❌ Ошибка загрузки данных кейса:', error);
+        setCaseData({ 
+          id: caseItem.id,
+          name: caseItem.name,
+          ...DEMO_CASE_PRICES[caseItem.id]
+        });
+        setCaseItems([]);
+      }
+    };
+    
+    if (caseItem?.id) {
+      loadCaseData();
+    }
+  }, [caseItem, initialFreeCaseStatus]);
+
+  // Предзагружаем все изображения (рамки + контент)
+  useEffect(() => {
+    const loadAllImages = async () => {
+      if (!caseData) return; // Ждем загрузки данных
+      
+      try {
+        console.log('🖼️ Начинаем предзагрузку всех изображений...');
+        
+        const frameBackground = getFrameBackground();
+        const contents = getFrameContents();
+        
+        // Собираем все URL для загрузки
+        const imagesToLoad = [
+          frameBackground, // Сначала рамка
+          ...contents.map(content => content.img) // Потом все изображения внутри рамок
+        ].filter(url => url && url !== tonIcon && url !== starsIcon); // Исключаем уже загруженные иконки
+        
+        console.log(`🖼️ Загружаем ${imagesToLoad.length} изображений...`);
+        
+        if (imagesToLoad.length > 0) {
+          await preloadImages(imagesToLoad);
+        }
+        
+        // Даем небольшую задержку для отрисовки
+        setTimeout(() => {
+          setImagesLoaded(true);
+          setIsLoading(false);
+          console.log('✅ Все изображения загружены');
+        }, 100);
+        
+      } catch (error) {
+        console.error('❌ Ошибка при загрузке изображений:', error);
+        // Даже при ошибке показываем контент
+        setImagesLoaded(true);
+        setIsLoading(false);
+      }
+    };
+    
+    loadAllImages();
+  }, [caseData, caseItems]);
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
   // Функция для получения цены кейса
   const getCasePrice = () => {
-    // В демо-режиме используем демо-цены
     if (isDemoMode) {
       return DEMO_CASE_PRICES[caseItem.id] || { ton: 0, stars: 0 };
     }
     
-    // В реальном режиме сначала из caseData, потом из caseItem
     if (caseData?.price_ton !== undefined) {
       return {
         ton: caseData.price_ton,
@@ -92,7 +279,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
     }
   };
 
-  // Функция для получения класса подписи WHAT'S INSIDE
+  // Функция для получения класса подписи
   const getLabelClass = () => {
     const caseId = caseItem.id;
     switch(caseId) {
@@ -106,22 +293,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
     }
   };
 
-  // Функция для получения фона рамки
-  const getFrameBackground = () => {
-    const caseId = caseItem.id;
-    
-    switch(caseId) {
-      case 1: return back1;
-      case 2: return back2;
-      case 3: return back3;
-      case 4: return back4;
-      case 5: return back5;
-      case 6: return back6;
-      default: return back1;
-    }
-  };
-
-  // Функция для обрезания цены (без округления)
+  // Форматирование цены
   const formatPrice = (priceStr) => {
     const priceValue = parseFloat(priceStr.replace(/[^\d.-]/g, ''));
     const currency = priceStr.includes('TON') ? ' TON' : priceStr.includes('Star') ? ' Stars' : '';
@@ -140,109 +312,48 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
     return priceStr;
   };
 
-  // Форматирование цены для звезд
-  const formatStarsPrice = (starsCount) => {
-    return `${starsCount} Stars`;
-  };
-
-  // Загружаем данные кейса по ID (только для предметов)
-  useEffect(() => {
-    const loadCaseData = async () => {
-      try {
-        setIsLoading(true);
-        console.log(`📦 Загрузка данных кейса ID: ${caseItem.id}`);
-        
-        const response = await casesApi.getCaseById(caseItem.id);
-        console.log('✅ Данные кейса загружены:', response);
-        
-        setCaseData(response.case);
-        setCaseItems(response.items || []);
-        
-        // Для первого кейса сохраняем статус ТОЛЬКО если его нет в пропсах
-        if (caseItem.id === 1 && response.case && !initialFreeCaseStatus) {
-          const status = {
-            eligible: response.case.free_case_eligible_today || false,
-            opened: response.case.free_case_opened_today || false,
-            available: response.case.free_case_available_today || false
-          };
-          
-          setFreeCaseStatus(status);
-          console.log('📊 Статус бесплатного кейса из getCaseById:', status);
-        }
-      } catch (error) {
-        console.error('❌ Ошибка загрузки данных кейса:', error);
-        setCaseData({ 
-          id: caseItem.id,
-          name: caseItem.name,
-          ...DEMO_CASE_PRICES[caseItem.id]
-        });
-        setCaseItems([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    if (caseItem?.id) {
-      loadCaseData();
-    }
-  }, [caseItem, initialFreeCaseStatus]);
-
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, []);
-
   // Проверка, можно ли открыть первый кейс
   const canOpenFreeCase = () => {
-    if (isDemoMode) return false; // В демо-режиме всегда недоступно
-    // Кейс можно открыть если: есть право на открытие (eligible = true) И еще не открыт (opened = false)
+    if (isDemoMode) return false;
     const canOpen = freeCaseStatus.eligible && !freeCaseStatus.opened;
     console.log('🔍 canOpenFreeCase:', canOpen, 'eligible:', freeCaseStatus.eligible, 'opened:', freeCaseStatus.opened);
     return canOpen;
   };
 
-  // Получение статуса для первого кейса (текст на кнопке)
+  // Получение статуса для первого кейса
   const getFreeCaseStatus = () => {
     if (isDemoMode) return 'LOCKED';
 
     console.log('🔍 getFreeCaseStatus - текущий статус:', freeCaseStatus);
     console.log('🔍 eligible:', freeCaseStatus.eligible, 'opened:', freeCaseStatus.opened);
 
-    // 1. Сначала проверяем, выполнены ли условия (eligible)
     if (!freeCaseStatus.eligible) {
       console.log('🔍 Решение: LOCKED (не выполнены условия)');
-      return 'LOCKED'; // Кнопка заблокирована, так как условия не выполнены
+      return 'LOCKED';
     }
 
-    // 2. Если условия выполнены (eligible: true), проверяем, открыт ли он уже (opened)
     if (freeCaseStatus.opened) {
       console.log('🔍 Решение: OPENED (уже открыт)');
-      return 'OPENED'; // Кнопка показывает, что кейс уже открыт
+      return 'OPENED';
     }
 
-    // 3. Если условия выполнены и еще не открыт
     console.log('🔍 Решение: FREE (можно открыть)');
-    return 'FREE'; // Кейс доступен для открытия
+    return 'FREE';
   };
 
-  // Получение текста подсказки для первого кейса
+  // Получение текста подсказки
   const getFreeCaseTooltip = () => {
-    if (isDemoMode) return 'Disabled in demo'; // В демо-режиме своя подсказка
+    if (isDemoMode) return 'Disabled in demo';
 
-    // 1. Если условия НЕ выполнены (eligible: false)
     if (!freeCaseStatus.eligible) {
-      return 'Complete daily tasks to unlock'; // Пишем про выполнение заданий
+      return 'Complete daily tasks to unlock';
     }
 
-    // 2. Если условия выполнены (eligible: true), но кейс УЖЕ открыт (opened: true)
     if (freeCaseStatus.opened) {
-      return 'Already opened today'; // Пишем, что кейс уже открыт
+      return 'Already opened today';
     }
 
-    // 3. Если можно открывать (eligible: true, opened: false)
-    return ''; // Подсказка не нужна
+    return '';
   };
 
   const handleFreeCaseClick = async () => {
@@ -252,18 +363,16 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
     const price = getCasePrice();
     
     if (isDemoMode) {
-      // В демо-режиме первый кейс недоступен - просто ничего не делаем
       return;
     }
     
-    // Реальный режим - открываем бесплатный кейс
     if (!caseData) {
       alert('Case data not loaded. Please try again.');
       return;
     }
     
     try {
-      await handleOpenCase('ton'); // Для бесплатного кейса используем ton как валюту
+      await handleOpenCase('ton');
     } catch (error) {
       console.error('❌ Error opening free case:', error);
       alert('Error opening free case. Please try again.');
@@ -277,22 +386,18 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
     if (isDemoMode) {
       console.log('🎮 Демо-режим: открытие кейса за TON');
       
-      // Проверяем баланс в демо-режиме
       if (demoBalance < price.ton) {
         alert(`Not enough TON in demo balance! You need ${price.ton} TON`);
         return;
       }
       
-      // СПИСЫВАЕМ ТОЛЬКО ЦЕНУ КЕЙСА (один раз)
       removeFromDemoBalance(price.ton);
       
-      // Получаем случайный предмет из caseItems для демо
       let demoWinningItem = null;
       if (caseItems.length > 0) {
         const randomIndex = Math.floor(Math.random() * caseItems.length);
         const randomItem = caseItems[randomIndex];
         
-        // Определяем изображение для предмета
         let itemImg;
         if (randomItem.item_type === 'reward_stars') {
           itemImg = starsIcon;
@@ -302,7 +407,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
           itemImg = tonIcon;
         }
         
-        // Определяем цену для отображения
         let displayPrice;
         if (randomItem.item_type === 'reward_stars') {
           displayPrice = formatStarsPrice(randomItem.price_stars);
@@ -323,7 +427,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
           stars_amount: randomItem.price_stars
         };
       } else {
-        // Если нет предметов, создаем заглушку
         demoWinningItem = {
           img: tonIcon,
           price: `${price.ton} TON`,
@@ -333,7 +436,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
         };
       }
       
-      // Передаём флаг, что баланс уже списан
       onNavigate('spin', { 
         winData: { 
           winningItem: demoWinningItem,
@@ -347,7 +449,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
       return;
     }
     
-    // Реальный режим - проверка баланса и открытие через API
     if (!caseData) {
       alert('Case data not loaded. Please try again.');
       return;
@@ -378,13 +479,11 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
     if (isDemoMode) {
       console.log('🎮 Демо-режим: открытие кейса за звезды');
       
-      // Получаем случайный предмет из caseItems для демо
       let demoWinningItem = null;
       if (caseItems.length > 0) {
         const randomIndex = Math.floor(Math.random() * caseItems.length);
         const randomItem = caseItems[randomIndex];
         
-        // Определяем изображение для предмета
         let itemImg;
         if (randomItem.item_type === 'reward_stars') {
           itemImg = starsIcon;
@@ -394,7 +493,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
           itemImg = tonIcon;
         }
         
-        // Определяем цену для отображения
         let displayPrice;
         if (randomItem.item_type === 'reward_stars') {
           displayPrice = formatStarsPrice(randomItem.price_stars);
@@ -415,7 +513,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
           stars_amount: randomItem.price_stars
         };
       } else {
-        // Если нет предметов, создаем заглушку
         demoWinningItem = {
           img: tonIcon,
           price: `${price.ton} TON`,
@@ -482,7 +579,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
         console.log('🔍 Found full item data:', fullItemData);
       }
       
-      // Определяем изображение
       let img;
       if (apiItem.item_type === 'reward_stars') {
         img = starsIcon;
@@ -494,7 +590,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
         img = tonIcon;
       }
       
-      // Определяем цену для отображения
       let price;
       if (apiItem.item_type === 'reward_stars') {
         const starsAmount = fullItemData?.price_stars || apiItem.price_stars || 0;
@@ -542,70 +637,8 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
     }
   };
 
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return tonIcon;
-    
-    if (imagePath.startsWith('/static/')) {
-      return `https://shamefully-gifted-catbird.cloudpub.ru${imagePath}`;
-    }
-    
-    if (imagePath.trim() === '') {
-      return tonIcon;
-    }
-    
-    return imagePath;
-  };
-
-  const getFrameContents = () => {
-    if (caseItems.length > 0) {
-      return caseItems.map((item) => {
-        let img;
-        let price;
-        
-        if (item.item_type === 'tg_gift') {
-          img = getImageUrl(item.image_url);
-          price = `${item.price_ton} TON`;
-        } else if (item.item_type === 'reward_stars') {
-          img = starsIcon;
-          price = formatStarsPrice(item.price_stars);
-        } else if (item.item_type === 'reward_ton') {
-          img = tonIcon;
-          price = `${item.price_ton} TON`;
-        } else {
-          img = tonIcon;
-          price = '0 TON';
-        }
-        
-        return { 
-          img, 
-          price, 
-          itemType: item.item_type, 
-          imageUrl: item.image_url,
-          id: item.id,
-          index: item.index || item.item_index,
-          name: item.name,
-          stars_amount: item.price_stars,
-          originalItem: item
-        };
-      });
-    }
-    
-    return Array(9).fill().map((_, index) => ({
-      img: tonIcon,
-      price: '0 TON',
-      itemType: 'reward_ton',
-      id: index,
-      index: `default_${index}`,
-      name: 'Default Item'
-    }));
-  };
-
-  const frameContents = getFrameContents();
-  const price = getCasePrice();
-
   // Функция для получения класса цены
   const getPriceClass = (priceStr) => {
-    // Если это звезды - всегда обычный класс без градиентов
     if (priceStr.includes('Stars')) {
       return 'modal-item-price';
     }
@@ -641,23 +674,23 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
     return 'modal-stars-button-case1';
   };
 
+  const frameContents = getFrameContents();
+  const price = getCasePrice();
   const titleClass = getTitleClass();
   const labelClass = getLabelClass();
   const tonButtonClass = getTonButtonClass();
   const starsButtonClass = getStarsButtonClass();
   const frameBackground = getFrameBackground();
 
-  // Определяем статус для первого кейса
   const freeCaseStatusText = getFreeCaseStatus();
   const freeCaseTooltip = getFreeCaseTooltip();
   const isFreeCaseDisabled = freeCaseStatusText !== 'FREE';
 
-  console.log('🎯 Итоговый статус:', { 
-    freeCaseStatusText, 
-    freeCaseTooltip, 
-    isFreeCaseDisabled,
-    rawStatus: freeCaseStatus,
-    isDemoMode
+  console.log('🎯 Итоговый статус загрузки:', { 
+    isLoading, 
+    imagesLoaded,
+    hasCaseData: !!caseData,
+    itemsCount: caseItems.length 
   });
 
   return (
@@ -671,10 +704,13 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
           <div className="modal-items-section">
             <div className={labelClass}>WHAT'S INSIDE?</div>
             
-            {isLoading ? (
+            {(isLoading || !imagesLoaded) ? (
               <div className="modal-loading-items">
                 <div className="modal-spinner"></div>
-                <p>Loading items...</p>
+                <p>Loading items and images...</p>
+                {!imagesLoaded && caseItems.length > 0 && (
+                  <p className="modal-loading-progress">Loading images... {frameContents.filter(c => c.img !== tonIcon && c.img !== starsIcon).length} items</p>
+                )}
               </div>
             ) : (
               <div className="modal-items-grid">
@@ -712,7 +748,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
           <div className="modal-footer">
             <div className="modal-button-container">
               {caseItem.id === 1 ? (
-                // Для первого кейса кнопка с разными состояниями
                 <div 
                   className={`modal-button modal-free-button 
                     ${isFreeCaseDisabled ? 'modal-free-button-disabled' : ''} 
@@ -737,7 +772,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
                   </span>
                 </div>
               ) : (
-                // Для остальных кейсов две кнопки
                 <>
                   <div 
                     className={`modal-button modal-ton-button ${tonButtonClass} ${isProcessing ? 'modal-button-disabled' : ''}`}
@@ -778,7 +812,6 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
               )}
             </div>
             
-            {/* Подсказка для первого кейса */}
             {caseItem.id === 1 && freeCaseTooltip && (
               <div className="modal-free-tooltip">
                 {freeCaseTooltip}
