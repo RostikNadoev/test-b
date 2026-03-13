@@ -4,7 +4,6 @@ import rocketBack from '../assets/Plinko/Back.png';
 import arrow from '../assets/SpinPage/arrow.png';
 import cardton1 from '../assets/MainPage/chest1/ton.png';
 import modalCloseIcon from '../assets/Profile/close.png';
-import tonIcon from '../assets/MainPage/ton.svg';
 import switchr from '../assets/Rocket/switchr.svg';
 import '../styles/UpgradeScreen.css';
 import { usersApi, upgradeApi } from '../utils/api';
@@ -821,11 +820,6 @@ export default function UpgradeScreen({ onNavigate }) {
                         />
                         <div className={`upgrade-inventory-item-price ${priceClass}`}>
                           {formatPrice(`${priceValue} TON`)}
-                          <img
-                            src={tonIcon}
-                            alt="ton"
-                            className="upgrade-ton-icon-small"
-                          />
                         </div>
                       </div>
                     );
