@@ -707,52 +707,59 @@ const getTonIconForPrice = (priceStr) => {
         </div>
       )}
 
-      {winModal && (
-        <div className="winner-modal-overlay" onClick={() => {}}>
-          <div className="winner-modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="winner-modal-header">
-              <div className="winner-avatar">
-                <div className="winner-avatar-image" style={{ backgroundImage: winModal.winner.photo ? `url(${winModal.winner.photo})` : undefined, backgroundColor: winModal.winner.photo ? 'transparent' : '#35A3F2', backgroundSize: 'cover', backgroundPosition: 'center' }} />
-              </div>
-              <div className="winner-info"><div className="winner-name">{winModal.winner.username}</div><div className="winner-game-id">Game ID: {winModal.game.id}</div></div>
-            </div>
-            <div className="winner-prize-section">
-              <div className="winner-prize-title">Won Prizes</div>
-              <div className="winner-prizes-container">
-                {(() => {
-                  // Сортируем выигранные призы по убыванию цены
-                  const sortedGifts = [...(winModal.gifts || [])].sort((a, b) => {
-                    const priceA = parseFloat(a.item_value || 0);
-                    const priceB = parseFloat(b.item_value || 0);
-                    return priceB - priceA;
-                  });
-                  
-                  return sortedGifts.map((gift, index) => (
-                    <div key={index} className="winner-prize-item">
-                      <img src={getImageUrl(gift.case_item?.image_url)} alt="Prize" className="winner-prize-image" onError={(e) => { e.target.src = cardton1; }} />
-                      <div className={`winner-prize-value ${getPriceClass(gift.item_value)}`}>
-                        <span className="winner-price-amount">{gift.item_value}</span>
-                        <img 
-                          src={getTonIconForPrice(gift.item_value)} 
-                          alt="TON" 
-                          className="winner-price-ton-icon" 
-                        />
-                      </div>
-                    </div>
-                  ));
-                })()}
-              </div>
-            </div>
-            <div className="winner-total-section">
-              <div className="winner-total-value">
-                <span className="total-text">Total: </span>
-                <span className="total-amount">{formatWinnerTotalValue(winModal.game.total_value)}</span>
-                <img src={tonIcon} alt="TON" className="total-ton-icon" />
-              </div>
-            </div>
-          </div>
+     {winModal && (
+  <div className="winner-modal-overlay" onClick={() => {}}>
+    <div className="winner-modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className="winner-modal-header">
+        <div className="winner-avatar">
+          <div className="winner-avatar-image" style={{ backgroundImage: winModal.winner.photo ? `url(${winModal.winner.photo})` : undefined, backgroundColor: winModal.winner.photo ? 'transparent' : '#35A3F2', backgroundSize: 'cover', backgroundPosition: 'center' }} />
         </div>
-      )}
+        <div className="winner-info">
+          <div className="winner-name" title={winModal.winner.username}>
+            {winModal.winner.username?.length > 12 
+              ? winModal.winner.username.substring(0, 12) + '...' 
+              : winModal.winner.username}
+          </div>
+          <div className="winner-game-id">Game ID: {winModal.game.id}</div>
+        </div>
+      </div>
+      <div className="winner-prize-section">
+        <div className="winner-prize-title">Won Prizes</div>
+        <div className="winner-prizes-container">
+          {(() => {
+            // Сортируем выигранные призы по убыванию цены
+            const sortedGifts = [...(winModal.gifts || [])].sort((a, b) => {
+              const priceA = parseFloat(a.item_value || 0);
+              const priceB = parseFloat(b.item_value || 0);
+              return priceB - priceA;
+            });
+            
+            return sortedGifts.map((gift, index) => (
+              <div key={index} className="winner-prize-item">
+                <img src={getImageUrl(gift.case_item?.image_url)} alt="Prize" className="winner-prize-image" onError={(e) => { e.target.src = cardton1; }} />
+                <div className={`winner-prize-value ${getPriceClass(gift.item_value)}`}>
+                  <span className="winner-price-amount">{gift.item_value}</span>
+                  <img 
+                    src={getTonIconForPrice(gift.item_value)} 
+                    alt="TON" 
+                    className="winner-price-ton-icon" 
+                  />
+                </div>
+              </div>
+            ));
+          })()}
+        </div>
+      </div>
+      <div className="winner-total-section">
+        <div className="winner-total-value">
+          <span className="total-text">Total: </span>
+          <span className="total-amount">{formatWinnerTotalValue(winModal.game.total_value)}</span>
+          <img src={tonIcon} alt="TON" className="total-ton-icon" />
+        </div>
+      </div>
+    </div>
+  </div>
+)}
     </MainLayout>
   );
 }
