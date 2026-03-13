@@ -10,7 +10,7 @@ import gameCard5 from '../assets/MainPage/newrocketcard.png';
 import inviteBg from '../assets/MainPage/invite1.png';
 import linkIcon from '../assets/MainPage/link.svg';
 // Импортируем иконку замка и иконку для новой кнопки
-import lockIcon from '../assets/MainPage/lock.png';
+import lockIcon from '../assets/MainPage/lock2.svg';
 import referralsIcon from '../assets/MainPage/refferals.svg';
 // Импортируем API
 import { referralsApi } from '../utils/api';
