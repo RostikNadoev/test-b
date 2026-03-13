@@ -214,7 +214,10 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
           индекс: apiItem.index,
           имя: apiItem.name,
           цена: apiItem.price,
-          тип: apiItem.item_type
+          тип: apiItem.item_type,
+          reward_amount: apiItem.reward_amount,
+          reward_currency: apiItem.reward_currency,
+          stars_amount: apiItem.stars_amount
         });
         
         // Определяем изображение для звезд
@@ -223,16 +226,28 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
           itemImg = starsIcon;
         }
         
+        // Исправляем цену для звезд - используем reward_amount если есть
+        let displayPrice = apiItem.price;
+        if (apiItem.item_type === 'reward_stars') {
+          const starsAmount = apiItem.reward_amount || apiItem.stars_amount || 0;
+          if (starsAmount > 0) {
+            displayPrice = formatStarsPrice(starsAmount);
+            console.log(`⭐ Исправлена цена для звезд: ${displayPrice}`);
+          }
+        }
+        
         targetItem = {
           img: itemImg || getDefaultImage(),
-          price: apiItem.price || '0 Stars',
+          price: displayPrice || '0 Stars',
           name: apiItem.name || 'Reward',
           item_type: apiItem.item_type || 'reward_stars',
           index: apiItem.index,
           item_index: apiItem.index,
           rarity: apiItem.rarity || 'common',
-          stars_amount: apiItem.stars_amount,
+          stars_amount: apiItem.reward_amount || apiItem.stars_amount,
           price_ton: apiItem.price_ton,
+          reward_amount: apiItem.reward_amount,
+          reward_currency: apiItem.reward_currency,
           fromApi: true,
           isRealWin: true,
           originalWinData: winData,
@@ -243,8 +258,8 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
           имя: targetItem.name,
           цена: targetItem.price,
           тип: targetItem.item_type,
-          валютаОплаты: targetItem.paymentCurrency,
-          price_ton: targetItem.price_ton
+          stars_amount: targetItem.stars_amount,
+          валютаОплаты: targetItem.paymentCurrency
         });
       } 
       // РЕАЛЬНЫЙ РЕЖИМ БЕЗ winData (ошибка)

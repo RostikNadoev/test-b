@@ -617,10 +617,16 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
         img = tonIcon;
       }
       
+      // Исправляем формирование цены для звезд
       let price;
       if (apiItem.item_type === 'reward_stars') {
-        const starsAmount = fullItemData?.price_stars || apiItem.price_stars || 0;
+        // Проверяем все возможные поля для количества звезд
+        const starsAmount = apiItem.reward_amount || 
+                           apiItem.price_stars || 
+                           fullItemData?.price_stars || 
+                           0;
         price = formatStarsPrice(starsAmount);
+        console.log(`⭐ Награда звездами: ${starsAmount} Stars`);
       } else if (fullItemData?.price_ton) {
         price = `${fullItemData.price_ton} TON`;
       } else if (apiItem.price_ton) {
@@ -640,8 +646,10 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
           index: apiItem.index,
           rarity: apiItem.rarity,
           image_url: fullItemData?.image_url || apiItem.image_url,
-          price_ton: fullItemData?.price_ton,
-          stars_amount: fullItemData?.price_stars || apiItem.price_stars,
+          price_ton: fullItemData?.price_ton || apiItem.price_ton,
+          stars_amount: apiItem.reward_amount || fullItemData?.price_stars || apiItem.price_stars,
+          reward_amount: apiItem.reward_amount,
+          reward_currency: apiItem.reward_currency,
           id: fullItemData?.id,
           fromApi: true,
           fullDataFound: !!fullItemData,
