@@ -356,25 +356,25 @@
 }
 
 /* Текст в чужих строках */
-.participants-row:not(.my-bet-row) .participant-nickname {
+.participants-row .participant-nickname {
   color: rgba(255, 255, 255, 0.9);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-.participants-row:not(.my-bet-row) .participant-bet {
+.participants-row .participant-bet {
   color: rgba(255, 255, 255, 0.8);
 }
 
-.participants-row:not(.my-bet-row) .participant-multiplier {
+.participants-row .participant-multiplier {
   color: rgba(255, 255, 255, 0.9);
 }
 
 /* Множители сохраняют свои цвета */
-.participants-row:not(.my-bet-row) .multiplier-green {
+.participants-row .multiplier-green {
   color: #59E367 !important;
 }
 
-.participants-row:not(.my-bet-row) .multiplier-red {
+.participants-row .multiplier-red {
   color: #EB5C4A !important;
 }
 
