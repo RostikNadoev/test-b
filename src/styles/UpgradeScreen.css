@@ -291,7 +291,7 @@
   flex-direction: column;
   box-sizing: border-box;
   animation: upgradeModalSlideIn 0.4s cubic-bezier(0.33, 1, 0.68, 1) forwards;
-  padding: 20px 16px;
+  padding: 20px 16px 0 16px;
   overflow: hidden;
   box-shadow: 0 -5px 20px rgba(53, 163, 242, 0.2);
 }
@@ -352,15 +352,31 @@
   100% { opacity: 0.6; }
 }
 
-/* Сетка предметов - ТРИ РАМКИ В РЯД */
+/* НОВЫЙ WRAPPER ДЛЯ СЕТКИ - ИСПРАВЛЕНИЕ ПРОБЛЕМЫ */
+.upgrade-grid-wrapper {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* Сетка предметов - ТРИ РАМКИ В РЯД - ИСПРАВЛЕНО */
 .upgrade-inventory-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   overflow-y: auto;
   padding: 4px 2px 20px 2px;
-  flex: 1;
-  min-height: 0;
+  min-height: min-content;
+  height: fit-content;
+  max-height: 100%;
+  margin: 0;
+  align-items: start;
+  justify-items: stretch;
+  grid-auto-rows: minmax(min-content, max-content);
 }
 
 /* Стилизация скроллбара */
@@ -399,6 +415,7 @@
   box-sizing: border-box;
   padding: 6px 4px;
   min-width: 0;
+  height: auto;
 }
 
 .upgrade-inventory-item:active {
@@ -590,7 +607,6 @@
   margin-top: 20px;
 }
 
-
 /* Эффект встряски при поражении */
 .shake-effect {
   animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
@@ -631,11 +647,11 @@
 /* Специальные эффекты для каждого уровня - ИСПРАВЛЕНО */
 .win-tier-high .upgrade-win-title {
   font-size: 36px;
-  color: #ffffff !important; /* Белый цвет для лучшей читаемости */
-  -webkit-text-stroke: 1px #ff00ff !important; /* Тонкая обводка */
+  color: #ffffff !important;
+  -webkit-text-stroke: 1px #ff00ff !important;
   paint-order: stroke fill;
   animation: epicTextPulse 1.5s infinite alternate;
-  text-shadow: 0 0 4px #ff00ff; /* Минимальное свечение */
+  text-shadow: 0 0 4px #ff00ff;
   background: none !important;
   -webkit-background-clip: unset !important;
   -webkit-text-fill-color: unset !important;
@@ -643,10 +659,10 @@
 
 .win-tier-medium .upgrade-win-title {
   font-size: 30px;
-  color: #ffffff !important; /* Белый цвет */
-  -webkit-text-stroke: 1px #ffaa00 !important; /* Тонкая обводка */
+  color: #ffffff !important;
+  -webkit-text-stroke: 1px #ffaa00 !important;
   animation: mediumTextPulse 1.2s infinite alternate;
-  text-shadow: 0 0 3px #ffaa00; /* Минимальное свечение */
+  text-shadow: 0 0 3px #ffaa00;
   background: none !important;
   -webkit-background-clip: unset !important;
   -webkit-text-fill-color: unset !important;
@@ -654,10 +670,10 @@
 
 .win-tier-low .upgrade-win-title {
   font-size: 24px;
-  color: #ffffff !important; /* Белый цвет */
-  -webkit-text-stroke: 1px #f1bf28 !important; /* Тонкая обводка */
+  color: #ffffff !important;
+  -webkit-text-stroke: 1px #f1bf28 !important;
   animation: lowTextPulse 1s infinite alternate;
-  text-shadow: 0 0 2px #f1bf28; /* Минимальное свечение */
+  text-shadow: 0 0 2px #f1bf28;
   background: none !important;
   -webkit-background-clip: unset !important;
   -webkit-text-fill-color: unset !important;

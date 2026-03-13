@@ -21,7 +21,7 @@ export default function UpgradeScreen({ onNavigate }) {
   const [arrowRotation, setArrowRotation] = useState(0);
   const [showWinModal, setShowWinModal] = useState(false);
   const [winChance, setWinChance] = useState(0);
-  const [winTier, setWinTier] = useState('low'); // 'low', 'medium', 'high'
+  const [winTier, setWinTier] = useState('low');
 
   // Состояния для данных из API
   const [myInventory, setMyInventory] = useState([]);
@@ -792,45 +792,47 @@ export default function UpgradeScreen({ onNavigate }) {
                 <p className="upgrade-modal-loading-text">Loading items...</p>
               </div>
             ) : (
-              <div className="upgrade-inventory-grid">
-                {(activeModal === 'my'
-                  ? myInventory
-                  : targetOptions
-                ).length > 0 ? (
-                  (activeModal === 'my'
+              <div className="upgrade-grid-wrapper">
+                <div className="upgrade-inventory-grid">
+                  {(activeModal === 'my'
                     ? myInventory
                     : targetOptions
-                  ).map((item) => {
-                    const priceValue = parseFloat(item.price_ton || item.item_value || 0);
-                    const priceClass = getPriceClass(priceValue);
-                    
-                    return (
-                      <div
-                        key={item.index || item.id || Math.random()}
-                        className="upgrade-inventory-item"
-                        onClick={() =>
-                          handleSelectItem(item, activeModal)
-                        }
-                      >
-                        <img
-                          src={getItemImage(item)}
-                          alt={item.name || 'Item'}
-                          className="upgrade-inventory-item-img"
-                          onError={(e) => e.target.src = cardton1}
-                        />
-                        <div className={`upgrade-inventory-item-price ${priceClass}`}>
-                          {formatPrice(`${priceValue} TON`)}
+                  ).length > 0 ? (
+                    (activeModal === 'my'
+                      ? myInventory
+                      : targetOptions
+                    ).map((item) => {
+                      const priceValue = parseFloat(item.price_ton || item.item_value || 0);
+                      const priceClass = getPriceClass(priceValue);
+                      
+                      return (
+                        <div
+                          key={item.index || item.id || Math.random()}
+                          className="upgrade-inventory-item"
+                          onClick={() =>
+                            handleSelectItem(item, activeModal)
+                          }
+                        >
+                          <img
+                            src={getItemImage(item)}
+                            alt={item.name || 'Item'}
+                            className="upgrade-inventory-item-img"
+                            onError={(e) => e.target.src = cardton1}
+                          />
+                          <div className={`upgrade-inventory-item-price ${priceClass}`}>
+                            {formatPrice(`${priceValue} TON`)}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="upgrade-empty-inventory-message">
-                    {activeModal === 'target' && isDemoMode 
-                      ? 'No more expensive items available' 
-                      : 'No items available'}
-                  </div>
-                )}
+                      );
+                    })
+                  ) : (
+                    <div className="upgrade-empty-inventory-message">
+                      {activeModal === 'target' && isDemoMode 
+                        ? 'No more expensive items available' 
+                        : 'No items available'}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
