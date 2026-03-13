@@ -1171,13 +1171,13 @@
 
 .my-bet-badge {
   font-size: 10px;
-  color: #6971FF;
+  color: rgba(255, 255, 255, 0.9);
   font-weight: bold;
   margin-left: 4px;
 }
 
 .my-multiplier {
-  color: #6971FF;
+  color: rgba(255, 255, 255, 0.8);
   font-weight: bold;
 }
 
