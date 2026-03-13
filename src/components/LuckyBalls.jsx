@@ -71,7 +71,7 @@ export default function LuckyBalls({
   const [isScrolling, setIsScrolling] = useState(false);
 
   const { balances, checkBalance, setNewBalances, loadBalances } = useBalance();
-  const { isDemoMode, demoBalance, removeFromDemoBalance, addToDemoBalance } = useDemo();
+  const { isDemoMode, demoBalances, removeFromDemoBalance, addToDemoBalance, checkDemoBalance, getDemoBalance } = useDemo();
 
   useEffect(() => {
     if (!isDemoMode) {
@@ -193,16 +193,20 @@ export default function LuckyBalls({
     if (isLoading) return;
 
     const bet = parseFloat(betAmount);
+    const currency = selectedCurrency.toLowerCase();
 
     // ДЕМО РЕЖИМ
     if (isDemoMode) {
-      if (demoBalance < bet) {
-        alert(`Insufficient TON in demo balance! You need ${bet} TON`);
+      // Проверяем соответствующий демо-баланс
+      const currentBalance = getDemoBalance(currency);
+      
+      if (currentBalance < bet) {
+        alert(`Insufficient ${selectedCurrency} in demo balance! You need ${bet} ${selectedCurrency}`);
         return;
       }
       
-      // Списываем с демо-баланса
-      removeFromDemoBalance(bet);
+      // Списываем с соответствующего демо-баланса
+      removeFromDemoBalance(bet, currency);
       
       setIsLoading(true);
       
@@ -399,12 +403,13 @@ export default function LuckyBalls({
     if (!activeGameId || gameState !== 'playing') return;
     
     if (isLoading || isScrolling) return;
+    const currency = selectedCurrency.toLowerCase();
 
     // ДЕМО РЕЖИМ
     if (isDemoMode) {
-      // Добавляем выигрыш к демо-балансу
+      // Добавляем выигрыш к соответствующему демо-балансу
       if (currentPrize > 0) {
-        addToDemoBalance(currentPrize);
+        addToDemoBalance(currentPrize, currency);
       }
       
       setGameState('cashed_out');
