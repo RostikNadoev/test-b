@@ -443,10 +443,10 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
         const tonValue = winningItem.price_ton || parseFloat(winningItem.price.replace(/[^\d.-]/g, ''));
         
         if (paymentCurrency === 'stars') {
-          // Если платили звездами, конвертируем TON в звезды
+          // Если платили звездами, конвертируем TON в звезды (только при добавлении на баланс)
           priceValue = tonValue * TON_TO_STARS_RATE;
           addToDemoBalance(priceValue, 'stars');
-          console.log(`💰 Конвертировано ${tonValue} TON → ${priceValue} STARS в демо-баланс`);
+          console.log(`💰 Конвертировано ${tonValue} TON → ${priceValue} STARS в демо-баланс (показываем как TON в интерфейсе)`);
         } else {
           // Если платили TON, добавляем TON
           priceValue = tonValue;
@@ -471,6 +471,7 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
     setIsProcessing(true);
 
     if ((isDemoMode || isDemo) && winningItem) {
+      // Для подарков конвертация не нужна, просто добавляем в инвентарь
       addToDemoInventory(winningItem);
       setShowModal(false);
       onNavigate('cases');
