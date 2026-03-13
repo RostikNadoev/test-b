@@ -47,44 +47,31 @@ export const useCrashGame = () => {
     stageRef.current = stage;
   }, [stage]);
 
-  // --- 🔧 ЭФФЕКТ: Очистка таблицы через 1.9 секунды после краша ---
-  useEffect(() => {
-    if (engineEvents.crash) {
-      console.log('💥 Crash detected, scheduling table clear in 1.9s');
-      
-      // Очищаем предыдущий таймер если есть
-      if (clearTableTimeoutRef.current) {
-        clearTimeout(clearTableTimeoutRef.current);
-      }
-      
-      // Запускаем таймер на 1.9 секунды
-      clearTableTimeoutRef.current = setTimeout(() => {
-        console.log('🧹 Clearing bets table 1.9s after crash');
-        setBetsById(new Map());
-        betsRef.current = new Map();
-        setMyActiveBet(null);
-        myActiveBetRef.current = null;
-        clearTableTimeoutRef.current = null;
-      }, 1900);
-    }
-    
-    // Cleanup при размонтировании или новом краше
-    return () => {
-      if (clearTableTimeoutRef.current) {
-        clearTimeout(clearTableTimeoutRef.current);
-      }
-    };
-  }, [engineEvents.crash]);
-
-  // --- ОБРАБОТКА ТАЙМЕРА (УБРАЛ ОЧИСТКУ ТАБЛИЦЫ) ---
+  // --- ОБРАБОТКА ТАЙМЕРА (теперь напрямую из сокета) ---
   const handleTimerMessage = useCallback((data) => {
     // Данные из сокета содержат поле 'sec' - это и есть текущие секунды таймера
     if (data.sec !== undefined) {
       setTimerSeconds(data.sec);
       
-      // Переключаемся на таймер, если мы ещё во взрыве
-      if (stageRef.current === 'explosion') {
-        setStage('timer');
+      // Если это первое сообщение таймера после взрыва - очищаем таблицу
+      if (stageRef.current === 'explosion' || stageRef.current === 'timer') {
+        // Очищаем таблицу при получении первого таймера нового раунда
+        if (clearTableTimeoutRef.current) {
+          clearTimeout(clearTableTimeoutRef.current);
+          clearTableTimeoutRef.current = null;
+        }
+        
+        // Очищаем таблицу сразу (без задержки, как в логах)
+        console.log('🧹 Clearing bets table on new timer message');
+        setBetsById(new Map());
+        betsRef.current = new Map();
+        setMyActiveBet(null);
+        myActiveBetRef.current = null;
+        
+        // Переключаемся на таймер, если мы ещё во взрыве
+        if (stageRef.current === 'explosion') {
+          setStage('timer');
+        }
       }
     }
     
@@ -302,7 +289,7 @@ export const useCrashGame = () => {
           myActiveBetRef.current = null;
         }
         
-        // Таблица очистится через 1.9с в отдельном useEffect
+        // НЕ очищаем таблицу здесь! Очистка произойдёт при получении первого timer сообщения
       });
       
       crashWebSocket.on('bet_placed', (data) => {
@@ -372,7 +359,7 @@ export const useCrashGame = () => {
       console.error('WebSocket Init Error', e);
       setWsConnected(false);
     }
-  }, [currentRoundId, handleRoundInfo, formatBet, updateStageFromStatus, handleTimerMessage, multiplierNow]);
+  }, [currentRoundId, handleRoundInfo, formatBet, updateStageFromStatus, handleTimerMessage]);
 
   useEffect(() => {
     initializeWebSocket();
@@ -438,7 +425,7 @@ export const useCrashGame = () => {
     currentRoundId,
     multiplierNow,
     roundStatus,
-    timerSeconds,
+    timerSeconds, // Теперь это значение прямо из сокета
     stage,
     setStage,
     wsConnected,
