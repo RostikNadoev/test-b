@@ -9,6 +9,9 @@ import starsIcon from '../assets/MainPage/cases/starsicon.png';
 import arrow from '../assets/SpinPage/arrow.png';
 import tonIcon from '../assets/MainPage/cases/tonicon.png';
 
+// Курс конвертации TON -> STARS для демо-режима
+const TON_TO_STARS_RATE = 100;
+
 // Маппинг изображений по ID кейса
 const caseImages = {
   1: tonIcon,
@@ -38,6 +41,7 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
   const [glowOpacity, setGlowOpacity] = useState(0);
   const [hasCharged, setHasCharged] = useState(balanceAlreadyCharged);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentCurrency, setPaymentCurrency] = useState('ton'); // Какая валюта использовалась для оплаты
   
   const scrollerRef = useRef(null);
   const animationRef = useRef(null);
@@ -81,8 +85,12 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
       try {
         setIsLoading(true);
         
-        // Если есть winData, используем его для получения caseId
+        // Если есть winData, используем его для получения caseId и валюты оплаты
         const targetCaseId = winData?.caseId || caseId;
+        
+        if (winData?.paymentCurrency) {
+          setPaymentCurrency(winData.paymentCurrency);
+        }
         
         if (targetCaseId) {
           console.log(`🔄 Загрузка данных кейса ${targetCaseId} для спина...`);
@@ -158,6 +166,7 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
     console.log('📦 winData получены:', winData);
     console.log('📦 caseItems загружены:', caseItems.length);
     console.log('💰 balanceAlreadyCharged:', balanceAlreadyCharged);
+    console.log('💳 paymentCurrency:', paymentCurrency);
     
     const initializeData = () => {
       let targetItem = null;
@@ -215,13 +224,15 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
           stars_amount: apiItem.stars_amount,
           fromApi: true,
           isRealWin: true,
-          originalWinData: winData
+          originalWinData: winData,
+          paymentCurrency: winData.paymentCurrency || paymentCurrency
         };
         
         console.log('🎯 ИТОГОВЫЙ выигрышный предмет:', {
           имя: targetItem.name,
           цена: targetItem.price,
-          тип: targetItem.item_type
+          тип: targetItem.item_type,
+          валютаОплаты: targetItem.paymentCurrency
         });
       } 
       // РЕАЛЬНЫЙ РЕЖИМ БЕЗ winData (ошибка)
@@ -246,7 +257,7 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
     };
 
     initializeData();
-  }, [isLoading, isDemoMode, isDemo, winData, caseItems, balanceAlreadyCharged]);
+  }, [isLoading, isDemoMode, isDemo, winData, caseItems, balanceAlreadyCharged, paymentCurrency]);
 
   // Генерация фреймов для анимации
   const generateFrames = (targetItem) => {
@@ -271,7 +282,8 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
           id: randomItem.id,
           index: randomItem.index,
           rarity: randomItem.rarity,
-          stars_amount: randomItem.stars_amount
+          stars_amount: randomItem.stars_amount,
+          price_ton: randomItem.price_ton
         });
       } else {
         frames.push({
@@ -301,7 +313,8 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
           id: randomItem.id,
           index: randomItem.index,
           rarity: randomItem.rarity,
-          stars_amount: randomItem.stars_amount
+          stars_amount: randomItem.stars_amount,
+          price_ton: randomItem.price_ton
         });
       } else {
         frames.push({
@@ -409,20 +422,39 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
     stopAnimation();
   };
 
-  // Продажа предмета (только для TON наград)
+  // Продажа предмета
   const handleSell = async () => {
     if (isProcessing) return;
     setIsProcessing(true);
 
     if ((isDemoMode || isDemo) && winningItem) {
       let priceValue = 0;
+      
+      // Определяем валюту для добавления
+      const paymentCurrency = winningItem.paymentCurrency || 'ton';
+      
       if (winningItem.item_type === 'reward_stars') {
+        // Если это награда звездами, добавляем звезды
         priceValue = winningItem.stars_amount || parseFloat(winningItem.price.replace(/[^\d.-]/g, ''));
-        addToDemoBalance(priceValue);
-      } else {
-        priceValue = parseFloat(winningItem.price.replace(/[^\d.-]/g, ''));
-        addToDemoBalance(priceValue);
+        addToDemoBalance(priceValue, 'stars');
+        console.log(`💰 Добавлено ${priceValue} STARS в демо-баланс`);
+      } else if (winningItem.item_type === 'reward_ton' || winningItem.item_type === 'tg_gift') {
+        // Если это TON награда
+        const tonValue = winningItem.price_ton || parseFloat(winningItem.price.replace(/[^\d.-]/g, ''));
+        
+        if (paymentCurrency === 'stars') {
+          // Если платили звездами, конвертируем TON в звезды
+          priceValue = tonValue * TON_TO_STARS_RATE;
+          addToDemoBalance(priceValue, 'stars');
+          console.log(`💰 Конвертировано ${tonValue} TON → ${priceValue} STARS в демо-баланс`);
+        } else {
+          // Если платили TON, добавляем TON
+          priceValue = tonValue;
+          addToDemoBalance(priceValue, 'ton');
+          console.log(`💰 Добавлено ${priceValue} TON в демо-баланс`);
+        }
       }
+      
       setShowModal(false);
       onNavigate('cases');
     } else if (winningItem && !isDemoMode) {
@@ -477,21 +509,20 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
   }, []);
 
   // Класс для цены
-// Класс для цены
-const getPriceClass = (priceStr) => {
-  if (!priceStr) return 'item-price';
-  
-  // Если это звезды - всегда обычный класс без градиентов
-  if (priceStr.includes('Stars')) {
+  const getPriceClass = (priceStr) => {
+    if (!priceStr) return 'item-price';
+    
+    // Если это звезды - всегда обычный класс без градиентов
+    if (priceStr.includes('Stars')) {
+      return 'item-price';
+    }
+    
+    const priceValue = parseFloat(priceStr.replace(/[^\d.-]/g, ''));
+    if (priceValue >= 501) return 'item-price-gradient-3';
+    if (priceValue >= 51) return 'item-price-gradient-2';
+    if (priceValue >= 11) return 'item-price-gradient-1';
     return 'item-price';
-  }
-  
-  const priceValue = parseFloat(priceStr.replace(/[^\d.-]/g, ''));
-  if (priceValue >= 501) return 'item-price-gradient-3';
-  if (priceValue >= 51) return 'item-price-gradient-2';
-  if (priceValue >= 11) return 'item-price-gradient-1';
-  return 'item-price';
-};
+  };
 
   if (isLoading) {
     return (

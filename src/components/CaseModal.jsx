@@ -27,6 +27,9 @@ const DEMO_CASE_PRICES = {
   6: { ton: 15, stars: 1500 }
 };
 
+// Курс конвертации TON -> STARS для демо-режима
+const TON_TO_STARS_RATE = 100;
+
 export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatus: initialFreeCaseStatus }) {
   const [caseData, setCaseData] = useState(null);
   const [caseItems, setCaseItems] = useState([]);
@@ -39,7 +42,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
     available: false
   });
   
-  const { isDemoMode, demoBalance, removeFromDemoBalance } = useDemo();
+  const { isDemoMode, demoBalances, removeFromDemoBalance, addToDemoBalance, getDemoBalance } = useDemo();
   const { balances, checkBalance, loadBalances } = useBalance();
 
   // Если передан статус из пропсов, используем его сразу
@@ -386,12 +389,13 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
     if (isDemoMode) {
       console.log('🎮 Демо-режим: открытие кейса за TON');
       
-      if (demoBalance < price.ton) {
+      const currentBalance = getDemoBalance('ton');
+      if (currentBalance < price.ton) {
         alert(`Not enough TON in demo balance! You need ${price.ton} TON`);
         return;
       }
       
-      removeFromDemoBalance(price.ton);
+      removeFromDemoBalance(price.ton, 'ton');
       
       let demoWinningItem = null;
       if (caseItems.length > 0) {
@@ -424,7 +428,8 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
           index: randomItem.item_index,
           rarity: randomItem.rarity,
           isDemo: true,
-          stars_amount: randomItem.price_stars
+          stars_amount: randomItem.price_stars,
+          price_ton: randomItem.price_ton
         };
       } else {
         demoWinningItem = {
@@ -432,14 +437,16 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
           price: `${price.ton} TON`,
           name: `${price.ton} TON`,
           item_type: 'reward_ton',
-          isDemo: true
+          isDemo: true,
+          price_ton: price.ton
         };
       }
       
       onNavigate('spin', { 
         winData: { 
           winningItem: demoWinningItem,
-          demoCasePrice: price.ton
+          demoCasePrice: price.ton,
+          paymentCurrency: 'ton'
         },
         caseId: caseItem.id, 
         isDemo: true,
@@ -479,6 +486,14 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
     if (isDemoMode) {
       console.log('🎮 Демо-режим: открытие кейса за звезды');
       
+      const currentBalance = getDemoBalance('stars');
+      if (currentBalance < price.stars) {
+        alert(`Not enough STARS in demo balance! You need ${price.stars} STARS`);
+        return;
+      }
+      
+      removeFromDemoBalance(price.stars, 'stars');
+      
       let demoWinningItem = null;
       if (caseItems.length > 0) {
         const randomIndex = Math.floor(Math.random() * caseItems.length);
@@ -494,12 +509,24 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
         }
         
         let displayPrice;
+        let originalValue;
+        
         if (randomItem.item_type === 'reward_stars') {
           displayPrice = formatStarsPrice(randomItem.price_stars);
+          originalValue = randomItem.price_stars;
         } else if (randomItem.item_type === 'tg_gift') {
-          displayPrice = `${randomItem.price_ton} TON`;
+          // Конвертируем TON в STARS для демо-режима
+          const convertedValue = randomItem.price_ton * TON_TO_STARS_RATE;
+          displayPrice = formatStarsPrice(convertedValue);
+          originalValue = convertedValue;
+        } else if (randomItem.item_type === 'reward_ton') {
+          // Конвертируем TON в STARS для демо-режима
+          const convertedValue = randomItem.price_ton * TON_TO_STARS_RATE;
+          displayPrice = formatStarsPrice(convertedValue);
+          originalValue = convertedValue;
         } else {
-          displayPrice = `${randomItem.price_ton} TON`;
+          displayPrice = '0 Stars';
+          originalValue = 0;
         }
         
         demoWinningItem = {
@@ -510,7 +537,9 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
           index: randomItem.item_index,
           rarity: randomItem.rarity,
           isDemo: true,
-          stars_amount: randomItem.price_stars
+          stars_amount: originalValue,
+          price_ton: randomItem.price_ton,
+          wasConverted: randomItem.item_type === 'reward_ton' || randomItem.item_type === 'tg_gift'
         };
       } else {
         demoWinningItem = {
@@ -518,15 +547,19 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
           price: `${price.ton} TON`,
           name: `${price.ton} TON`,
           item_type: 'reward_ton',
-          isDemo: true
+          isDemo: true,
+          price_ton: price.ton
         };
       }
       
       onNavigate('spin', { 
-        winData: { winningItem: demoWinningItem },
+        winData: { 
+          winningItem: demoWinningItem,
+          paymentCurrency: 'stars'
+        },
         caseId: caseItem.id, 
         isDemo: true,
-        balanceAlreadyCharged: false
+        balanceAlreadyCharged: true
       });
       onClose();
       return;
@@ -617,7 +650,8 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
           stars_amount: fullItemData?.price_stars || apiItem.price_stars,
           id: fullItemData?.id,
           fromApi: true,
-          fullDataFound: !!fullItemData
+          fullDataFound: !!fullItemData,
+          paymentCurrency: currency
         },
         apiResponse: result,
         fullItemData: fullItemData,
@@ -808,6 +842,13 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
                 </>
               )}
             </div>
+            
+            {/* Памятка о конвертации для всех кейсов кроме первого */}
+            {caseItem.id !== 1 && (
+              <div className="modal-conversion-note">
+                Opening with STARS, TON rewards automatically converts to STARS
+              </div>
+            )}
             
             {caseItem.id === 1 && freeCaseTooltip && (
               <div className="modal-free-tooltip">
