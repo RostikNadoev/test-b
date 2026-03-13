@@ -40,14 +40,14 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
   const lastTempBetIdRef = useRef(null);
   const uiErrorTimeoutRef = useRef(null);
   const hasPlacedBetThisRoundRef = useRef(false);
-  const timerCheckRef = useRef(null);
+  const timerAnimationRef = useRef(null); // Для контроля анимации таймера
   
   const { balances, checkBalance, loadBalances, updateBalanceImmediately } = useBalance();
 
   const {
     multiplierNow,
     roundStatus,
-    timerSeconds, // Теперь это значение прямо из сокета!
+    timeLeft,
     wsConnected,
     bets: participants,
     placeBet,
@@ -127,46 +127,30 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
       setRecentlyPlacedBet(null);
       lastTempBetIdRef.current = null;
       vibrateTriple();
-      
-      // Устанавливаем таймер на возврат к таймеру после взрыва
-      if (explosionTimeoutRef.current) {
-        clearTimeout(explosionTimeoutRef.current);
-      }
-      
-      // Взрыв длится около 2 секунд, после чего мы ждем первое сообщение таймера
-      // (оно само переключит stage через handleTimerMessage)
-      explosionTimeoutRef.current = setTimeout(() => {
-        // Если через 3 секунды всё ещё во взрыве, принудительно переключаем
-        if (stage === 'explosion') {
-          console.log('⚠️ Forcing timer after explosion timeout');
-          // Но stage переключится сам при получении timer сообщения
-        }
-      }, 3000);
     }
-    
-    return () => {
-      if (explosionTimeoutRef.current) {
-        clearTimeout(explosionTimeoutRef.current);
-      }
-    };
-  }, [engineEvents.crash, stage]);
+  }, [engineEvents.crash]);
 
-  // Управление Lottie плеером для взрыва
+  // Управление Lottie плеером
   useEffect(() => {
     if (stage === 'explosion') {
       explosionHandledRef.current = false;
       if (explosionAnimationRef.current) {
-        explosionAnimationRef.current.setSpeed(1);
+        explosionAnimationRef.current.setSpeed(1.2);
         explosionAnimationRef.current.goToAndPlay(0, true);
       }
     }
   }, [stage]);
 
-  // --- ЛОГИКА ЗАВЕРШЕНИЯ ВЗРЫВА ---
+  // Обработка завершения взрыва
   const handleExplosionComplete = useCallback(() => {
     if (explosionHandledRef.current) return;
     explosionHandledRef.current = true;
-    console.log('💥 Explosion animation complete');
+    
+    // Не делаем ничего, так как переход на таймер произойдет по timer сообщению
+    // Просто сбрасываем ref
+    explosionTimeoutRef.current = setTimeout(() => {
+      explosionTimeoutRef.current = null;
+    }, 500);
   }, []);
 
   // Вибрация
@@ -303,7 +287,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
 
   const formatTime = (seconds) => {
     if (seconds === undefined || seconds === null || isNaN(seconds)) return '15';
-    // Просто форматируем число с ведущим нулём
+    // Показываем секунды как есть из WebSocket
     return seconds.toString().padStart(2, '0');
   };
 
@@ -356,6 +340,12 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
           return prevBetId === lastTempBetIdRef.current ? null : prev;
         });
       }, 5000);
+      
+      if (autoPayoutEnabled) {
+        console.log(`Auto-cashout set at x${payoutMultiplier.toFixed(1)}`);
+      }
+    } else {
+      showUiError('Failed to place bet');
     }
   };
 
@@ -407,7 +397,7 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
 
   const getDisplayMultiplier = () => {
     if (stage === 'explosion' && crashMultiplier) return `x${crashMultiplier.toFixed(2)}`;
-    if (stage === 'timer') return 'Waiting...';
+    if (stage === 'timer') return `x1.00`; // Показываем 1.00 во время таймера как в оригинале
     if (!wsConnected || !isCrashGameActive) return 'x1.00';
     return `x${(multiplierNow || 1.0).toFixed(2)}`;
   };
@@ -457,7 +447,8 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
     if (participant.user_id === userData.id) return true;
     const participantId = participant.bet_id ?? participant.id;
     const myActiveBetId = myActiveBet?.bet_id ?? myActiveBet?.id;
-    return myActiveBetId && participantId === myActiveBetId;
+    const recentBetId = recentlyPlacedBet?.bet_id ?? recentlyPlacedBet?.id;
+    return (myActiveBetId && participantId === myActiveBetId) || (recentBetId && participantId === recentBetId);
   };
 
   return (
@@ -475,17 +466,28 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
                 <div className="loading-animation">Loading...</div>
               ) : (
                 <>
+                  {/* Таймер - показываем когда stage === 'timer' */}
                   {stage === 'timer' && (
                     <div className="timer-container">
                       <img src={timerImg} alt="Timer" className="timer-image" />
-                      <div className="timer-text">{formatTime(timerSeconds)}</div>
+                      <div className="timer-text">{formatTime(timeLeft)}</div>
                     </div>
                   )}
+                  
+                  {/* Ракета - показываем когда stage === 'rocket' */}
                   {stage === 'rocket' && animationData && (
                     <div className="animation-container">
-                      <Lottie animationData={animationData} loop={true} autoplay={true} className="raketa-animation" speed={1.5} />
+                      <Lottie 
+                        animationData={animationData} 
+                        loop={true} 
+                        autoplay={true} 
+                        className="raketa-animation" 
+                        speed={1.5} 
+                      />
                     </div>
                   )}
+                  
+                  {/* Взрыв - показываем когда stage === 'explosion' */}
                   {stage === 'explosion' && exAnimationData && (
                     <div className="explosion-container">
                       <Lottie 
@@ -499,6 +501,8 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
                       />
                     </div>
                   )}
+                  
+                  {/* Fallback если анимации не загрузились */}
                   {!animationData && !exAnimationData && !loading && (
                     <div className="error-message">Failed to load animation</div>
                   )}
@@ -557,7 +561,9 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
                               {avatarElement || <span className="fallback">{username?.[0]?.toUpperCase() || 'U'}</span>}
                             </div>
                             <div className="participant-info">
-                              <div className="participant-nickname">{username}</div>
+                              <div className="participant-nickname">
+                                {username}
+                              </div>
                               <div className="participant-bet-currency">
                                 <img src={participant.currency === 'ton' ? tonSvg : starSvg} alt={participant.currency} className="currency-icon-small" style={{ marginTop: '-1px' }} />
                                 <span className="participant-bet">{currentAmount}</span>
@@ -592,7 +598,11 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
             </div>
   
             <div className="make-bet-button-container">
-              <button className={getButtonClass()} onClick={handleMainButtonClick} disabled={!isMainButtonActive()}>
+              <button 
+                className={getButtonClass()} 
+                onClick={handleMainButtonClick} 
+                disabled={!isMainButtonActive()}
+              >
                 <span className="make-bet-text">{getButtonText()}</span>
               </button>
             </div>
@@ -614,7 +624,16 @@ export default function Rocket({ onNavigate, currentCardIndex = 2 }) {
               <div className="bet-input-container">
                 <div className="bet-input-wrapper">
                   <span className={`bet-input-placeholder ${betAmount ? 'hidden' : ''}`}>Enter</span>
-                  <input ref={betInputRef} type="text" className="bet-input" value={betAmount} onChange={handleBetChange} placeholder="" inputMode="decimal" style={{ fontSize: '16px' }}/>
+                  <input 
+                    ref={betInputRef} 
+                    type="text" 
+                    className="bet-input" 
+                    value={betAmount} 
+                    onChange={handleBetChange} 
+                    placeholder="" 
+                    inputMode="decimal" 
+                    style={{ fontSize: '16px' }}
+                  />
                   <div className="currency-selector" onClick={toggleDropdown} ref={currencyDropdownRef}>
                     <img src={selectedCurrency === 'ton' ? tonSvg : starSvg} alt={selectedCurrency} className="currency-icon" />
                     <img src={isDropdownOpen ? switchSvg : switchbSvg} alt="switch" className="currency-switch" />

@@ -7,9 +7,13 @@ export const useCrashGame = () => {
   const [currentRoundId, setCurrentRoundId] = useState(null);
   const [multiplierNow, setMultiplierNow] = useState(1.0);
   const [roundStatus, setRoundStatus] = useState('waiting');
-  // --- Таймеры и время ---
-  const [timerSeconds, setTimerSeconds] = useState(15); // Текущее значение таймера из сокета
+  // --- Таймеры и время (ТОЛЬКО ИЗ WEBSOCKET) ---
+  const [timeLeft, setTimeLeft] = useState(15); // Будет обновляться из timer сообщений
   const [stage, setStage] = useState('timer');
+  // Для точной синхронизации времени
+  const [timeOffset, setTimeOffset] = useState(0);
+  const [roundStartsAt, setRoundStartsAt] = useState(null);
+  const [roundBetsCloseAt, setRoundBetsCloseAt] = useState(null);
   const [crashMultiplier, setCrashMultiplier] = useState(null);
   const [lastMultipliers, setLastMultipliers] = useState([]);
   // --- Ставки ---
@@ -29,13 +33,15 @@ export const useCrashGame = () => {
   const [wsConnected, setWsConnected] = useState(false);
   
   // Refs
+  const timerIntervalRef = useRef(null);
+  const clearTableTimeoutRef = useRef(null);
+  const explosionCleanupTimeoutRef = useRef(null); // Для очистки анимации взрыва
   const betsRef = useRef(new Map());
   const myActiveBetRef = useRef(null);
   const userIdRef = useRef(null);
   const hasBetThisRoundRef = useRef(false);
+  const timeOffsetRef = useRef(0);
   const stageRef = useRef('timer');
-  const explosionTimeoutRef = useRef(null);
-  const clearTableTimeoutRef = useRef(null);
   
   // Refs для автокешаута
   const autoCashoutTargetRef = useRef(null);
@@ -47,48 +53,118 @@ export const useCrashGame = () => {
     stageRef.current = stage;
   }, [stage]);
 
-  // --- ОБРАБОТКА ТАЙМЕРА (теперь напрямую из сокета) ---
+  // --- 1. ЛОГИКА СИНХРОНИЗАЦИИ ВРЕМЕНИ ---
+  const syncTime = useCallback((serverTimeMs) => {
+    if (!serverTimeMs) return;
+    const localNow = Date.now();
+    const newOffset = serverTimeMs - localNow;
+    if (Math.abs(newOffset - timeOffsetRef.current) > 500 || timeOffsetRef.current === 0) {
+      timeOffsetRef.current = newOffset;
+      setTimeOffset(newOffset);
+    }
+  }, []);
+
+  const getServerTime = useCallback(() => {
+    return Date.now() + timeOffsetRef.current;
+  }, []);
+
+  // --- 2. ОБРАБОТКА TIMER СООБЩЕНИЙ (НОВОЕ) ---
   const handleTimerMessage = useCallback((data) => {
-    // Данные из сокета содержат поле 'sec' - это и есть текущие секунды таймера
+    // Синхронизируем время с сервером
+    if (data.server_time_ms) syncTime(data.server_time_ms);
+    
+    // Обновляем round_id если пришел новый
+    if (data.round_id && data.round_id !== currentRoundId) {
+      setCurrentRoundId(data.round_id);
+      hasBetThisRoundRef.current = false;
+    }
+    
+    // Обновляем betting_locked статус
+    if (data.betting_locked !== undefined) {
+      // Можем использовать для дополнительной логики
+    }
+    
+    // Обновляем таймер - ИСПОЛЬЗУЕМ ПРЯМОЕ ЗНАЧЕНИЕ С СЕРВЕРА
     if (data.sec !== undefined) {
-      setTimerSeconds(data.sec);
+      setTimeLeft(data.sec);
       
-      // Если это первое сообщение таймера после взрыва - очищаем таблицу
-      if (stageRef.current === 'explosion' || stageRef.current === 'timer') {
-        // Очищаем таблицу при получении первого таймера нового раунда
-        if (clearTableTimeoutRef.current) {
-          clearTimeout(clearTableTimeoutRef.current);
-          clearTableTimeoutRef.current = null;
+      // Логирование как в оригинале
+      if (data.sec <= 5 && data.sec > 0) {
+        console.log(`⏱️ Server timer: ${data.sec}s remaining`);
+      }
+    }
+    
+    // Обновляем время закрытия ставок
+    if (data.seconds_to_bets_close !== undefined && roundStartsAt) {
+      // Можно использовать для точности
+    }
+    
+    // ВАЖНО: Если мы в стадии взрыва и пришло timer сообщение - переключаемся на таймер
+    if (stageRef.current === 'explosion') {
+      // Очищаем таймер на очистку взрыва
+      if (explosionCleanupTimeoutRef.current) {
+        clearTimeout(explosionCleanupTimeoutRef.current);
+        explosionCleanupTimeoutRef.current = null;
+      }
+      
+      // Переключаемся на таймер
+      setStage('timer');
+    }
+  }, [currentRoundId, syncTime, roundStartsAt]);
+
+  // --- 3. ОЧИСТКА ВЗРЫВА ПО ТАЙМЕРУ (НОВОЕ) ---
+  useEffect(() => {
+    // Если произошел краш, устанавливаем таймер на принудительную очистку взрыва
+    // на случай, если timer сообщение не придет
+    if (engineEvents.crash) {
+      if (explosionCleanupTimeoutRef.current) {
+        clearTimeout(explosionCleanupTimeoutRef.current);
+      }
+      
+      // Через 3 секунды принудительно выходим из взрыва если не пришло timer сообщение
+      explosionCleanupTimeoutRef.current = setTimeout(() => {
+        if (stageRef.current === 'explosion') {
+          console.log('⚠️ Forcing explosion cleanup - no timer message received');
+          setStage('timer');
         }
-        
-        // Очищаем таблицу сразу (без задержки, как в логах)
-        console.log('🧹 Clearing bets table on new timer message');
+        explosionCleanupTimeoutRef.current = null;
+      }, 3000);
+    }
+    
+    return () => {
+      if (explosionCleanupTimeoutRef.current) {
+        clearTimeout(explosionCleanupTimeoutRef.current);
+      }
+    };
+  }, [engineEvents.crash]);
+
+  // --- 4. ОЧИСТКА ТАБЛИЦЫ ЧЕРЕЗ 1.9с ПОСЛЕ КРАША (КАК В ОРИГИНАЛЕ) ---
+  useEffect(() => {
+    if (engineEvents.crash) {
+      // Очищаем предыдущий таймер если есть
+      if (clearTableTimeoutRef.current) {
+        clearTimeout(clearTableTimeoutRef.current);
+      }
+      
+      // Запускаем таймер на 1.9 секунды
+      clearTableTimeoutRef.current = setTimeout(() => {
+        console.log('🧹 Clearing bets table 1.9s after crash');
         setBetsById(new Map());
         betsRef.current = new Map();
         setMyActiveBet(null);
         myActiveBetRef.current = null;
-        
-        // Переключаемся на таймер, если мы ещё во взрыве
-        if (stageRef.current === 'explosion') {
-          setStage('timer');
-        }
+        clearTableTimeoutRef.current = null;
+      }, 1900);
+    }
+    
+    return () => {
+      if (clearTableTimeoutRef.current) {
+        clearTimeout(clearTableTimeoutRef.current);
       }
-    }
-    
-    // Обновляем статус беттинга
-    if (data.betting_locked !== undefined) {
-      setRoundStatus(data.betting_locked ? 'locked' : 'betting');
-    }
-    
-    // Обновляем ID раунда если он изменился
-    if (data.round_id && data.round_id !== currentRoundId) {
-      console.log('🔄 New round detected from timer:', data.round_id);
-      setCurrentRoundId(data.round_id);
-      hasBetThisRoundRef.current = false;
-    }
-  }, [currentRoundId, stageRef]);
+    };
+  }, [engineEvents.crash]);
 
-  // --- 2. ЛОГИКА АВТОКЕШАУТА ---
+  // --- 5. ЛОГИКА АВТОКЕШАУТА (ТОЛЬКО НА ФРОНТЕ) ---
   useEffect(() => {
     if (stage === 'rocket' &&
         myActiveBetRef.current &&
@@ -100,12 +176,12 @@ export const useCrashGame = () => {
       const triggerMultiplier = targetMultiplier - AUTO_CASHOUT_BUFFER;
       
       if (currentMultiplier >= triggerMultiplier) {
-        console.log(`🎯 Auto-cashout triggered at x${currentMultiplier.toFixed(2)} (target: x${targetMultiplier})`);
+        console.log(`🎯 Auto-cashout triggered at x${currentMultiplier.toFixed(2)} (target: x${targetMultiplier}, buffer: ${AUTO_CASHOUT_BUFFER})`);
         autoCashoutTriggeredRef.current = true;
         crashWebSocket.cashout(myActiveBetRef.current.bet_id);
       }
     }
-  }, [multiplierNow, stage]);
+  }, [multiplierNow, stage, myActiveBetRef.current]);
 
   useEffect(() => {
     if (currentRoundId) {
@@ -121,7 +197,7 @@ export const useCrashGame = () => {
     }
   }, [engineEvents.cashout_ok, engineEvents.crash]);
 
-  // --- 3. HELPERS ДЛЯ ФОРМАТИРОВАНИЯ ---
+  // --- 6. HELPERS ДЛЯ ФОРМАТИРОВАНИЯ ---
   const formatBet = useCallback((rawBet) => {
     const winMultiplier = rawBet.x || rawBet.multiplier || rawBet.cashout_multiplier || rawBet.payout_multiplier || null;
     let status = rawBet.status || 'placed';
@@ -149,22 +225,23 @@ export const useCrashGame = () => {
     };
   }, []);
 
-  // --- 4. УПРАВЛЕНИЕ ДАННЫМИ РАУНДА ---
+  // --- 7. УПРАВЛЕНИЕ ДАННЫМИ РАУНДА ---
   const updateStageFromStatus = useCallback((status) => {
     switch (status) {
       case 'betting':
       case 'countdown':
-      case 'locked':
         setStage('timer');
         setCrashMultiplier(null);
         setMultiplierNow(1.0);
+        if (hasBetThisRoundRef.current && !myActiveBetRef.current) {
+          hasBetThisRoundRef.current = false;
+        }
         break;
       case 'running':
         setStage('rocket');
         setMultiplierNow(1.0);
         break;
       case 'crashed':
-        // Не меняем stage здесь, это делается в обработчике crash
         break;
       default:
         setStage('timer');
@@ -172,25 +249,41 @@ export const useCrashGame = () => {
   }, []);
 
   const handleRoundInfo = useCallback((roundData, serverTimeMs) => {
+    if (serverTimeMs) syncTime(serverTimeMs);
+    
     if (roundData.id && roundData.id !== currentRoundId) {
       console.log('🔄 New round detected:', roundData.id);
       setCurrentRoundId(roundData.id);
       hasBetThisRoundRef.current = false;
     }
     
+    if (roundData.starts_at) {
+      const startsAtTime = new Date(roundData.starts_at).getTime();
+      setRoundStartsAt(startsAtTime);
+    }
+    if (roundData.bets_close_at) {
+      setRoundBetsCloseAt(new Date(roundData.bets_close_at).getTime());
+    }
     if (roundData.status) {
       setRoundStatus(roundData.status);
       updateStageFromStatus(roundData.status);
     }
-  }, [currentRoundId, updateStageFromStatus]);
+  }, [currentRoundId, syncTime, updateStageFromStatus]);
 
-  // --- 5. WS INIT ---
+  // --- 8. WS INIT (ОСНОВНЫЕ ИЗМЕНЕНИЯ ЗДЕСЬ) ---
   const initializeWebSocket = useCallback(async () => {
     try {
       await crashWebSocket.connect();
       setWsConnected(true);
       
+      // Обработчик для timer сообщений (ВАЖНО: добавляем до остальных)
+      crashWebSocket.on('timer', (data) => {
+        setEngineEvents(prev => ({ ...prev, countdown: data }));
+        handleTimerMessage(data);
+      });
+      
       crashWebSocket.on('state', (data) => {
+        if (data.server_time_ms) syncTime(data.server_time_ms);
         if (data.round) {
           handleRoundInfo(data.round, data.server_time_ms);
         }
@@ -215,12 +308,6 @@ export const useCrashGame = () => {
         }
       });
       
-      crashWebSocket.on('timer', (data) => {
-        // Это основное сообщение для синхронизации таймера
-        handleTimerMessage(data);
-        setEngineEvents(prev => ({ ...prev, countdown: data }));
-      });
-      
       crashWebSocket.on('round', (data) => {
         setEngineEvents(prev => ({ ...prev, round: data }));
         const roundInfo = data.round || data;
@@ -228,6 +315,7 @@ export const useCrashGame = () => {
       });
       
       crashWebSocket.on('status', (data) => {
+        if (data.server_time_ms) syncTime(data.server_time_ms);
         setEngineEvents(prev => ({ ...prev, status: data }));
         if (data.status) {
           setRoundStatus(data.status);
@@ -236,6 +324,7 @@ export const useCrashGame = () => {
       });
       
       crashWebSocket.on('tick', (data) => {
+        if (data.server_time_ms) syncTime(data.server_time_ms);
         if (data.multiplier) {
           setMultiplierNow(data.multiplier);
           setEngineEvents(prev => ({ ...prev, tick: data }));
@@ -263,15 +352,15 @@ export const useCrashGame = () => {
       
       crashWebSocket.on('crash', (data) => {
         console.log('💥 Crash event:', data);
+        if (data.server_time_ms) syncTime(data.server_time_ms);
         setEngineEvents(prev => ({ ...prev, crash: data }));
         setRoundStatus('crashed');
         setStage('explosion');
-        
         const mult = data.multiplier || data.crash_mult || 1.0;
         setCrashMultiplier(mult);
         setLastMultipliers(prev => [mult, ...prev].slice(0, 10));
         
-        // Обновляем статусы ставок на 'lose'
+        // Обновляем статусы ставок
         setBetsById(prev => {
           const newMap = new Map(prev);
           newMap.forEach((bet, id) => {
@@ -283,16 +372,14 @@ export const useCrashGame = () => {
           return newMap;
         });
         
-        // Очищаем активную ставку
         if (myActiveBetRef.current?.status === 'placed') {
           setMyActiveBet(null);
           myActiveBetRef.current = null;
         }
-        
-        // НЕ очищаем таблицу здесь! Очистка произойдёт при получении первого timer сообщения
       });
       
       crashWebSocket.on('bet_placed', (data) => {
+        if (data.server_time_ms) syncTime(data.server_time_ms);
         if (data.round_id !== currentRoundId) {
           setCurrentRoundId(data.round_id);
           hasBetThisRoundRef.current = false;
@@ -302,6 +389,7 @@ export const useCrashGame = () => {
       });
       
       crashWebSocket.on('bet_ok', (data) => {
+        if (data.server_time_ms) syncTime(data.server_time_ms);
         const bet = formatBet(data.bet);
         setMyActiveBet(bet);
         myActiveBetRef.current = bet;
@@ -310,6 +398,7 @@ export const useCrashGame = () => {
       });
       
       crashWebSocket.on('cashout_ok', (data) => {
+        if (data.server_time_ms) syncTime(data.server_time_ms);
         setEngineEvents(prev => ({ ...prev, cashout_ok: data }));
         const mult = data.bet.CashoutMultiplier || data.bet.cashout_multiplier || multiplierNow;
         const updated = {
@@ -331,6 +420,7 @@ export const useCrashGame = () => {
       });
       
       crashWebSocket.on('bet_result', (data) => {
+        if (data.server_time_ms) syncTime(data.server_time_ms);
         setEngineEvents(prev => ({ ...prev, bet_result: data }));
         setBetsById(prev => {
           const map = new Map(prev);
@@ -359,21 +449,30 @@ export const useCrashGame = () => {
       console.error('WebSocket Init Error', e);
       setWsConnected(false);
     }
-  }, [currentRoundId, handleRoundInfo, formatBet, updateStageFromStatus, handleTimerMessage]);
+  }, [currentRoundId, handleRoundInfo, syncTime, formatBet, updateStageFromStatus, handleTimerMessage]);
 
   useEffect(() => {
     initializeWebSocket();
     return () => {
       crashWebSocket.disconnect();
-      if (explosionTimeoutRef.current) clearTimeout(explosionTimeoutRef.current);
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
       if (clearTableTimeoutRef.current) clearTimeout(clearTableTimeoutRef.current);
+      if (explosionCleanupTimeoutRef.current) clearTimeout(explosionCleanupTimeoutRef.current);
     };
   }, [initializeWebSocket]);
+
+  // --- 9. УДАЛЯЕМ СТАРЫЙ ЛОКАЛЬНЫЙ ТАЙМЕР ---
+  // useEffect с локальным таймером БОЛЬШЕ НЕ НУЖЕН, так как мы используем timer сообщения
 
   // --- ACTIONS ---
   const clearActiveBet = () => {
     setMyActiveBet(null);
     myActiveBetRef.current = null;
+  };
+  
+  const clearAllBets = () => {
+    setBetsById(new Map());
+    betsRef.current = new Map();
   };
   
   const getHistoryFromBackend = useCallback(async () => {
@@ -386,11 +485,15 @@ export const useCrashGame = () => {
   const canPlaceBet = useCallback(() => {
     if (!wsConnected || myActiveBetRef.current) return false;
     if (hasBetThisRoundRef.current) return false;
-    // Ставки можно делать только когда betting_locked = false (из таймера)
-    // и раунд в статусе betting
-    if (roundStatus === 'locked' || roundStatus !== 'betting') return false;
+    const now = getServerTime();
+    if (roundBetsCloseAt) {
+      if (now >= roundBetsCloseAt) return false;
+    } else if (roundStartsAt) {
+      if (now >= roundStartsAt - 3000) return false;
+    }
+    if (roundStatus !== 'betting' && roundStatus !== 'countdown') return false;
     return true;
-  }, [wsConnected, roundStatus]);
+  }, [wsConnected, roundBetsCloseAt, roundStartsAt, getServerTime, roundStatus]);
   
   const canPlaceCashout = useCallback(() => {
     if (myActiveBetRef.current?.status === 'win') return false;
@@ -425,7 +528,7 @@ export const useCrashGame = () => {
     currentRoundId,
     multiplierNow,
     roundStatus,
-    timerSeconds, // Теперь это значение прямо из сокета
+    timeLeft,
     stage,
     setStage,
     wsConnected,
