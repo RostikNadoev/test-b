@@ -709,7 +709,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
                 <div className="modal-spinner"></div>
                 <p>Loading items and images...</p>
                 {!imagesLoaded && caseItems.length > 0 && (
-                  <p className="modal-loading-progress">Loading images... {frameContents.filter(c => c.img !== tonIcon && c.img !== starsIcon).length} items</p>
+                  <p className="modal-loading-progress">Loading case data...</p>
                 )}
               </div>
             ) : (
