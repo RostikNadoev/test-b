@@ -183,14 +183,24 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
         console.log('🎮 ДЕМО РЕЖИМ: Используем случайный предмет из caseItems');
         if (caseItems.length > 0) {
           const randomIndex = Math.floor(Math.random() * caseItems.length);
-          targetItem = { ...caseItems[randomIndex], isDemo: true };
+          const randomItem = caseItems[randomIndex];
+          
+          // Сохраняем paymentCurrency из winData если есть, иначе 'ton'
+          const currency = winData?.paymentCurrency || paymentCurrency;
+          
+          targetItem = { 
+            ...caseItems[randomIndex], 
+            isDemo: true,
+            paymentCurrency: currency 
+          };
         } else {
           targetItem = {
             img: getDefaultImage(),
             price: '1 TON',
             name: 'Demo Item',
             item_type: 'reward_ton',
-            isDemo: true
+            isDemo: true,
+            paymentCurrency: winData?.paymentCurrency || paymentCurrency
           };
         }
       } 
@@ -222,6 +232,7 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
           item_index: apiItem.index,
           rarity: apiItem.rarity || 'common',
           stars_amount: apiItem.stars_amount,
+          price_ton: apiItem.price_ton,
           fromApi: true,
           isRealWin: true,
           originalWinData: winData,
@@ -232,7 +243,8 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
           имя: targetItem.name,
           цена: targetItem.price,
           тип: targetItem.item_type,
-          валютаОплаты: targetItem.paymentCurrency
+          валютаОплаты: targetItem.paymentCurrency,
+          price_ton: targetItem.price_ton
         });
       } 
       // РЕАЛЬНЫЙ РЕЖИМ БЕЗ winData (ошибка)
@@ -422,7 +434,7 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
     stopAnimation();
   };
 
-  // Продажа предмета
+  // Продажа предмета (добавление на баланс для reward_ton и reward_stars)
   const handleSell = async () => {
     if (isProcessing) return;
     setIsProcessing(true);
@@ -438,21 +450,30 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
         priceValue = winningItem.stars_amount || parseFloat(winningItem.price.replace(/[^\d.-]/g, ''));
         addToDemoBalance(priceValue, 'stars');
         console.log(`💰 Добавлено ${priceValue} STARS в демо-баланс`);
-      } else if (winningItem.item_type === 'reward_ton' || winningItem.item_type === 'tg_gift') {
-        // Если это TON награда
+      } else if (winningItem.item_type === 'reward_ton') {
+        // Если это TON награда - добавляем на баланс (конвертируем если нужно)
         const tonValue = winningItem.price_ton || parseFloat(winningItem.price.replace(/[^\d.-]/g, ''));
         
         if (paymentCurrency === 'stars') {
-          // Если платили звездами, конвертируем TON в звезды (только при добавлении на баланс)
+          // Если платили звездами, конвертируем TON в звезды
           priceValue = tonValue * TON_TO_STARS_RATE;
           addToDemoBalance(priceValue, 'stars');
-          console.log(`💰 Конвертировано ${tonValue} TON → ${priceValue} STARS в демо-баланс (показываем как TON в интерфейсе)`);
+          console.log(`💰 Конвертировано ${tonValue} TON → ${priceValue} STARS в демо-баланс`);
         } else {
           // Если платили TON, добавляем TON
           priceValue = tonValue;
           addToDemoBalance(priceValue, 'ton');
           console.log(`💰 Добавлено ${priceValue} TON в демо-баланс`);
         }
+      } else if (winningItem.item_type === 'tg_gift') {
+        // Для подарков - добавляем в инвентарь (не на баланс)
+        // Сохраняем подарок с ценой в TON
+        const giftItem = {
+          ...winningItem,
+          price: `${winningItem.price_ton} TON` // Убеждаемся что цена в TON
+        };
+        addToDemoInventory(giftItem);
+        console.log(`🎁 Добавлен подарок в демо-инвентарь: ${winningItem.name} (${winningItem.price_ton} TON)`);
       }
       
       setShowModal(false);
@@ -471,8 +492,13 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
     setIsProcessing(true);
 
     if ((isDemoMode || isDemo) && winningItem) {
-      // Для подарков конвертация не нужна, просто добавляем в инвентарь
-      addToDemoInventory(winningItem);
+      // Для подарков добавляем в инвентарь с ценой в TON
+      const giftItem = {
+        ...winningItem,
+        price: `${winningItem.price_ton} TON` // Убеждаемся что цена в TON
+      };
+      addToDemoInventory(giftItem);
+      console.log(`🎁 Добавлен подарок в демо-инвентарь: ${winningItem.name} (${winningItem.price_ton} TON)`);
       setShowModal(false);
       onNavigate('cases');
     } else if (winningItem && !isDemoMode) {
@@ -483,9 +509,17 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
     setIsProcessing(false);
   };
 
-  // Проверка, является ли предмет TON наградой или звездами
+  // Проверка типа предмета
   const isRewardItem = (item) => {
     return item && (item.item_type === 'reward_ton' || item.item_type === 'reward_stars');
+  };
+
+  const isGiftItem = (item) => {
+    return item && item.item_type === 'tg_gift';
+  };
+
+  const isStarsReward = (item) => {
+    return item && item.item_type === 'reward_stars';
   };
 
   // Создание снежинок
@@ -665,7 +699,17 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
                 }}></div>
               </div>
               
-              {isRewardItem(winningItem) ? (
+              {isGiftItem(winningItem) ? (
+                // Для подарков - кнопка добавления в инвентарь
+                <button 
+                  className="spin-modal-exit-button" 
+                  onClick={handleAddToInventory}
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? 'PROCESSING...' : 'ADD TO INVENTORY'}
+                </button>
+              ) : isStarsReward(winningItem) ? (
+                // Для звезд - кнопка продажи (добавления на баланс звезд)
                 <button 
                   className="spin-modal-secondary-button spin-modal-single-button" 
                   onClick={handleSell}
@@ -674,12 +718,13 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
                   {isProcessing ? 'PROCESSING...' : `SELL FOR ${winningItem.price}`}
                 </button>
               ) : (
+                // Для TON наград - кнопка продажи (добавления на баланс)
                 <button 
-                  className="spin-modal-exit-button" 
-                  onClick={handleAddToInventory}
+                  className="spin-modal-secondary-button spin-modal-single-button" 
+                  onClick={handleSell}
                   disabled={isProcessing}
                 >
-                  {isProcessing ? 'PROCESSING...' : 'ADD TO INVENTORY'}
+                  {isProcessing ? 'PROCESSING...' : `SELL FOR ${winningItem.price}`}
                 </button>
               )}
             </div>
