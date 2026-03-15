@@ -3,7 +3,7 @@ import '../styles/TasksScreen.css';
 import MainLayout from './MainLayout';
 import coinIcon from '../assets/Tasks/coin.png';
 import leaderboardImage from '../assets/Tasks/leaderboard.png';
-import { usersApi, authApi } from '../utils/api';
+import api, { usersApi, authApi } from '../utils/api';
 
 export default function TasksScreen({ onNavigate }) {
   const [isLoading, setIsLoading] = useState(true);
@@ -18,26 +18,28 @@ export default function TasksScreen({ onNavigate }) {
     return Math.floor(value);
   };
 
-  // Загрузка баланса через usersApi
+  // Загрузка баланса
   const loadBalance = async () => {
     try {
-      const data = await usersApi.getBalance();
-      if (data && data.balances && typeof data.balances.coins !== 'undefined') {
-        setBalance(data.balances.coins);
-        console.log('💰 Balance loaded:', data.balances.coins);
+      const response = await api.get('/api/v1/users/balance');
+      const data = response.data?.balances || response?.balances;
+      if (data && typeof data.coins !== 'undefined') {
+        setBalance(data.coins);
+        console.log('💰 Balance loaded:', data.coins);
       }
     } catch (err) {
       console.error('❌ Error loading balance:', err);
     }
   };
 
-  // Загрузка квестов через usersApi с обработкой таймаута
+  // Загрузка квестов
   const loadQuests = async () => {
     try {
       setIsLoading(true);
       setError(null);
       
-      const data = await usersApi.getQuests();
+      const response = await api.get('/api/v1/quests/');
+      const data = response.data || response;
       
       if (data && data.quests) {
         // Активные квесты: не завершены ИЛИ завершены но не забраны
@@ -59,23 +61,13 @@ export default function TasksScreen({ onNavigate }) {
       }
     } catch (err) {
       console.error('❌ Error loading quests:', err);
-      
-      // Более детальная обработка ошибки
-      if (err.code === 'ECONNABORTED') {
-        setError('Request timeout. The server is taking too long to respond.');
-      } else if (err.response) {
-        setError(`Server error: ${err.response.status} - ${err.response.data?.message || 'Unknown error'}`);
-      } else if (err.request) {
-        setError('No response from server. Please check your connection.');
-      } else {
-        setError(`Failed to load quests: ${err.message}`);
-      }
+      setError('Failed to load quests. Please check your connection.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Функция для получения награды через usersApi
+  // Функция для получения награды
   const claimReward = async (questId) => {
     if (isClaiming) return false;
     
@@ -83,7 +75,8 @@ export default function TasksScreen({ onNavigate }) {
       setIsClaiming(true);
       console.log(`🎁 Claiming reward for quest ${questId}...`);
       
-      const data = await usersApi.claimQuest(questId);
+      const response = await api.post(`/api/v1/quests/${questId}/claim`, {});
+      const data = response.data || response;
       
       console.log('✅ Claim response:', data);
       
@@ -331,6 +324,7 @@ function TaskItem({ quest, coinIcon, onClaim, isClaiming }) {
       <div className={`task-content ${isCompleted ? 'task-content--completed' : ''}`}>
         <div className="task-text">
           <div className="task-title">{quest.title || 'Quest'}</div>
+          {/* Описание убрано */}
         </div>
         {!isCompleted && (
           <div className="task-progress">
@@ -380,6 +374,7 @@ function CompletedTaskItem({ quest, coinIcon }) {
       <div className="task-content task-content--completed">
         <div className="task-text">
           <div className="task-title">{quest.title || 'Quest'}</div>
+          {/* Описание убрано */}
         </div>
         <div className="task-progress task-progress--completed">
           {progress}/{target}
