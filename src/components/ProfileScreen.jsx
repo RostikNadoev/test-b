@@ -12,12 +12,6 @@ import gift from '../assets/Profile/gift.png';
 import cardton1 from '../assets/MainPage/chest1/ton.png';
 import starIcon from '../assets/MainPage/star1.png';
 
-// Импортируем Buffer полифилл
-import { Buffer } from 'buffer';
-
-// Добавляем Buffer в глобальную область видимости
-window.Buffer = Buffer;
-
 export default function ProfileScreen({ onNavigate }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -49,102 +43,6 @@ export default function ProfileScreen({ onNavigate }) {
     addToDemoBalance,
     clearDemoInventory
   } = useDemo();
-
-  // Функция для конвертации hex строки в Uint8Array
-  const hexToBytes = (hex) => {
-    const bytes = [];
-    for (let i = 0; i < hex.length; i += 2) {
-      bytes.push(parseInt(hex.substr(i, 2), 16));
-    }
-    return new Uint8Array(bytes);
-  };
-
-  // Функция для конвертации raw адреса в user-friendly формат
-  const convertRawToUserFriendly = (rawAddress) => {
-    if (!rawAddress) return '';
-    
-    try {
-      // Если адрес уже в user-friendly формате (начинается с UQ, EQ, kQ, 0Q)
-      if (rawAddress.match(/^(UQ|EQ|kQ|0Q)/)) {
-        return rawAddress;
-      }
-      
-      // Если адрес в raw формате (0:...)
-      if (rawAddress.startsWith('0:')) {
-        // Убираем префикс '0:'
-        const hex = rawAddress.slice(2);
-        
-        // Для TON адресов:
-        // workchain = 0 (1 байт)
-        // hash = 32 байта (64 hex символа)
-        
-        // Проверяем длину hex
-        if (hex.length !== 64) {
-          console.warn('Unexpected hex length:', hex.length);
-          return rawAddress;
-        }
-        
-        // Конвертируем hex в байты
-        const hashBytes = hexToBytes(hex);
-        
-        // Создаем буфер: workchain (1 байт) + hash (32 байта)
-        const buffer = new Uint8Array(33);
-        buffer[0] = 0; // workchain = 0
-        buffer.set(hashBytes, 1);
-        
-        // Добавляем флаги: bounceable = true, testnet = false
-        // Флаг bounceable: 0x11 для mainnet
-        const flags = 0x11; // bounceable mainnet
-        
-        // Создаем итоговый буфер с флагами
-        const finalBuffer = new Uint8Array(34);
-        finalBuffer[0] = flags;
-        finalBuffer.set(buffer, 1);
-        
-        // Конвертируем в base64
-        let base64 = '';
-        for (let i = 0; i < finalBuffer.length; i++) {
-          base64 += String.fromCharCode(finalBuffer[i]);
-        }
-        base64 = btoa(base64);
-        
-        // Заменяем символы для URL-safe base64
-        const urlSafe = base64.replace(/\+/g, '-').replace(/\//g, '_');
-        
-        // Возвращаем с префиксом UQ
-        const result = 'UQ' + urlSafe;
-        
-        console.log('Address conversion:', {
-          raw: rawAddress,
-          userFriendly: result
-        });
-        
-        return result;
-      }
-      
-      return rawAddress;
-    } catch (error) {
-      console.error('Error converting address:', error);
-      return rawAddress;
-    }
-  };
-
-  // Функция для форматирования адреса для отображения
-  const formatWalletAddress = (address) => {
-    if (!address) return '';
-    
-    // Конвертируем raw адрес в user-friendly
-    const userFriendlyAddress = convertRawToUserFriendly(address);
-    
-    // Обрезаем для отображения
-    if (userFriendlyAddress.length <= 9) return userFriendlyAddress;
-    
-    // Для адресов UQ... оставляем первые 4 и последние 4 символа
-    // Например: UQCP...Hdg7
-    const prefix = userFriendlyAddress.slice(0, 4);
-    const suffix = userFriendlyAddress.slice(-4);
-    return `${prefix}...${suffix}`;
-  };
 
   useEffect(() => {
     const checkWalletStatus = async () => {
@@ -742,6 +640,12 @@ export default function ProfileScreen({ onNavigate }) {
     }
   };
 
+  const formatWalletAddress = (address) => {
+    if (!address) return '';
+    if (address.length <= 9) return address;
+    return `${address.slice(0, 5)}...${address.slice(-4)}`;
+  };
+
   const refreshUserData = async () => {
     try {
       setRefreshing(true);
@@ -913,7 +817,7 @@ export default function ProfileScreen({ onNavigate }) {
                 <div 
                   key={index} 
                   className={`inventory-item-frame ${newItems.has(index) ? 'new-item-pulse' : ''}`}
-                  onClick={() => handleItemClick(item, index)}
+                  onClick={() => handleItemClick(item, index)} // Всегда вызываем handleItemClick, независимо от статуса
                   title={item.status === 'withdraw_pending' ? 'Item is pending withdrawal (click to view)' : 'Click to sell/withdraw'}
                 >
                   <div className="inventory-item-content">
