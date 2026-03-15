@@ -46,7 +46,7 @@ export const useCrashGame = () => {
   // Refs для автокешаута
   const autoCashoutTargetRef = useRef(null);
   const autoCashoutTriggeredRef = useRef(false);
-  const AUTO_CASHOUT_BUFFER = 0.02;
+  const AUTO_CASHOUT_BUFFER = 0.01;
 
   // Синхронизация ref со стейтом
   useEffect(() => {
