@@ -1972,3 +1972,37 @@
   max-height: 625px !important;
 }
 
+/* Стили для загрузки в модалке */
+.profile-modal-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: 20px;
+}
+
+.profile-modal-loading .spinner {
+  width: 60px;
+  height: 60px;
+  border: 5px solid rgba(205, 226, 251, 0.3);
+  border-radius: 50%;
+  border-top-color: #CDE2FB;
+  border-left-color: #CDE2FB;
+  animation: spin 1s ease-in-out infinite;
+  box-shadow: 0 0 15px rgba(205, 226, 251, 0.5);
+}
+
+.profile-modal-loading p {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: #CDE2FB;
+  letter-spacing: 1px;
+  text-shadow: 0 0 10px rgba(205, 226, 251, 0.5);
+  margin: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

@@ -20,13 +20,10 @@ import { authApi } from './utils/api';
 
 // === 🔥 ИМПОРТ ВСЕХ ИЗОБРАЖЕНИЙ ===
 // ProfileScreen
-import gift from './assets/Profile/gift.png';
-import giftchange from './assets/Profile/giftchange.png';
 import tonGift from './assets/Profile/ton-gift.svg';
 import modalCloseIcon from './assets/Profile/close.png';
 
 // MainScreen
-import middle from './assets/MainPage/middle.png';
 import cardBack1 from './assets/MainPage/chest1/back.png';
 import cardBack2 from './assets/MainPage/chest1/back2.png';
 import cardton1 from './assets/MainPage/chest1/ton.png';
@@ -34,7 +31,6 @@ import cardton2 from './assets/MainPage/chest2/ton.png';
 import cardton3 from './assets/MainPage/chest3/ton.png';
 
 // Common UI
-import ava from './assets/MainPage/ava.jpg';
 import ton from './assets/MainPage/ton.svg';
 import add_balance from './assets/MainPage/add_balance.svg';
 import foot from './assets/MainPage/foot.png';
@@ -46,8 +42,6 @@ import closeIcon from './assets/MainPage/close.png';
 import star from './assets/MainPage/star1.png';
 import tonIcon from './assets/Ton.svg';
 
-import ballsq from './assets/Lucky/ballsq.png';
-import timerImg from './assets/Rocket/timer.png';
 
 // TasksScreen
 import coinIcon from './assets/Tasks/coin.png';
@@ -520,16 +514,10 @@ export default function App() {
     gameCard5,
     rocketback1,
     casesBack,
-    giftchange,
     tonGift,
     modalCloseIcon,
-    middle,
     cardBack1,
     cardBack2,
-    cardton1,
-    cardton2,
-    cardton3,
-    ava,
     ton,
     add_balance,
     foot,
@@ -546,8 +534,6 @@ export default function App() {
     logoImage,
     l1, l2, l3, l4, l5, l6,
     l1a, l2a, l3a, l4a, l5a, l6a,
-    ballsq,
-    timerImg
   ];
 
   // Функция загрузки и анимации

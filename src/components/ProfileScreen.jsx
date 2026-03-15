@@ -34,6 +34,7 @@ export default function ProfileScreen({ onNavigate }) {
   const [withdrawResult, setWithdrawResult] = useState(null);
   const [starsBalance, setStarsBalance] = useState(0);
   const [checkingBalance, setCheckingBalance] = useState(false);
+  const [giftchangeLoaded, setGiftchangeLoaded] = useState(false); // Новый state для отслеживания загрузки изображения
   
   const { 
     isDemoMode, 
@@ -43,6 +44,16 @@ export default function ProfileScreen({ onNavigate }) {
     addToDemoBalance,
     clearDemoInventory
   } = useDemo();
+
+  // Предзагрузка изображения giftchange при открытии модалки
+  useEffect(() => {
+    if (isModalOpen && !giftchangeLoaded) {
+      const img = new Image();
+      img.src = giftchange;
+      img.onload = () => setGiftchangeLoaded(true);
+      img.onerror = () => setGiftchangeLoaded(true); // Даже при ошибке показываем контент
+    }
+  }, [isModalOpen, giftchangeLoaded]);
 
   useEffect(() => {
     const checkWalletStatus = async () => {
@@ -481,6 +492,7 @@ export default function ProfileScreen({ onNavigate }) {
   };
 
   const handleOpenModal = () => {
+    setGiftchangeLoaded(false); // Сбрасываем состояние загрузки при открытии
     setIsModalOpen(true);
     setIsClosing(false);
   };
@@ -493,6 +505,7 @@ export default function ProfileScreen({ onNavigate }) {
     if (isClosing) {
       setIsModalOpen(false);
       setIsClosing(false);
+      setGiftchangeLoaded(false); // Сбрасываем при закрытии
     }
   };
 
@@ -817,7 +830,7 @@ export default function ProfileScreen({ onNavigate }) {
                 <div 
                   key={index} 
                   className={`inventory-item-frame ${newItems.has(index) ? 'new-item-pulse' : ''}`}
-                  onClick={() => handleItemClick(item, index)} // Всегда вызываем handleItemClick, независимо от статуса
+                  onClick={() => handleItemClick(item, index)}
                   title={item.status === 'withdraw_pending' ? 'Item is pending withdrawal (click to view)' : 'Click to sell/withdraw'}
                 >
                   <div className="inventory-item-content">
@@ -883,29 +896,44 @@ export default function ProfileScreen({ onNavigate }) {
             onMouseUp={handleTouchEnd}
             onMouseLeave={handleTouchEnd}
           >
-            <img src={giftchange} alt="" className="profile-modal-top-decor" />
-            <div className="profile-modal-body">
-              <h2 className="profile-modal-title">ADD GIFTS</h2>
-              <p className="profile-modal-instruction">
-                Send the gift to the&ensp;
-                <span 
-                  className="profile-modal-username-link"
+            {!giftchangeLoaded ? (
+              // Показываем спинер пока загружается изображение
+              <div className="profile-modal-loading">
+                <div className="spinner"></div>
+                <p>Loading...</p>
+              </div>
+            ) : (
+              <>
+                <img 
+                  src={giftchange} 
+                  alt="" 
+                  className="profile-modal-top-decor"
+                  onLoad={() => setGiftchangeLoaded(true)}
+                />
+                <div className="profile-modal-body">
+                  <h2 className="profile-modal-title">ADD GIFTS</h2>
+                  <p className="profile-modal-instruction">
+                    Send the gift to the&ensp;
+                    <span 
+                      className="profile-modal-username-link"
+                      onClick={openTelegramBot}
+                    >
+                      @bouncegifts
+                    </span>
+                    &ensp;bot, and the gift balance will be updated
+                  </p>
+                </div>
+                <button 
+                  className="profile-modal-action-btn"
                   onClick={openTelegramBot}
                 >
-                  @bouncegifts
-                </span>
-                &ensp;bot, and the gift balance will be updated
-              </p>
-            </div>
-            <button 
-              className="profile-modal-action-btn"
-              onClick={openTelegramBot}
-            >
-              ADD GIFT
-            </button>
-            <button className="profile-modal-close-btn" onClick={handleCloseModal}>
-              <img src={modalCloseIcon} alt="Close" className="profile-modal-close-icon" />
-            </button>
+                  ADD GIFT
+                </button>
+                <button className="profile-modal-close-btn" onClick={handleCloseModal}>
+                  <img src={modalCloseIcon} alt="Close" className="profile-modal-close-icon" />
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
