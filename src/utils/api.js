@@ -250,7 +250,12 @@ export const usersApi = {
   async getQuests() {
     try {
       console.log('🎯 Requesting user quests...');
-      const response = await api.get('/api/v1/quests/');
+      
+      // Создаем отдельный экземпляр с увеличенным таймаутом для этого запроса
+      const response = await api.get('/api/v1/quests/', {
+        timeout: 30000 // 30 секунд вместо 10
+      });
+      
       console.log('✅ Quests received:', response.data.quests?.length || 0);
       return response.data;
     } catch (error) {

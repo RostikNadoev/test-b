@@ -3,7 +3,7 @@ import '../styles/TasksScreen.css';
 import MainLayout from './MainLayout';
 import coinIcon from '../assets/Tasks/coin.png';
 import leaderboardImage from '../assets/Tasks/leaderboard.png';
-import api, { usersApi, authApi } from '../utils/api';
+import { usersApi, authApi } from '../utils/api';
 
 export default function TasksScreen({ onNavigate }) {
   const [isLoading, setIsLoading] = useState(true);
@@ -18,28 +18,26 @@ export default function TasksScreen({ onNavigate }) {
     return Math.floor(value);
   };
 
-  // Загрузка баланса
+  // Загрузка баланса через usersApi
   const loadBalance = async () => {
     try {
-      const response = await api.get('/api/v1/users/balance');
-      const data = response.data?.balances || response?.balances;
-      if (data && typeof data.coins !== 'undefined') {
-        setBalance(data.coins);
-        console.log('💰 Balance loaded:', data.coins);
+      const data = await usersApi.getBalance();
+      if (data && data.balances && typeof data.balances.coins !== 'undefined') {
+        setBalance(data.balances.coins);
+        console.log('💰 Balance loaded:', data.balances.coins);
       }
     } catch (err) {
       console.error('❌ Error loading balance:', err);
     }
   };
 
-  // Загрузка квестов
+  // Загрузка квестов через usersApi
   const loadQuests = async () => {
     try {
       setIsLoading(true);
       setError(null);
       
-      const response = await api.get('/api/v1/quests/');
-      const data = response.data || response;
+      const data = await usersApi.getQuests();
       
       if (data && data.quests) {
         // Активные квесты: не завершены ИЛИ завершены но не забраны
@@ -67,7 +65,7 @@ export default function TasksScreen({ onNavigate }) {
     }
   };
 
-  // Функция для получения награды
+  // Функция для получения награды через usersApi
   const claimReward = async (questId) => {
     if (isClaiming) return false;
     
@@ -75,8 +73,7 @@ export default function TasksScreen({ onNavigate }) {
       setIsClaiming(true);
       console.log(`🎁 Claiming reward for quest ${questId}...`);
       
-      const response = await api.post(`/api/v1/quests/${questId}/claim`, {});
-      const data = response.data || response;
+      const data = await usersApi.claimQuest(questId);
       
       console.log('✅ Claim response:', data);
       
@@ -324,7 +321,6 @@ function TaskItem({ quest, coinIcon, onClaim, isClaiming }) {
       <div className={`task-content ${isCompleted ? 'task-content--completed' : ''}`}>
         <div className="task-text">
           <div className="task-title">{quest.title || 'Quest'}</div>
-          {/* Описание убрано */}
         </div>
         {!isCompleted && (
           <div className="task-progress">
@@ -374,7 +370,6 @@ function CompletedTaskItem({ quest, coinIcon }) {
       <div className="task-content task-content--completed">
         <div className="task-text">
           <div className="task-title">{quest.title || 'Quest'}</div>
-          {/* Описание убрано */}
         </div>
         <div className="task-progress task-progress--completed">
           {progress}/{target}
