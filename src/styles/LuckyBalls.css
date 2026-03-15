@@ -716,3 +716,77 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+
+/* Добавьте в конец файла LuckyBalls.css */
+
+/* Контейнер для загрузки страницы */
+.page-loading-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(5px);
+  z-index: 9999;
+}
+
+/* Спинер для загрузки страницы */
+.page-loading-spinner {
+  width: 70px;
+  height: 70px;
+  border: 5px solid rgba(205, 226, 251, 0.3);
+  border-radius: 50%;
+  border-top-color: #CDE2FB;
+  border-left-color: #CDE2FB;
+  animation: page-spin 1s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(205, 226, 251, 0.7);
+  margin-bottom: 20px;
+}
+
+/* Текст загрузки */
+.page-loading-text {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: #CDE2FB;
+  letter-spacing: 1px;
+  text-shadow: 0 0 15px rgba(205, 226, 251, 0.7);
+  margin: 0;
+  animation: pulse-text 1.5s ease-in-out infinite;
+}
+
+/* Анимация для спиннера */
+@keyframes page-spin {
+  to { 
+    transform: rotate(360deg); 
+  }
+}
+
+/* Пульсация текста */
+@keyframes pulse-text {
+  0% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+}
+
+/* Убедимся, что Header не перекрывает загрузку */
+.lucky-balls-screen {
+  position: relative;
+}
+
+/* Остальные стили остаются без изменений */

@@ -40,11 +40,36 @@ const DEMO_WIN_CHANCES = {
   10: 4   // 50% шанс пройти 10 уровень
 };
 
+// Список всех изображений для предзагрузки
+const imagesToPreload = [
+  ballsq,
+  tonSvg,
+  starSvg,
+  switchSvg,
+  switchbSvg,
+  luckyWinIcon,
+  luckyLoseIcon
+];
+
 // Функция для определения, выиграл ли игрок на текущем уровне в демо-режиме
 const getDemoPickResult = (level) => {
   const chance = DEMO_WIN_CHANCES[level] || 50;
   const random = Math.random() * 100;
   return random <= chance;
+};
+
+// Функция для предзагрузки изображений
+const preloadImages = (imageUrls) => {
+  return Promise.all(
+    imageUrls.map((url) => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = url;
+        img.onload = resolve;
+        img.onerror = resolve; // Даже при ошибке продолжаем
+      });
+    })
+  );
 };
 
 export default function LuckyBalls({ 
@@ -69,15 +94,36 @@ export default function LuckyBalls({
   const [isLoading, setIsLoading] = useState(false);
   const [lastPickResult, setLastPickResult] = useState(null);
   const [isScrolling, setIsScrolling] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true); // Состояние загрузки страницы
+  const [imagesLoaded, setImagesLoaded] = useState(false);
 
   const { balances, checkBalance, setNewBalances, loadBalances } = useBalance();
   const { isDemoMode, demoBalances, removeFromDemoBalance, addToDemoBalance, checkDemoBalance, getDemoBalance } = useDemo();
 
+  // Предзагрузка всех изображений при монтировании
   useEffect(() => {
-    if (!isDemoMode) {
+    const loadAllImages = async () => {
+      try {
+        console.log('🖼️ Preloading Lucky Balls images...');
+        await preloadImages(imagesToPreload);
+        console.log('✅ All images loaded');
+        setImagesLoaded(true);
+        setTimeout(() => setPageLoading(false), 500); // Небольшая задержка для плавности
+      } catch (error) {
+        console.error('❌ Error loading images:', error);
+        setImagesLoaded(true);
+        setPageLoading(false);
+      }
+    };
+
+    loadAllImages();
+  }, []);
+
+  useEffect(() => {
+    if (!isDemoMode && imagesLoaded) {
       loadActiveGame();
     }
-  }, [isDemoMode]);
+  }, [isDemoMode, imagesLoaded]);
 
   useEffect(() => {
     if (tilesContainerRef.current && rowRefs.current[currentLevel] && !isScrolling) {
@@ -705,6 +751,19 @@ export default function LuckyBalls({
       );
     }
   };
+
+  // Если страница загружается, показываем спинер
+  if (pageLoading) {
+    return (
+      <div className="lucky-balls-screen">
+        <Header onNavigate={onNavigate} />
+        <div className="page-loading-container">
+          <div className="page-loading-spinner"></div>
+          <p className="page-loading-text">Loading game...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="lucky-balls-screen">
