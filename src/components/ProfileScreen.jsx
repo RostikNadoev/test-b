@@ -76,10 +76,12 @@ export default function ProfileScreen({ onNavigate }) {
     loadUserData();
   }, [isDemoMode]);
 
+  // Загружаем баланс звезд при открытии модалки вывода
   useEffect(() => {
     if (isWithdrawModalOpen && !isDemoMode && selectedItem) {
       loadStarsBalance();
       
+      // Проверяем, есть ли у выбранного предмета статус withdraw_pending
       if (selectedItem.status === 'withdraw_pending' && selectedItem.locked_until) {
         setWithdrawResult({
           locked_until: selectedItem.locked_until,
@@ -213,12 +215,14 @@ export default function ProfileScreen({ onNavigate }) {
     return 'item-price';
   };
 
+  // Функция для получения отсортированного инвентаря
   const getSortedInventory = () => {
     const items = isDemoMode ? demoInventory : inventory;
+    
     return [...items].sort((a, b) => {
       const priceA = parseFloat(getItemPrice(a).replace(/[^\d.-]/g, ''));
       const priceB = parseFloat(getItemPrice(b).replace(/[^\d.-]/g, ''));
-      return priceB - priceA;
+      return priceB - priceA; // По убыванию (сначала дорогие)
     });
   };
 
@@ -285,12 +289,30 @@ export default function ProfileScreen({ onNavigate }) {
         return;
       }
       
+      let totalSold = 0;
+      let totalPrice = 0;
+      
       for (const item of giftsToSell) {
         try {
           const inventoryId = item.inventory_id || item.id;
           if (!inventoryId) continue;
           
-          await giftsApi.sellGiftForTon(inventoryId);
+          const result = await giftsApi.sellGiftForTon(inventoryId);
+          
+          if (result.success) {
+            totalSold++;
+            totalPrice += parseFloat(result.sell_ton || item.price_ton || 0);
+            
+            if (result.balance_ton !== undefined) {
+              const user = authApi.getCurrentUser();
+              if (user) {
+                authApi.updateUserData({
+                  balance_ton: result.balance_ton
+                });
+              }
+            }
+          }
+          
           await new Promise(resolve => setTimeout(resolve, 300));
         } catch (error) {
           console.error(`Error selling item ${item.id}:`, error);
@@ -355,6 +377,7 @@ export default function ProfileScreen({ onNavigate }) {
   const handleWithdraw = async () => {
     if (isDemoMode || !selectedItem) return;
     
+    // Если предмет уже в статусе withdraw_pending, ничего не делаем
     if (selectedItem.status === 'withdraw_pending') {
       alert('This item is already pending withdrawal');
       setWithdrawing(false);
@@ -364,6 +387,7 @@ export default function ProfileScreen({ onNavigate }) {
     try {
       setWithdrawing(true);
       
+      // 1. Получаем inventory_id
       const inventoryId = selectedItem.inventory_id || selectedItem.id;
       if (!inventoryId) {
         alert('❌ Error: Missing item ID');
@@ -373,11 +397,14 @@ export default function ProfileScreen({ onNavigate }) {
       
       console.log(`🎮 Starting withdrawal for item ${inventoryId}...`);
       
+      // 2. Вызываем API для вывода
       const result = await giftsApi.withdrawItem(inventoryId);
       
+      // 3. Проверяем, нужно ли пополнить баланс
       if (result.need_topup) {
         console.log('💰 Need to top up stars:', result);
         
+        // Открываем invoice для пополнения
         if (result.invoice_link) {
           if (window.Telegram?.WebApp) {
             window.Telegram.WebApp.openTelegramLink(result.invoice_link);
@@ -385,6 +412,7 @@ export default function ProfileScreen({ onNavigate }) {
             window.open(result.invoice_link, '_blank');
           }
           
+          // Показываем сообщение о необходимости пополнить баланс
           alert(`⚠️ Insufficient Stars balance!\n\nNeed: ${result.topup_amount} Stars\nFee: ${result.withdraw_fee} Stars\n\nPlease complete the payment in Telegram to continue.`);
         } else {
           alert(`⚠️ Insufficient Stars balance! Need ${result.topup_amount || 50} Stars.`);
@@ -394,11 +422,14 @@ export default function ProfileScreen({ onNavigate }) {
         return;
       }
       
+      // 4. Если вывод успешен (вариант B - Stars хватает)
       if (result.ok || result.mode === 'manual') {
         console.log('✅ Withdrawal successful:', result);
         
+        // Сохраняем результат для отображения
         setWithdrawResult(result);
         
+        // Обновляем баланс звезд если он вернулся в ответе
         if (result.balance_stars !== undefined) {
           authApi.updateUserData({
             balance_stars: result.balance_stars
@@ -406,10 +437,13 @@ export default function ProfileScreen({ onNavigate }) {
           setStarsBalance(result.balance_stars);
         }
         
+        // Обновляем инвентарь через API
         await loadUserData();
         
+        // Показываем сообщение об успехе
         alert('✅ Withdrawal request created successfully!\n\nThe item will be withdrawn within 24 hours.');
         
+        // Обновляем выбранный предмет с новым статусом
         const updatedItem = {
           ...selectedItem,
           status: 'withdraw_pending',
@@ -463,6 +497,7 @@ export default function ProfileScreen({ onNavigate }) {
   };
 
   const handleItemClick = (item, index) => {
+    // Всегда можно нажать на предмет, независимо от статуса
     setSelectedItem({ ...item, originalIndex: index });
     setIsSellModalOpen(true);
   };
@@ -605,42 +640,10 @@ export default function ProfileScreen({ onNavigate }) {
     }
   };
 
-  // ПРОСТАЯ ФУНКЦИЯ ФОРМАТИРОВАНИЯ АДРЕСА - БЕЗ БИБЛИОТЕК
   const formatWalletAddress = (address) => {
     if (!address) return '';
-    
-    try {
-      // Если адрес начинается с "0:" - это raw формат
-      if (address.startsWith('0:')) {
-        // Просто обрезаем его для отображения
-        const shortAddress = address.substring(2); // убираем "0:"
-        if (shortAddress.length > 8) {
-          return `0:${shortAddress.slice(0, 4)}...${shortAddress.slice(-4)}`;
-        }
-        return address;
-      }
-      
-      // Если адрес уже в user-friendly формате (начинается с UQ, EQ и т.д.)
-      // Просто обрезаем его красиво
-      if (address.length > 9) {
-        return `${address.slice(0, 4)}...${address.slice(-4)}`;
-      }
-      
-      return address;
-    } catch (error) {
-      console.error('Error formatting address:', error);
-      // В случае ошибки просто обрезаем
-      if (address.length > 9) {
-        return `${address.slice(0, 5)}...${address.slice(-4)}`;
-      }
-      return address;
-    }
-  };
-
-  // Функция для получения полного адреса (для копирования)
-  const getFullAddress = () => {
-    if (!walletInfo?.account?.address) return '';
-    return walletInfo.account.address;
+    if (address.length <= 9) return address;
+    return `${address.slice(0, 5)}...${address.slice(-4)}`;
   };
 
   const refreshUserData = async () => {
@@ -654,6 +657,7 @@ export default function ProfileScreen({ onNavigate }) {
 
   const canSellItem = (item) => {
     if (isDemoMode) return true;
+    
     return item.item_type === 'tg_gift' && item.status !== 'withdraw_pending';
   };
 
@@ -661,6 +665,7 @@ export default function ProfileScreen({ onNavigate }) {
     return getSortedInventory();
   };
 
+  // Форматирование locked_until для отображения
   const formatLockedUntil = (lockedUntil) => {
     if (!lockedUntil) return '';
     
@@ -679,6 +684,7 @@ export default function ProfileScreen({ onNavigate }) {
     }
   };
 
+  // Проверяем, есть ли у выбранного предмета активный вывод
   const hasActiveWithdraw = () => {
     return selectedItem?.status === 'withdraw_pending' || withdrawResult !== null;
   };
@@ -756,26 +762,6 @@ export default function ProfileScreen({ onNavigate }) {
                 <div className="wallet-address">
                   {formatWalletAddress(walletInfo.account?.address || '')}
                 </div>
-                {/* Кнопка для копирования полного адреса */}
-                {walletInfo.account?.address && (
-                  <div 
-                    className="wallet-address-full"
-                    onClick={() => {
-                      navigator.clipboard.writeText(getFullAddress());
-                      alert('Address copied to clipboard!');
-                    }}
-                    style={{ 
-                      fontSize: '11px', 
-                      opacity: 0.7, 
-                      marginTop: '4px',
-                      cursor: 'pointer',
-                      textAlign: 'center'
-                    }}
-                    title="Click to copy full address"
-                  >
-                    📋 Copy full address
-                  </div>
-                )}
                 <button 
                   className="disconnect-wallet-btn-profile"
                   onClick={handleDisconnectWallet}
@@ -831,7 +817,7 @@ export default function ProfileScreen({ onNavigate }) {
                 <div 
                   key={index} 
                   className={`inventory-item-frame ${newItems.has(index) ? 'new-item-pulse' : ''}`}
-                  onClick={() => handleItemClick(item, index)}
+                  onClick={() => handleItemClick(item, index)} // Всегда вызываем handleItemClick, независимо от статуса
                   title={item.status === 'withdraw_pending' ? 'Item is pending withdrawal (click to view)' : 'Click to sell/withdraw'}
                 >
                   <div className="inventory-item-content">
@@ -853,6 +839,7 @@ export default function ProfileScreen({ onNavigate }) {
                         {item.name}
                       </div>
                     )}
+                    {/* Отображаем статус, если есть */}
                     {item.status === 'withdraw_pending' && (
                       <div className="inventory-item-status pending">
                         PENDING
@@ -1000,6 +987,7 @@ export default function ProfileScreen({ onNavigate }) {
                 </p>
               </div>
               
+              {/* Блок с информацией о locked-статусе */}
               {hasActiveWithdraw() && (
                 <div className="withdraw-lock-info">
                   <div className="withdraw-lock-icon">🔒</div>
