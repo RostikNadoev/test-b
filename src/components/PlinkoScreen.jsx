@@ -458,9 +458,9 @@ export default function BounceFallScreen({ onNavigate }) {
         <div className="plinko-header-wrapper">
           <Header onNavigate={onNavigate} variant="plinko" />
         </div>
-        <div className="page-loading-container">
-          <div className="page-loading-spinner"></div>
-          <p className="page-loading-text">Loading game...</p>
+        <div className="plinko-page-loading-container">
+          <div className="plinko-page-loading-spinner"></div>
+          <p className="plinko-page-loading-text">Loading game...</p>
         </div>
       </div>
     );
