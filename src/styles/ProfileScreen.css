@@ -369,6 +369,9 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  max-height: calc(100vh - 463px);
+  overflow-y: hidden;
+  position: relative;
 }
 
 .gift-balance-container {
@@ -379,6 +382,9 @@
   justify-content: flex-start;
   align-items: center;
   box-sizing: border-box;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
 }
 
 .gift-balance-title {
@@ -397,16 +403,78 @@
   line-height: 1.5;
 }
 
-/* Новый стиль для контейнера анимации и текста */
-.empty-gifts-container {
+/* Новый контейнер-обертка */
+.profile-content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  min-height: 200px;
+  width: 100%;
+}
+
+/* Стили для загрузки инвентаря */
+.loading-inventory {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   text-align: center;
-  align-self: center;
   width: 100%;
   box-sizing: border-box;
+  padding: 30px 20px;
+  z-index: 1;
+}
+
+.loading-inventory .spinner {
+  width: 60px;
+  height: 60px;
+  border: 3px solid rgba(53, 163, 242, 0.3);
+  border-top-color: rgba(53, 163, 242, 1);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-inventory p {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  line-height: 1.6;
+  color: transparent;
+  background: linear-gradient(0deg, rgba(128, 202, 244, 1), rgb(82, 159, 204));
+  -webkit-background-clip: text;
+  background-clip: text;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+/* Стили для пустого инвентаря */
+.empty-gifts-container {
+  position: absolute;
+  top: 15px;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 20px;
+  z-index: 1;
 }
 
 .empty-gifts-animation-wrapper {
@@ -417,13 +485,13 @@
   align-items: center;
   backdrop-filter: blur(1px);
   background: transparent;
+  margin-bottom: 10px;
 }
 
 .empty-gifts-animation {
   width: 110px;
   height: 110px;
   object-fit: contain;
-  margin-bottom: 0px;
 }
 
 .empty-gifts-text {
@@ -469,6 +537,125 @@
 
 .how-to-add-text:active {
   transform: scale(0.95);
+}
+
+/* Инвентарь с предметами */
+.inventory-container {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow-y: auto;
+  padding: 0 20px 20px;
+  box-sizing: border-box;
+  z-index: 1;
+}
+
+.items-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding-bottom: 20px;
+  min-height: min-content;
+}
+
+.inventory-item-frame {
+  width: 100%;
+  aspect-ratio: 100 / 120;
+  background-image: url('../assets/MainPage/chest3/back.png');
+  background-size: cover;
+  background-position: center;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: transform 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.inventory-item-frame:active {
+  transform: scale(0.95);
+}
+
+.new-item-pulse {
+  animation: newItemPulse 2s ease-in-out;
+}
+
+@keyframes newItemPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(250, 250, 250, 0.7);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 15px rgba(250, 250, 250, 0);
+    transform: scale(1.05);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    transform: scale(1);
+  }
+}
+
+.inventory-item-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+  position: relative;
+}
+
+.inventory-item-image {
+  max-width: 70%;
+  max-height: 60%;
+  object-fit: contain;
+  margin-bottom: 5px;
+}
+
+.inventory-item-price {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+  text-align: center;
+}
+
+.inventory-item-name {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 600;
+  font-size: 9px;
+  text-align: center;
+  color: rgba(53, 163, 242, 1);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 4px;
+  margin-top: 2px;
+}
+
+.inventory-item-status {
+  position: absolute;
+  bottom: 5px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-weight: 800;
+  font-size: 8px;
+  padding: 2px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #ff9800;
+  border: 1px solid #ff9800;
+}
+
+.inventory-item-status.pending {
+  color: #ff9800;
+  border-color: #ff9800;
 }
 
 .profile-footer {
@@ -625,8 +812,7 @@
   padding: 1px 0;
 }
 
-/* === Модальное окно === */
-
+/* === Модальное окно ADD GIFTS === */
 .profile-modal-overlay {
   position: fixed;
   top: 0;
@@ -784,6 +970,37 @@
   display: block;
 }
 
+/* Стили для загрузки в модалке ADD GIFTS */
+.profile-modal-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: 20px;
+}
+
+.profile-modal-loading .spinner {
+  width: 60px;
+  height: 60px;
+  border: 5px solid rgba(205, 226, 251, 0.3);
+  border-radius: 50%;
+  border-top-color: #CDE2FB;
+  border-left-color: #CDE2FB;
+  animation: spin 1s ease-in-out infinite;
+  box-shadow: 0 0 15px rgba(205, 226, 251, 0.5);
+}
+
+.profile-modal-loading p {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: #CDE2FB;
+  letter-spacing: 1px;
+  text-shadow: 0 0 10px rgba(205, 226, 251, 0.5);
+  margin: 0;
+}
+
 @keyframes modalSlideIn {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
@@ -792,87 +1009,6 @@
 @keyframes modalSlideOut {
   from { transform: translateY(0); }
   to { transform: translateY(100%); }
-}
-
-/* Инвентарь в демо-режиме */
-.demo-inventory-container {
-  width: 100%;
-  padding: 0 20px;
-  margin-top: 0px;
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
-  max-height: none;
-}
-
-.items-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  padding-bottom: 20px;
-  min-height: min-content;
-}
-
-.inventory-item-frame {
-  width: 100%;
-  aspect-ratio: 100 / 120;
-  background-image: url('../assets/MainPage/chest3/back.png');
-  background-size: cover;
-  background-position: center;
-  border-radius: 5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  transition: transform 0.2s ease;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.inventory-item-frame:active {
-  transform: scale(0.95);
-}
-
-.new-item-pulse {
-  animation: newItemPulse 2s ease-in-out;
-}
-
-@keyframes newItemPulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(250, 250, 250, 0.7);
-    transform: scale(1);
-  }
-  50% {
-    box-shadow: 0 0 0 15px rgba(250, 250, 250, 0);
-    transform: scale(1.05);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
-    transform: scale(1);
-  }
-}
-
-.inventory-item-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  padding: 8px;
-}
-
-.inventory-item-image {
-  max-width: 70%;
-  max-height: 60%;
-  object-fit: contain;
-  margin-bottom: 5px;
-}
-
-.inventory-item-price {
-  font-family: 'KZ Supercell-Magic', sans-serif;
-  font-weight: 800;
-  font-size: 12px;
-  text-align: center;
 }
 
 /* Стили для модалки продажи */
@@ -987,6 +1123,15 @@
   box-shadow: 0 3px 8px rgba(169, 229, 255, 0.3);
 }
 
+.sell-modal-button:active {
+  transform: scale(0.98);
+}
+
+.sell-modal-button--disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 /* Кнопка WITHDRAW в модалке продажи */
 .withdraw-modal-button {
   width: 100%;
@@ -1009,8 +1154,13 @@
   box-shadow: 0 4px 12px rgb(140, 219, 253);
 }
 
-.sell-modal-button:active {
+.withdraw-modal-button:active:not(:disabled) {
   transform: scale(0.98);
+}
+
+.withdraw-modal-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .sell-modal-close-btn {
@@ -1035,80 +1185,6 @@
 .sell-modal-close-icon {
   width: 42px;
   height: 42px;
-}
-
-/* Адаптив для мобильных */
-@media (max-width: 480px) {
-  .demo-inventory-container {
-    max-height: calc(100vh - 350px);
-  }
-  
-  .sell-modal-content {
-    width: 90%;
-    max-width: 320px;
-    padding: 25px 20px;
-  }
-  
-  .sell-item-frame {
-    width: 230px;
-    height: 240px;
-  }
-  
-  .sell-modal-button {
-    height: 50px;
-    font-size: 16px;
-  }
-}
-
-@media (max-width: 360px) {
-  .sell-modal-content {
-    width: 95%;
-    padding: 20px 15px;
-  }
-  
-  .sell-item-frame {
-    width: 160px;
-    height: 180px;
-  }
-}
-
-/* Улучшаем скролл для WebKit браузеров */
-.demo-inventory-container::-webkit-scrollbar {
-  width: 4px;
-}
-
-.demo-inventory-container::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.demo-inventory-container::-webkit-scrollbar-thumb {
-  background: rgba(53, 163, 242, 0.3);
-  border-radius: 2px;
-}
-
-.demo-inventory-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(53, 163, 242, 0.5);
-}
-
-.sell-all-button {
-  padding: 8px 16px;
-  font-family: 'KZ Supercell-Magic', sans-serif;
-  font-weight: 800;
-  font-size: 14px;
-  background: linear-gradient(135deg, #A9E5FF 0%, #FFFFFF 50%, #A9E5FF 100%);
-  border: 2px solid white;
-  border-radius: 8px;
-  color: white;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  min-width: 80px;
-  margin-left: auto;
-  margin-right: 30px;
-  margin-top: -10px;
-  -webkit-text-stroke: 1.5px #3AABED;
-  paint-order: stroke fill;
-  box-shadow: 0 3px 8px rgba(169, 229, 255, 0.3);
-  transition: all 0.2s ease;
 }
 
 /* Стили для модалки Sell All */
@@ -1199,311 +1275,29 @@
   paint-order: stroke fill;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-   box-shadow: 0 3px 8px rgba(169, 229, 255, 0.3);
+  box-shadow: 0 3px 8px rgba(169, 229, 255, 0.3);
 }
 
-
-.connect-wallet-btn-profile:disabled,
-.disconnect-wallet-btn-profile:disabled,
-.refresh-data-button:disabled {
-  opacity: 0.8;
-  cursor: not-allowed !important;
-}
-
-.add-button:disabled {
-  opacity: 0.8;
-  cursor: not-allowed;
-}
-
-
-.inventory-container{
-  max-height: 550px;
-  overflow-y: auto;
-}
-
-/* Контейнер подключения кошелька */
-.wallet-connect-section {
-  margin: 5px 20px 15px;
-  display: flex;
-  justify-content: center;
-}
-
-/* Кнопка подключения кошелька */
-.connect-wallet-btn-profile {
-  width: 240px;
-  height: 40px;
+/* Кнопка Sell All */
+.sell-all-button {
   padding: 8px 16px;
-  background: linear-gradient(135deg, #35a3f2, #37bdf3);
-  border: 2px solid rgba(169, 229, 255, 1);
-  border-radius: 10px;
   font-family: 'KZ Supercell-Magic', sans-serif;
   font-weight: 800;
-  font-size: 13px;
-  color: white;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.connect-wallet-btn-profile:hover:not(:disabled) {
-  background: linear-gradient(135deg, #2d92d8, #2fa8e0);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(53, 163, 242, 0.3);
-}
-
-.connect-wallet-btn-profile:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Информация о подключенном кошельке */
-.wallet-info-section {
-  margin: 5px 20px 15px;
-  padding: 12px 15px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  border: 2px solid rgba(169, 229, 255, 0.3);
-  backdrop-filter: blur(5px);
-}
-
-.connected-wallet-info-profile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.wallet-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: 'KZ Supercell-Magic', sans-serif;
-  font-weight: 800;
-  font-size: 16px;
-}
-
-.wallet-status.connected .wallet-name {
-  color: transparent;
-  background: linear-gradient(90deg, rgb(36, 92, 133), rgb(47, 162, 207));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.wallet-status-indicator {
-  font-size: 12px;
-}
-
-.wallet-address {
-  font-family: 'KZ Supercell-Magic', sans-serif;
-  font-size: 12px;
-  color: rgba(55, 189, 243, 1);
-  background: rgba(245, 249, 255, 0.8);
-  padding: 4px 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(53, 163, 242, 0.2);
-  letter-spacing: 0.5px;
-}
-
-.disconnect-wallet-btn-profile {
-  width: 150px;
-  height: 32px;
-  padding: 4px 12px;
-  background: linear-gradient(135deg, #ff6b6b, #ff5252);
-  border: 2px solid rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  background: linear-gradient(135deg, #A9E5FF 0%, #FFFFFF 50%, #A9E5FF 100%);
+  border: 2px solid white;
   border-radius: 8px;
-  font-family: 'KZ Supercell-Magic', sans-serif;
-  font-weight: 800;
-  font-size: 12px;
   color: white;
   cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.disconnect-wallet-btn-profile:hover:not(:disabled) {
-  background: linear-gradient(135deg, #ff5252, #ff4040);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
-}
-
-.disconnect-wallet-btn-profile:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Кнопка обновления данных */
-.refresh-data-button {
-  padding: 6px 12px;
-  background: linear-gradient(135deg, #3d6ea7, #1c4872);
-  border: none;
-  border-radius: 20px;
-  color: white;
-  font-family: 'KZ Supercell-Magic', sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
   -webkit-tap-highlight-color: transparent;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.refresh-data-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-}
-
-.refresh-data-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Адаптивность */
-@media (max-width: 480px) {
-  .wallet-connect-section {
-    margin: 5px 15px 10px;
-  }
-  
-  .connect-wallet-btn-profile {
-    width: 200px;
-    height: 36px;
-    font-size: 12px;
-  }
-  
-  .wallet-info-section {
-    margin: 5px 15px 10px;
-    padding: 10px;
-  }
-  
-  .disconnect-wallet-btn-profile {
-    width: 120px;
-    height: 28px;
-    font-size: 11px;
-  }
-  
-  .wallet-status {
-    font-size: 14px;
-  }
-  
-  .wallet-address {
-    font-size: 11px;
-    padding: 3px 8px;
-  }
-  
-  .refresh-data-button {
-    padding: 5px 10px;
-    font-size: 11px;
-  }
-}
-
-@media (max-width: 360px) {
-  .connect-wallet-btn-profile {
-    width: 180px;
-  }
-  
-  .refresh-data-button {
-    padding: 4px 8px;
-    font-size: 10px;
-  }
-}
-
-
-
-.profile-content {
-  flex: 1;
-  padding-top: 10px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  max-height: calc(100vh - 463px); /* Вот это ключевое ограничение */
-  overflow-y: hidden;
-}
-
-.inventory-container {
-  flex: 1;
-  max-height: 100%;
-  overflow-y: auto;
-  padding-bottom: 20px; /* Отступ внутри контейнера */
-  margin-bottom: 20px; /* Отступ снаружи для визуального разделения */
-}
-
-/* Добавьте эти стили в конец ProfileScreen.css */
-
-/* Стили для загрузки инвентаря */
-.loading-inventory {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  align-self: center;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 50px 20px;
-}
-
-.loading-inventory .spinner {
-  width: 60px;
-  height: 60px;
-  border: 3px solid rgba(53, 163, 242, 0.3);
-  border-top-color: rgba(53, 163, 242, 1);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 20px;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.loading-inventory p {
-  font-family: 'KZ Supercell-Magic', sans-serif;
-  font-weight: 800;
-  font-size: 16px;
-  line-height: 1.6;
-  color: transparent;
-  background: linear-gradient(0deg, rgba(128, 202, 244, 1), rgb(82, 159, 204));
-  -webkit-background-clip: text;
-  background-clip: text;
-  margin: 0;
-  padding: 0;
-  text-align: center;
-}
-
-/* Делаем сообщение о загрузке на том же месте, что и пустой инвентарь */
-.loading-inventory {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 1;
-}
-
-.empty-gifts-container {
-  position: relative;
-  min-height: 200px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.withdraw-modal-button:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-.withdraw-modal-button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
+  min-width: 80px;
+  margin-left: auto;
+  margin-right: 30px;
+  margin-top: -10px;
+  -webkit-text-stroke: 1.5px #3AABED;
+  paint-order: stroke fill;
+  box-shadow: 0 3px 8px rgba(169, 229, 255, 0.3);
+  transition: all 0.2s ease;
 }
 
 /* Модальное окно вывода средств */
@@ -1545,7 +1339,12 @@
   box-sizing: border-box;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
   animation: withdrawModalAppear 0.3s cubic-bezier(0.33, 1, 0.68, 1) forwards;
-  max-height: 485px;
+  max-height: 510px;
+  transition: max-height 0.3s ease;
+}
+
+.withdraw-modal-content--with-lock {
+  max-height: 625px !important;
 }
 
 @keyframes withdrawModalAppear {
@@ -1653,18 +1452,6 @@
   paint-order: stroke fill;
   position: relative;
   line-height: 1.3;
-}
-
-/* Альтернативное решение с более ярким желтым */
-.withdraw-time-alt {
-  display: inline-block;
-  color: #FFA500;
-  text-shadow: 
-    0 0 1px rgba(255, 165, 0, 0.8),
-    0 1px 2px rgba(0, 0, 0, 0.2);
-  font-weight: 900;
-  -webkit-text-stroke: 0.5px rgba(255, 215, 0, 0.8);
-  paint-order: stroke fill;
 }
 
 .withdraw-item-preview {
@@ -1775,103 +1562,9 @@
   cursor: not-allowed;
 }
 
-.withdraw-modal-close-btn {
-  position: absolute;
-  top: -65px;
-  right: -15px;
-  width: 58px;
-  height: 58px;
-  background: linear-gradient(180deg, rgb(180, 201, 226), rgba(255, 255, 255, 1));
-  border: 3px solid white;
-  border-radius: 15px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  padding: 0;
-  margin: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.withdraw-modal-close-btn:disabled {
-  opacity: 0.7;
+.withdraw-action-button--disabled {
+  opacity: 0.6;
   cursor: not-allowed;
-}
-
-.withdraw-modal-close-icon {
-  width: 42px;
-  height: 42px;
-}
-
-/* Статус предмета в инвентаре */
-.inventory-item-status {
-  position: absolute;
-  bottom: 5px;
-  left: 0;
-  right: 0;
-  text-align: center;
-  font-family: 'KZ Supercell-Magic', sans-serif;
-  font-weight: 800;
-  font-size: 8px;
-  padding: 2px;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.9);
-  color: #ff9800;
-  border: 1px solid #ff9800;
-}
-
-.inventory-item-status.pending {
-  color: #ff9800;
-  border-color: #ff9800;
-}
-
-/* Контейнер для предмета с относительным позиционированием */
-.inventory-item-content {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Имя предмета в инвентаре */
-.inventory-item-name {
-  font-family: 'KZ Supercell-Magic', sans-serif;
-  font-weight: 600;
-  font-size: 9px;
-  text-align: center;
-  color: rgba(53, 163, 242, 1);
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  padding: 0 4px;
-  margin-top: 2px;
-}
-
-/* Статус предмета в модалке продажи */
-.sell-item-status {
-  position: absolute;
-  bottom: 30px;
-  left: 0;
-  right: 0;
-  text-align: center;
-  font-family: 'KZ Supercell-Magic', sans-serif;
-  font-weight: 800;
-  font-size: 10px;
-  padding: 4px;
-  border-radius: 3px;
-  background: rgba(255, 152, 0, 0.2);
-  color: #ff9800;
-  border: 1px solid #ff9800;
-}
-
-/* Модальное окно вывода с увеличенной высотой при активном lock */
-.withdraw-modal-content--with-lock {
-  max-height: 540px !important;
 }
 
 /* Блок информации о lock */
@@ -1926,16 +1619,33 @@
   word-break: break-all;
 }
 
-/* Кнопка вывода в disabled состоянии */
-.withdraw-action-button--disabled {
-  opacity: 0.6;
+.withdraw-modal-close-btn {
+  position: absolute;
+  top: -65px;
+  right: -15px;
+  width: 58px;
+  height: 58px;
+  background: linear-gradient(180deg, rgb(180, 201, 226), rgba(255, 255, 255, 1));
+  border: 3px solid white;
+  border-radius: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.withdraw-modal-close-btn:disabled {
+  opacity: 0.7;
   cursor: not-allowed;
 }
 
-/* Кнопка продажи в disabled состоянии */
-.sell-modal-button--disabled {
-  opacity: 0.5;
-  pointer-events: none;
+.withdraw-modal-close-icon {
+  width: 42px;
+  height: 42px;
 }
 
 @keyframes pulse {
@@ -1950,59 +1660,25 @@
   }
 }
 
-/* Обновленные стили для модалки вывода */
-.withdraw-modal-content {
+/* Общие состояния для кнопок */
+.connect-wallet-btn-profile:disabled,
+.disconnect-wallet-btn-profile:disabled,
+.refresh-data-button:disabled,
+.add-button:disabled {
+  opacity: 0.8;
+  cursor: not-allowed !important;
+}
+
+.add-button:disabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+/* Убедимся, что эти элементы не перекрывают */
+.profile-header,
+.profile-main-row,
+.controls-row,
+.wallet-connect-section {
   position: relative;
-  width: 340px;
-  background: linear-gradient(180deg, rgb(230, 240, 250), rgba(255, 255, 255, 1));
-  border-radius: 25px;
-  border: 4px solid white;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 22px 25px 28px;
-  box-sizing: border-box;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
-  animation: withdrawModalAppear 0.3s cubic-bezier(0.33, 1, 0.68, 1) forwards;
-  max-height: 510px;
-  transition: max-height 0.3s ease;
-}
-
-.withdraw-modal-content--with-lock {
-  max-height: 625px !important;
-}
-
-/* Стили для загрузки в модалке */
-.profile-modal-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 300px;
-  gap: 20px;
-}
-
-.profile-modal-loading .spinner {
-  width: 60px;
-  height: 60px;
-  border: 5px solid rgba(205, 226, 251, 0.3);
-  border-radius: 50%;
-  border-top-color: #CDE2FB;
-  border-left-color: #CDE2FB;
-  animation: spin 1s ease-in-out infinite;
-  box-shadow: 0 0 15px rgba(205, 226, 251, 0.5);
-}
-
-.profile-modal-loading p {
-  font-family: 'KZ Supercell-Magic', sans-serif;
-  font-size: 18px;
-  font-weight: 800;
-  color: #CDE2FB;
-  letter-spacing: 1px;
-  text-shadow: 0 0 10px rgba(205, 226, 251, 0.5);
-  margin: 0;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
+  z-index: 3;
 }
