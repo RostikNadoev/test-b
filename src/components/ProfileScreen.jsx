@@ -3,6 +3,7 @@ import '../styles/ProfileScreen.css';
 import { useDemo } from '../contexts/DemoContext';
 import { authApi, usersApi, giftsApi, starsApi } from '../utils/api';
 import { tonConnect } from '../utils/tonConnect';
+import TonWeb from 'tonweb'; // Импортируем TonWeb для конвертации адресов
 
 import ava from '../assets/MainPage/ava.jpg';
 import tonGift from '../assets/Profile/ton-gift.svg';
@@ -43,6 +44,60 @@ export default function ProfileScreen({ onNavigate }) {
     addToDemoBalance,
     clearDemoInventory
   } = useDemo();
+
+  // Функция для конвертации raw адреса в user-friendly формат
+  const convertRawToUserFriendly = (rawAddress) => {
+    if (!rawAddress) return '';
+    
+    try {
+      // Если адрес уже в user-friendly формате (начинается с UQ, EQ, kQ, 0Q)
+      if (rawAddress.match(/^(UQ|EQ|kQ|0Q)/)) {
+        return rawAddress;
+      }
+      
+      // Если адрес в raw формате (0:...)
+      if (rawAddress.startsWith('0:')) {
+        // Убираем префикс '0:'
+        const hex = rawAddress.slice(2);
+        
+        // Создаем адрес в user-friendly формате
+        // Используем workchain 0 и bounceable формат (UQ...)
+        const address = new TonWeb.Address(hex);
+        
+        // Получаем адрес в bounceable формате (UQ...)
+        const bounceable = address.toString(true, true, false);
+        
+        console.log('Address conversion:', {
+          raw: rawAddress,
+          bounceable: bounceable
+        });
+        
+        return bounceable;
+      }
+      
+      return rawAddress;
+    } catch (error) {
+      console.error('Error converting address:', error);
+      return rawAddress;
+    }
+  };
+
+  // Функция для форматирования адреса для отображения
+  const formatWalletAddress = (address) => {
+    if (!address) return '';
+    
+    // Конвертируем raw адрес в user-friendly
+    const userFriendlyAddress = convertRawToUserFriendly(address);
+    
+    // Обрезаем для отображения
+    if (userFriendlyAddress.length <= 9) return userFriendlyAddress;
+    
+    // Для адресов UQ... оставляем первые 4 и последние 4 символа
+    // Например: UQCP...Hdg7
+    const prefix = userFriendlyAddress.slice(0, 4);
+    const suffix = userFriendlyAddress.slice(-4);
+    return `${prefix}...${suffix}`;
+  };
 
   useEffect(() => {
     const checkWalletStatus = async () => {
@@ -640,12 +695,6 @@ export default function ProfileScreen({ onNavigate }) {
     }
   };
 
-  const formatWalletAddress = (address) => {
-    if (!address) return '';
-    if (address.length <= 9) return address;
-    return `${address.slice(0, 5)}...${address.slice(-4)}`;
-  };
-
   const refreshUserData = async () => {
     try {
       setRefreshing(true);
@@ -817,7 +866,7 @@ export default function ProfileScreen({ onNavigate }) {
                 <div 
                   key={index} 
                   className={`inventory-item-frame ${newItems.has(index) ? 'new-item-pulse' : ''}`}
-                  onClick={() => handleItemClick(item, index)} // Всегда вызываем handleItemClick, независимо от статуса
+                  onClick={() => handleItemClick(item, index)}
                   title={item.status === 'withdraw_pending' ? 'Item is pending withdrawal (click to view)' : 'Click to sell/withdraw'}
                 >
                   <div className="inventory-item-content">
