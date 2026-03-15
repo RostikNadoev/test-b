@@ -90,6 +90,29 @@ const triggerHapticFeedback = (multiplier) => {
   }
 };
 
+// Список всех изображений для предзагрузки
+const imagesToPreload = [
+  rocketBack,
+  tonSvg,
+  starSvg,
+  switchSvg,
+  switchbSvg
+];
+
+// Функция для предзагрузки изображений
+const preloadImages = (imageUrls) => {
+  return Promise.all(
+    imageUrls.map((url) => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = url;
+        img.onload = resolve;
+        img.onerror = resolve; // Даже при ошибке продолжаем
+      });
+    })
+  );
+};
+
 export default function BounceFallScreen({ onNavigate }) {
   const plinkoRef = useRef();
   const currencyDropdownRef = useRef(null);
@@ -109,6 +132,10 @@ export default function BounceFallScreen({ onNavigate }) {
   // СОСТОЯНИЕ ДЛЯ ЭФФЕКТА ВЫИГРЫША
   const [winEffect, setWinEffect] = useState(null);
   
+  // СОСТОЯНИЕ ДЛЯ ЗАГРУЗКИ СТРАНИЦЫ
+  const [pageLoading, setPageLoading] = useState(true);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+  
   const { checkBalance, setNewBalances, loadBalances } = useBalance();
   const { 
     isDemoMode, 
@@ -118,6 +145,27 @@ export default function BounceFallScreen({ onNavigate }) {
     checkDemoBalance,
     getDemoBalance 
   } = useDemo();
+
+  // Предзагрузка всех изображений при монтировании
+  useEffect(() => {
+    const loadAllImages = async () => {
+      try {
+        console.log('🖼️ Preloading Plinko images...');
+        await preloadImages(imagesToPreload);
+        console.log('✅ All Plinko images loaded');
+        setImagesLoaded(true);
+        
+        // Даем небольшую задержку для плавности
+        setTimeout(() => setPageLoading(false), 500);
+      } catch (error) {
+        console.error('❌ Error loading Plinko images:', error);
+        setImagesLoaded(true);
+        setPageLoading(false);
+      }
+    };
+
+    loadAllImages();
+  }, []);
 
   // Обработчики для слайдера
   const handleSliderStart = (e) => {
@@ -402,6 +450,21 @@ export default function BounceFallScreen({ onNavigate }) {
 
   // Процент для слайдера
   const sliderPercentage = ((ballCount - 1) / 9) * 100;
+
+  // Если страница загружается, показываем спинер
+  if (pageLoading) {
+    return (
+      <div className="plinko-screen">
+        <div className="plinko-header-wrapper">
+          <Header onNavigate={onNavigate} variant="plinko" />
+        </div>
+        <div className="page-loading-container">
+          <div className="page-loading-spinner"></div>
+          <p className="page-loading-text">Loading game...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 
