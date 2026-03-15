@@ -34,7 +34,7 @@ export default function ProfileScreen({ onNavigate }) {
   const [withdrawResult, setWithdrawResult] = useState(null);
   const [starsBalance, setStarsBalance] = useState(0);
   const [checkingBalance, setCheckingBalance] = useState(false);
-  const [giftchangeLoaded, setGiftchangeLoaded] = useState(false); // Новый state для отслеживания загрузки изображения
+  const [giftchangeLoaded, setGiftchangeLoaded] = useState(false);
   
   const { 
     isDemoMode, 
@@ -51,7 +51,7 @@ export default function ProfileScreen({ onNavigate }) {
       const img = new Image();
       img.src = giftchange;
       img.onload = () => setGiftchangeLoaded(true);
-      img.onerror = () => setGiftchangeLoaded(true); // Даже при ошибке показываем контент
+      img.onerror = () => setGiftchangeLoaded(true);
     }
   }, [isModalOpen, giftchangeLoaded]);
 
@@ -92,7 +92,6 @@ export default function ProfileScreen({ onNavigate }) {
     if (isWithdrawModalOpen && !isDemoMode && selectedItem) {
       loadStarsBalance();
       
-      // Проверяем, есть ли у выбранного предмета статус withdraw_pending
       if (selectedItem.status === 'withdraw_pending' && selectedItem.locked_until) {
         setWithdrawResult({
           locked_until: selectedItem.locked_until,
@@ -226,14 +225,13 @@ export default function ProfileScreen({ onNavigate }) {
     return 'item-price';
   };
 
-  // Функция для получения отсортированного инвентаря
   const getSortedInventory = () => {
     const items = isDemoMode ? demoInventory : inventory;
     
     return [...items].sort((a, b) => {
       const priceA = parseFloat(getItemPrice(a).replace(/[^\d.-]/g, ''));
       const priceB = parseFloat(getItemPrice(b).replace(/[^\d.-]/g, ''));
-      return priceB - priceA; // По убыванию (сначала дорогие)
+      return priceB - priceA;
     });
   };
 
@@ -388,7 +386,6 @@ export default function ProfileScreen({ onNavigate }) {
   const handleWithdraw = async () => {
     if (isDemoMode || !selectedItem) return;
     
-    // Если предмет уже в статусе withdraw_pending, ничего не делаем
     if (selectedItem.status === 'withdraw_pending') {
       alert('This item is already pending withdrawal');
       setWithdrawing(false);
@@ -398,7 +395,6 @@ export default function ProfileScreen({ onNavigate }) {
     try {
       setWithdrawing(true);
       
-      // 1. Получаем inventory_id
       const inventoryId = selectedItem.inventory_id || selectedItem.id;
       if (!inventoryId) {
         alert('❌ Error: Missing item ID');
@@ -408,14 +404,11 @@ export default function ProfileScreen({ onNavigate }) {
       
       console.log(`🎮 Starting withdrawal for item ${inventoryId}...`);
       
-      // 2. Вызываем API для вывода
       const result = await giftsApi.withdrawItem(inventoryId);
       
-      // 3. Проверяем, нужно ли пополнить баланс
       if (result.need_topup) {
         console.log('💰 Need to top up stars:', result);
         
-        // Открываем invoice для пополнения
         if (result.invoice_link) {
           if (window.Telegram?.WebApp) {
             window.Telegram.WebApp.openTelegramLink(result.invoice_link);
@@ -423,7 +416,6 @@ export default function ProfileScreen({ onNavigate }) {
             window.open(result.invoice_link, '_blank');
           }
           
-          // Показываем сообщение о необходимости пополнить баланс
           alert(`⚠️ Insufficient Stars balance!\n\nNeed: ${result.topup_amount} Stars\nFee: ${result.withdraw_fee} Stars\n\nPlease complete the payment in Telegram to continue.`);
         } else {
           alert(`⚠️ Insufficient Stars balance! Need ${result.topup_amount || 50} Stars.`);
@@ -433,14 +425,11 @@ export default function ProfileScreen({ onNavigate }) {
         return;
       }
       
-      // 4. Если вывод успешен (вариант B - Stars хватает)
       if (result.ok || result.mode === 'manual') {
         console.log('✅ Withdrawal successful:', result);
         
-        // Сохраняем результат для отображения
         setWithdrawResult(result);
         
-        // Обновляем баланс звезд если он вернулся в ответе
         if (result.balance_stars !== undefined) {
           authApi.updateUserData({
             balance_stars: result.balance_stars
@@ -448,13 +437,10 @@ export default function ProfileScreen({ onNavigate }) {
           setStarsBalance(result.balance_stars);
         }
         
-        // Обновляем инвентарь через API
         await loadUserData();
         
-        // Показываем сообщение об успехе
         alert('✅ Withdrawal request created successfully!\n\nThe item will be withdrawn within 24 hours.');
         
-        // Обновляем выбранный предмет с новым статусом
         const updatedItem = {
           ...selectedItem,
           status: 'withdraw_pending',
@@ -492,7 +478,7 @@ export default function ProfileScreen({ onNavigate }) {
   };
 
   const handleOpenModal = () => {
-    setGiftchangeLoaded(false); // Сбрасываем состояние загрузки при открытии
+    setGiftchangeLoaded(false);
     setIsModalOpen(true);
     setIsClosing(false);
   };
@@ -505,12 +491,11 @@ export default function ProfileScreen({ onNavigate }) {
     if (isClosing) {
       setIsModalOpen(false);
       setIsClosing(false);
-      setGiftchangeLoaded(false); // Сбрасываем при закрытии
+      setGiftchangeLoaded(false);
     }
   };
 
   const handleItemClick = (item, index) => {
-    // Всегда можно нажать на предмет, независимо от статуса
     setSelectedItem({ ...item, originalIndex: index });
     setIsSellModalOpen(true);
   };
@@ -678,7 +663,6 @@ export default function ProfileScreen({ onNavigate }) {
     return getSortedInventory();
   };
 
-  // Форматирование locked_until для отображения
   const formatLockedUntil = (lockedUntil) => {
     if (!lockedUntil) return '';
     
@@ -697,7 +681,6 @@ export default function ProfileScreen({ onNavigate }) {
     }
   };
 
-  // Проверяем, есть ли у выбранного предмета активный вывод
   const hasActiveWithdraw = () => {
     return selectedItem?.status === 'withdraw_pending' || withdrawResult !== null;
   };
@@ -818,67 +801,68 @@ export default function ProfileScreen({ onNavigate }) {
           )}
         </div>
 
-        {loading ? (
-          <div className="loading-inventory">
-            <div className="spinner"></div>
-            <p>Loading inventory...</p>
-          </div>
-        ) : getItemsToDisplay().length > 0 ? (
-          <div className="inventory-container">
-            <div className="items-grid">
-              {getItemsToDisplay().map((item, index) => (
-                <div 
-                  key={index} 
-                  className={`inventory-item-frame ${newItems.has(index) ? 'new-item-pulse' : ''}`}
-                  onClick={() => handleItemClick(item, index)}
-                  title={item.status === 'withdraw_pending' ? 'Item is pending withdrawal (click to view)' : 'Click to sell/withdraw'}
-                >
-                  <div className="inventory-item-content">
-                    <img 
-                      src={getItemImage(item)} 
-                      alt={item.name || 'Item'} 
-                      className="inventory-item-image"
-                      loading="lazy"
-                      onError={(e) => {
-                        console.error('Failed to load image:', item);
-                        e.target.src = cardton1;
-                      }}
-                    />
-                    <div className={`inventory-item-price ${getPriceClass(getItemPrice(item))}`}>
-                      {getItemPrice(item)}
+        <div className="profile-content-wrapper">
+          {loading ? (
+            <div className="loading-inventory">
+              <div className="spinner"></div>
+              <p>Loading inventory...</p>
+            </div>
+          ) : getItemsToDisplay().length > 0 ? (
+            <div className="inventory-container">
+              <div className="items-grid">
+                {getItemsToDisplay().map((item, index) => (
+                  <div 
+                    key={index} 
+                    className={`inventory-item-frame ${newItems.has(index) ? 'new-item-pulse' : ''}`}
+                    onClick={() => handleItemClick(item, index)}
+                    title={item.status === 'withdraw_pending' ? 'Item is pending withdrawal (click to view)' : 'Click to sell/withdraw'}
+                  >
+                    <div className="inventory-item-content">
+                      <img 
+                        src={getItemImage(item)} 
+                        alt={item.name || 'Item'} 
+                        className="inventory-item-image"
+                        loading="lazy"
+                        onError={(e) => {
+                          console.error('Failed to load image:', item);
+                          e.target.src = cardton1;
+                        }}
+                      />
+                      <div className={`inventory-item-price ${getPriceClass(getItemPrice(item))}`}>
+                        {getItemPrice(item)}
+                      </div>
+                      {item.name && (
+                        <div className="inventory-item-name">
+                          {item.name}
+                        </div>
+                      )}
+                      {item.status === 'withdraw_pending' && (
+                        <div className="inventory-item-status pending">
+                          PENDING
+                        </div>
+                      )}
                     </div>
-                    {item.name && (
-                      <div className="inventory-item-name">
-                        {item.name}
-                      </div>
-                    )}
-                    {/* Отображаем статус, если есть */}
-                    {item.status === 'withdraw_pending' && (
-                      <div className="inventory-item-status pending">
-                        PENDING
-                      </div>
-                    )}
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className='empty-gifts-container'>
-            <div className="empty-gifts-animation-wrapper">
-              <img
-                src={gift}
-                className="empty-gifts-animation"
-                alt="Empty gifts animation"
-                loading="lazy"
-              />
+          ) : (
+            <div className='empty-gifts-container'>
+              <div className="empty-gifts-animation-wrapper">
+                <img
+                  src={gift}
+                  className="empty-gifts-animation"
+                  alt="Empty gifts animation"
+                  loading="lazy"
+                />
+              </div>
+              <div className="empty-gifts-text">
+                <p className="no-gifts-text">No gifts yet.</p>
+                <p className="how-to-add-text" onClick={handleOpenModal}>How to add?</p>
+              </div>
             </div>
-            <div className="empty-gifts-text">
-              <p className="no-gifts-text">No gifts yet.</p>
-              <p className="how-to-add-text" onClick={handleOpenModal}>How to add?</p>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </main>
 
       {isModalOpen && (
@@ -897,7 +881,6 @@ export default function ProfileScreen({ onNavigate }) {
             onMouseLeave={handleTouchEnd}
           >
             {!giftchangeLoaded ? (
-              // Показываем спинер пока загружается изображение
               <div className="profile-modal-loading">
                 <div className="spinner"></div>
                 <p>Loading...</p>
@@ -1015,7 +998,6 @@ export default function ProfileScreen({ onNavigate }) {
                 </p>
               </div>
               
-              {/* Блок с информацией о locked-статусе */}
               {hasActiveWithdraw() && (
                 <div className="withdraw-lock-info">
                   <div className="withdraw-lock-icon">🔒</div>
