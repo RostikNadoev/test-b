@@ -3,7 +3,7 @@ import '../styles/ProfileScreen.css';
 import { useDemo } from '../contexts/DemoContext';
 import { authApi, usersApi, giftsApi, starsApi } from '../utils/api';
 import { tonConnect } from '../utils/tonConnect';
-import { Address } from '@ton/core'; // <-- ДОБАВЛЕН ИМПОРТ
+import { Address } from 'ton'; // <-- ИСПОЛЬЗУЕМ БИБЛИОТЕКУ ton
 
 import ava from '../assets/MainPage/ava.jpg';
 import tonGift from '../assets/Profile/ton-gift.svg';
@@ -35,6 +35,7 @@ export default function ProfileScreen({ onNavigate }) {
   const [withdrawResult, setWithdrawResult] = useState(null);
   const [starsBalance, setStarsBalance] = useState(0);
   const [checkingBalance, setCheckingBalance] = useState(false);
+  const [fullAddress, setFullAddress] = useState(''); // Для хранения полного адреса
   
   const { 
     isDemoMode, 
@@ -53,8 +54,20 @@ export default function ProfileScreen({ onNavigate }) {
           if (connected) {
             const wallet = await tonConnect.getWallet();
             setWalletInfo(wallet);
+            
+            // Сохраняем полный адрес в user-friendly формате
+            if (wallet?.account?.address) {
+              try {
+                const friendlyAddress = getFullFriendlyAddress(wallet.account.address);
+                setFullAddress(friendlyAddress);
+              } catch (error) {
+                console.error('Error setting full address:', error);
+                setFullAddress(wallet.account.address);
+              }
+            }
           } else {
             setWalletInfo(null);
+            setFullAddress('');
           }
         } catch (error) {
           console.error('Error checking wallet status:', error);
@@ -66,6 +79,17 @@ export default function ProfileScreen({ onNavigate }) {
 
     const unsubscribe = tonConnect.onStatusChange((wallet) => {
       setWalletInfo(wallet);
+      if (wallet?.account?.address) {
+        try {
+          const friendlyAddress = getFullFriendlyAddress(wallet.account.address);
+          setFullAddress(friendlyAddress);
+        } catch (error) {
+          console.error('Error setting full address:', error);
+          setFullAddress(wallet.account.address);
+        }
+      } else {
+        setFullAddress('');
+      }
     });
 
     return () => {
@@ -616,6 +640,18 @@ export default function ProfileScreen({ onNavigate }) {
       
       if (wallet) {
         setWalletInfo(wallet);
+        
+        // Сохраняем полный адрес в user-friendly формате
+        if (wallet?.account?.address) {
+          try {
+            const friendlyAddress = getFullFriendlyAddress(wallet.account.address);
+            setFullAddress(friendlyAddress);
+          } catch (error) {
+            console.error('Error setting full address:', error);
+            setFullAddress(wallet.account.address);
+          }
+        }
+        
         alert(`Connected to ${wallet.device?.appName || 'Wallet'}!`);
       }
     } catch (error) {
@@ -634,10 +670,35 @@ export default function ProfileScreen({ onNavigate }) {
     try {
       await tonConnect.disconnect();
       setWalletInfo(null);
+      setFullAddress('');
       alert('Wallet disconnected');
     } catch (error) {
       console.error('Disconnect error:', error);
       alert(`Error: ${error.message}`);
+    }
+  };
+
+  // Функция для получения полного user-friendly адреса
+  const getFullFriendlyAddress = (address) => {
+    if (!address) return '';
+    
+    try {
+      // Проверяем, является ли адрес сырым форматом (начинается с "0:")
+      if (address.startsWith('0:')) {
+        // Парсим сырой адрес и конвертируем в user-friendly формат
+        const friendlyAddress = Address.parseRaw(address).toString({
+          bounceable: false,  // Используем non-bounceable (UQ...)
+          testOnly: false
+        });
+        console.log('Converted raw address:', address, '->', friendlyAddress);
+        return friendlyAddress;
+      }
+      
+      // Если адрес уже в user-friendly формате, возвращаем как есть
+      return address;
+    } catch (error) {
+      console.error('Error converting address:', error);
+      return address;
     }
   };
 
@@ -650,13 +711,13 @@ export default function ProfileScreen({ onNavigate }) {
       
       // Проверяем, является ли адрес сырым форматом (начинается с "0:")
       if (address.startsWith('0:')) {
-        // Парсим сырой адрес и конвертируем в user-friendly формат
-        const friendlyAddress = Address.parseRaw(address).toString({
-          bounceable: false,  // Используем non-bounceable (UQ...)
-          testOnly: false
-        });
-        displayAddress = friendlyAddress;
-        console.log('Converted raw address:', address, '->', displayAddress);
+        // Используем уже сохраненный fullAddress если он есть
+        if (fullAddress) {
+          displayAddress = fullAddress;
+        } else {
+          // Если нет, конвертируем сейчас
+          displayAddress = getFullFriendlyAddress(address);
+        }
       }
       
       // Обрезаем для отображения
@@ -671,24 +732,6 @@ export default function ProfileScreen({ onNavigate }) {
       if (address.length > 9) {
         return `${address.slice(0, 5)}...${address.slice(-4)}`;
       }
-      return address;
-    }
-  };
-
-  // Дополнительная функция для получения полного friendly-адреса
-  const getFullFriendlyAddress = (address) => {
-    if (!address) return '';
-    
-    try {
-      if (address.startsWith('0:')) {
-        return Address.parseRaw(address).toString({
-          bounceable: false,
-          testOnly: false
-        });
-      }
-      return address;
-    } catch (error) {
-      console.error('Error getting full address:', error);
       return address;
     }
   };
@@ -809,10 +852,26 @@ export default function ProfileScreen({ onNavigate }) {
                 <div className="wallet-address">
                   {formatWalletAddress(walletInfo.account?.address || '')}
                 </div>
-                {/* Добавляем подсказку при наведении с полным адресом */}
-                {walletInfo.account?.address && walletInfo.account.address.startsWith('0:') && (
-                  <div className="wallet-address-full" style={{ fontSize: '10px', opacity: 0.5, marginTop: '2px' }}>
-                    {getFullFriendlyAddress(walletInfo.account.address)}
+                {/* Показываем полный адрес для копирования */}
+                {fullAddress && (
+                  <div 
+                    className="wallet-address-full" 
+                    onClick={() => {
+                      navigator.clipboard.writeText(fullAddress);
+                      alert('Address copied to clipboard!');
+                    }}
+                    style={{ 
+                      fontSize: '11px', 
+                      opacity: 0.7, 
+                      marginTop: '4px',
+                      cursor: 'pointer',
+                      wordBreak: 'break-all',
+                      textAlign: 'center',
+                      maxWidth: '250px'
+                    }}
+                    title="Click to copy full address"
+                  >
+                    {fullAddress}
                   </div>
                 )}
                 <button 
@@ -870,7 +929,7 @@ export default function ProfileScreen({ onNavigate }) {
                 <div 
                   key={index} 
                   className={`inventory-item-frame ${newItems.has(index) ? 'new-item-pulse' : ''}`}
-                  onClick={() => handleItemClick(item, index)} // Всегда вызываем handleItemClick, независимо от статуса
+                  onClick={() => handleItemClick(item, index)}
                   title={item.status === 'withdraw_pending' ? 'Item is pending withdrawal (click to view)' : 'Click to sell/withdraw'}
                 >
                   <div className="inventory-item-content">
