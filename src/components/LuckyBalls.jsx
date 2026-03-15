@@ -94,8 +94,9 @@ export default function LuckyBalls({
   const [isLoading, setIsLoading] = useState(false);
   const [lastPickResult, setLastPickResult] = useState(null);
   const [isScrolling, setIsScrolling] = useState(false);
-  const [pageLoading, setPageLoading] = useState(true); // Состояние загрузки страницы
+  const [pageLoading, setPageLoading] = useState(true);
   const [imagesLoaded, setImagesLoaded] = useState(false);
+  const [initialScrollDone, setInitialScrollDone] = useState(false);
 
   const { balances, checkBalance, setNewBalances, loadBalances } = useBalance();
   const { isDemoMode, demoBalances, removeFromDemoBalance, addToDemoBalance, checkDemoBalance, getDemoBalance } = useDemo();
@@ -108,7 +109,7 @@ export default function LuckyBalls({
         await preloadImages(imagesToPreload);
         console.log('✅ All images loaded');
         setImagesLoaded(true);
-        setTimeout(() => setPageLoading(false), 500); // Небольшая задержка для плавности
+        setTimeout(() => setPageLoading(false), 500);
       } catch (error) {
         console.error('❌ Error loading images:', error);
         setImagesLoaded(true);
@@ -125,8 +126,9 @@ export default function LuckyBalls({
     }
   }, [isDemoMode, imagesLoaded]);
 
+  // Скролл к текущему уровню
   useEffect(() => {
-    if (tilesContainerRef.current && rowRefs.current[currentLevel] && !isScrolling) {
+    if (!pageLoading && tilesContainerRef.current && rowRefs.current[currentLevel] && !isScrolling) {
       setIsScrolling(true);
       
       const scrollToRow = () => {
@@ -150,27 +152,36 @@ export default function LuckyBalls({
       const timer = setTimeout(scrollToRow, 100);
       return () => clearTimeout(timer);
     }
-  }, [currentLevel]);
+  }, [currentLevel, pageLoading]);
 
+  // Начальный скролл к первой ступеньке (уровень 1)
   useEffect(() => {
-    const initialScroll = setTimeout(() => {
-      if (tilesContainerRef.current && rowRefs.current[1]) {
+    if (!pageLoading && !initialScrollDone && tilesContainerRef.current && rowRefs.current[1]) {
+      setInitialScrollDone(true);
+      
+      const scrollToFirstRow = () => {
         const rowElement = rowRefs.current[1];
-        if (rowElement) {
-          const containerHeight = tilesContainerRef.current.clientHeight;
-          const rowTop = rowElement.offsetTop;
-          const rowHeight = rowElement.clientHeight;
-          
-          const targetScroll = Math.max(0, rowTop - (containerHeight / 2) + (rowHeight / 2));
-          
-          tilesContainerRef.current.scrollTo({
-            top: targetScroll,
-            behavior: 'smooth'
-          });
-        }
-      }
-    }, 300);
-    
+        if (!rowElement || !tilesContainerRef.current) return;
+        
+        const containerHeight = tilesContainerRef.current.clientHeight;
+        const rowTop = rowElement.offsetTop;
+        const rowHeight = rowElement.clientHeight;
+        
+        const targetScroll = Math.max(0, rowTop - (containerHeight / 2) + (rowHeight / 2));
+        
+        tilesContainerRef.current.scrollTo({
+          top: targetScroll,
+          behavior: 'smooth'
+        });
+      };
+      
+      // Небольшая задержка для полной отрисовки
+      setTimeout(scrollToFirstRow, 300);
+    }
+  }, [pageLoading, initialScrollDone]);
+
+  // Обработчик клика вне дропдауна
+  useEffect(() => {
     const handleClickOutside = (event) => {
       if (currencyDropdownRef.current && !currencyDropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false);
@@ -180,7 +191,6 @@ export default function LuckyBalls({
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-      clearTimeout(initialScroll);
     };
   }, []);
 
@@ -243,7 +253,6 @@ export default function LuckyBalls({
 
     // ДЕМО РЕЖИМ
     if (isDemoMode) {
-      // Проверяем соответствующий демо-баланс
       const currentBalance = getDemoBalance(currency);
       
       if (currentBalance < bet) {
@@ -251,20 +260,18 @@ export default function LuckyBalls({
         return;
       }
       
-      // Списываем с соответствующего демо-баланса
       removeFromDemoBalance(bet, currency);
       
       setIsLoading(true);
       
-      // Запускаем демо-игру с ПЕРВОГО уровня
       setActiveGameId('demo_' + Date.now());
-      setCurrentLevel(0); // Важно: currentLevel = 0 означает, что следующий уровень - 1
-      setMultiplier(1); // Множитель пока 1, обновится после первого клика
+      setCurrentLevel(0);
+      setMultiplier(1);
       setGameState('playing');
       setTileStates({});
       setSelectedTiles([]);
       setLastPickResult(null);
-      setCurrentPrize(0); // Приз пока 0, обновится после первого клика
+      setCurrentPrize(0);
       
       setTimeout(() => setIsLoading(false), 500);
       return;
@@ -276,7 +283,6 @@ export default function LuckyBalls({
       
       const currency = selectedCurrency.toLowerCase();
       
-      // Проверяем баланс через контекст
       if (!checkBalance(currency, bet)) {
         alert(`Insufficient ${selectedCurrency} balance`);
         setIsLoading(false);
@@ -295,11 +301,8 @@ export default function LuckyBalls({
         setSelectedTiles([]);
         setLastPickResult(null);
         
-        // Обновляем балансы через контекст
         if (response.balance) {
           setNewBalances(response.balance);
-          
-          // Отправляем событие обновления баланса
           window.dispatchEvent(new CustomEvent('balanceUpdate'));
         }
         
@@ -321,12 +324,9 @@ export default function LuckyBalls({
   const handleTileClick = async (row, tile) => {
     if (gameState !== 'playing' || row !== currentLevel + 1 || isLoading || isScrolling) return;
     
-    // ДЕМО РЕЖИМ
     if (isDemoMode) {
       setIsLoading(true);
       
-      // Определяем результат на основе шансов для текущего уровня
-      // row = currentLevel + 1, поэтому текущий уровень = row
       const currentGameLevel = row;
       const isWin = getDemoPickResult(currentGameLevel);
       
@@ -343,7 +343,6 @@ export default function LuckyBalls({
       setLastPickResult({ is_win: isWin });
       
       if (isWin) {
-        // Обновляем множитель и приз для текущего уровня
         const currentMultiplier = DEMO_LEVEL_MULTIPLIERS[currentGameLevel] || 1;
         setMultiplier(currentMultiplier);
         
@@ -351,11 +350,9 @@ export default function LuckyBalls({
         const newPrize = bet * currentMultiplier;
         setCurrentPrize(selectedCurrency === 'STARS' ? Math.round(newPrize) : newPrize);
         
-        // Переход на следующий уровень
         const nextLevel = currentGameLevel;
         
         if (nextLevel < 10) {
-          // Есть следующий уровень - обновляем currentLevel
           setCurrentLevel(nextLevel);
           
           setTimeout(() => {
@@ -363,14 +360,12 @@ export default function LuckyBalls({
             setIsLoading(false);
           }, 800);
         } else {
-          // Дошли до 10 уровня и выиграли
           setTimeout(() => {
-            setGameState('playing'); // Оставляем в состоянии игры, чтобы можно было забрать выигрыш
+            setGameState('playing');
             setIsLoading(false);
           }, 800);
         }
       } else {
-        // Проигрыш
         setCurrentPrize(0);
         
         setTimeout(() => {
@@ -382,7 +377,6 @@ export default function LuckyBalls({
       return;
     }
 
-    // РЕАЛЬНЫЙ РЕЖИМ
     if (!activeGameId) {
       alert('No active game found');
       return;
@@ -451,9 +445,7 @@ export default function LuckyBalls({
     if (isLoading || isScrolling) return;
     const currency = selectedCurrency.toLowerCase();
 
-    // ДЕМО РЕЖИМ
     if (isDemoMode) {
-      // Добавляем выигрыш к соответствующему демо-балансу
       if (currentPrize > 0) {
         addToDemoBalance(currentPrize, currency);
       }
@@ -463,7 +455,6 @@ export default function LuckyBalls({
       return;
     }
 
-    // РЕАЛЬНЫЙ РЕЖИМ
     try {
       setIsLoading(true);
       
@@ -479,11 +470,8 @@ export default function LuckyBalls({
           setCurrentPrize(game.payout);
         }
         
-        // Обновляем балансы через контекст
         if (response.balance) {
           setNewBalances(response.balance);
-          
-          // Отправляем событие обновления баланса
           window.dispatchEvent(new CustomEvent('balanceUpdate'));
         }
         
@@ -724,7 +712,7 @@ export default function LuckyBalls({
                 ? 'YOU LOST!' 
                 : gameState === 'cashed_out' 
                   ? 'CASHED OUT!' 
-                  : `LEVEL ${currentLevel + 1}`} {/* Показываем текущий уровень + 1 */}
+                  : `LEVEL ${currentLevel + 1}`}
             </div>
           </div>
           
@@ -752,7 +740,6 @@ export default function LuckyBalls({
     }
   };
 
-  // Если страница загружается, показываем спинер
   if (pageLoading) {
     return (
       <div className="lucky-balls-screen">
