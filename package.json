@@ -14,7 +14,7 @@
     "@react-three/cannon": "^6.6.0",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
-    "@ton/core": "^0.62.0",
+    "@ton/core": "^0.62.1",
     "@tonconnect/sdk": "^3.3.1",
     "@tonconnect/ui": "^2.3.1",
     "antd": "^6.2.0",

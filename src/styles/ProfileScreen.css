@@ -1971,3 +1971,13 @@
 .withdraw-modal-content--with-lock {
   max-height: 625px !important;
 }
+
+
+.wallet-address-full {
+  font-size: 10px;
+  opacity: 0.5;
+  margin-top: 2px;
+  word-break: break-all;
+  max-width: 200px;
+  text-align: center;
+}
