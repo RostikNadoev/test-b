@@ -817,20 +817,22 @@ export default function ProfileScreen({ onNavigate }) {
                 <div 
                   key={index} 
                   className={`inventory-item-frame ${newItems.has(index) ? 'new-item-pulse' : ''}`}
-                  onClick={() => handleItemClick(item, index)} // Всегда вызываем handleItemClick, независимо от статуса
+                  onClick={() => handleItemClick(item, index)}
                   title={item.status === 'withdraw_pending' ? 'Item is pending withdrawal (click to view)' : 'Click to sell/withdraw'}
                 >
                   <div className="inventory-item-content">
-                    <img 
-                      src={getItemImage(item)} 
-                      alt={item.name || 'Item'} 
-                      className="inventory-item-image"
-                      loading="lazy"
-                      onError={(e) => {
-                        console.error('Failed to load image:', item);
-                        e.target.src = cardton1;
-                      }}
-                    />
+                    <div className="inventory-item-image-wrapper">
+                      <img 
+                        src={getItemImage(item)} 
+                        alt={item.name || 'Item'} 
+                        className="inventory-item-image"
+                        loading="lazy"
+                        onError={(e) => {
+                          console.error('Failed to load image:', item);
+                          e.target.src = cardton1;
+                        }}
+                      />
+                    </div>
                     <div className={`inventory-item-price ${getPriceClass(getItemPrice(item))}`}>
                       {getItemPrice(item)}
                     </div>
