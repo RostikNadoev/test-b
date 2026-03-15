@@ -3,7 +3,6 @@ import '../styles/ProfileScreen.css';
 import { useDemo } from '../contexts/DemoContext';
 import { authApi, usersApi, giftsApi, starsApi } from '../utils/api';
 import { tonConnect } from '../utils/tonConnect';
-import TonWeb from 'tonweb'; // Импортируем TonWeb для конвертации адресов
 
 import ava from '../assets/MainPage/ava.jpg';
 import tonGift from '../assets/Profile/ton-gift.svg';
@@ -12,6 +11,12 @@ import giftchange from '../assets/Profile/giftchange.png';
 import gift from '../assets/Profile/gift.png';
 import cardton1 from '../assets/MainPage/chest1/ton.png';
 import starIcon from '../assets/MainPage/star1.png';
+
+// Импортируем Buffer полифилл
+import { Buffer } from 'buffer';
+
+// Добавляем Buffer в глобальную область видимости
+window.Buffer = Buffer;
 
 export default function ProfileScreen({ onNavigate }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -45,6 +50,15 @@ export default function ProfileScreen({ onNavigate }) {
     clearDemoInventory
   } = useDemo();
 
+  // Функция для конвертации hex строки в Uint8Array
+  const hexToBytes = (hex) => {
+    const bytes = [];
+    for (let i = 0; i < hex.length; i += 2) {
+      bytes.push(parseInt(hex.substr(i, 2), 16));
+    }
+    return new Uint8Array(bytes);
+  };
+
   // Функция для конвертации raw адреса в user-friendly формат
   const convertRawToUserFriendly = (rawAddress) => {
     if (!rawAddress) return '';
@@ -60,19 +74,52 @@ export default function ProfileScreen({ onNavigate }) {
         // Убираем префикс '0:'
         const hex = rawAddress.slice(2);
         
-        // Создаем адрес в user-friendly формате
-        // Используем workchain 0 и bounceable формат (UQ...)
-        const address = new TonWeb.Address(hex);
+        // Для TON адресов:
+        // workchain = 0 (1 байт)
+        // hash = 32 байта (64 hex символа)
         
-        // Получаем адрес в bounceable формате (UQ...)
-        const bounceable = address.toString(true, true, false);
+        // Проверяем длину hex
+        if (hex.length !== 64) {
+          console.warn('Unexpected hex length:', hex.length);
+          return rawAddress;
+        }
+        
+        // Конвертируем hex в байты
+        const hashBytes = hexToBytes(hex);
+        
+        // Создаем буфер: workchain (1 байт) + hash (32 байта)
+        const buffer = new Uint8Array(33);
+        buffer[0] = 0; // workchain = 0
+        buffer.set(hashBytes, 1);
+        
+        // Добавляем флаги: bounceable = true, testnet = false
+        // Флаг bounceable: 0x11 для mainnet
+        const flags = 0x11; // bounceable mainnet
+        
+        // Создаем итоговый буфер с флагами
+        const finalBuffer = new Uint8Array(34);
+        finalBuffer[0] = flags;
+        finalBuffer.set(buffer, 1);
+        
+        // Конвертируем в base64
+        let base64 = '';
+        for (let i = 0; i < finalBuffer.length; i++) {
+          base64 += String.fromCharCode(finalBuffer[i]);
+        }
+        base64 = btoa(base64);
+        
+        // Заменяем символы для URL-safe base64
+        const urlSafe = base64.replace(/\+/g, '-').replace(/\//g, '_');
+        
+        // Возвращаем с префиксом UQ
+        const result = 'UQ' + urlSafe;
         
         console.log('Address conversion:', {
           raw: rawAddress,
-          bounceable: bounceable
+          userFriendly: result
         });
         
-        return bounceable;
+        return result;
       }
       
       return rawAddress;
