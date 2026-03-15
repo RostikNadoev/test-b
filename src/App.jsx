@@ -78,16 +78,6 @@ import gameCard3 from './assets/MainPage/newcasescard.png';
 import gameCard4 from './assets/MainPage/newluckycard.png';
 import gameCard5 from './assets/MainPage/newrocketcard.png';
 
-// Cases
-import casesBack from './assets/Plinko/Back.png';
-import rocketback1 from './assets/Rocket/rocketback.png';
-import firstCase from './assets/MainPage/cases/firstcase1.png';
-import secondCase from './assets/MainPage/cases/secondcase1.png';
-import thirdCase from './assets/MainPage/cases/thirdcase1.png';
-import fourthCase from './assets/MainPage/cases/fourthcase1.png';
-import fifthCase from './assets/MainPage/cases/fifthcase.png';
-import sixthCase from './assets/MainPage/cases/sixthcase.png';
-
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticating, setIsAuthenticating] = useState(true);
@@ -526,12 +516,6 @@ export default function App() {
     gameCard5,
     rocketback1,
     casesBack,
-    firstCase,
-    secondCase,
-    thirdCase,
-    fourthCase,
-    fifthCase,
-    sixthCase,
     giftchange,
     tonGift,
     modalCloseIcon,

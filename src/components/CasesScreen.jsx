@@ -38,40 +38,104 @@ const DEMO_CASE_PRICES = {
   6: { ton: 15, stars: 1500 }
 };
 
+// Функция для предзагрузки изображений
+const preloadImages = (imageUrls) => {
+  return Promise.all(
+    imageUrls.map((url) => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = url;
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+    })
+  );
+};
+
 export default function CasesScreen({ onNavigate }) {
   const [selectedCase, setSelectedCase] = useState(null);
   const [cases, setCases] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
   const { isDemoMode } = useDemo();
 
-  // Загружаем список кейсов с бэкенда
+  // Загружаем список кейсов с бэкенда и изображения
   useEffect(() => {
-    const loadCases = async () => {
+    const loadCasesAndImages = async () => {
       try {
         setIsLoading(true);
+        setLoadingProgress(10);
+        
         console.log('📦 Загрузка списка кейсов...');
         
+        // Загружаем данные кейсов
         const casesData = await casesApi.getAllCases();
         console.log('✅ Кейсы загружены:', casesData);
         
         setCases(casesData);
+        setLoadingProgress(50);
+        
+        // Предзагружаем все изображения кейсов
+        console.log('🖼️ Предзагрузка изображений кейсов...');
+        const imageUrls = Object.values(caseImages);
+        
+        // Обновляем прогресс по мере загрузки изображений
+        const totalImages = imageUrls.length;
+        let loadedCount = 0;
+        
+        await Promise.all(
+          imageUrls.map((url) => {
+            return new Promise((resolve, reject) => {
+              const img = new Image();
+              img.src = url;
+              img.onload = () => {
+                loadedCount++;
+                setLoadingProgress(50 + Math.floor((loadedCount / totalImages) * 50));
+                resolve();
+              };
+              img.onerror = reject;
+            });
+          })
+        );
+        
+        setImagesLoaded(true);
+        setLoadingProgress(100);
+        console.log('✅ Все изображения загружены');
+        
       } catch (error) {
         console.error('❌ Ошибка загрузки кейсов, используем демо-цены:', error);
+        
         // В случае ошибки используем заглушки с демо-ценами
-        setCases([
+        const demoCases = [
           { id: 1, name: 'FREE', price: DEMO_CASE_PRICES[1] },
           { id: 2, name: 'BASIC', price: DEMO_CASE_PRICES[2] },
           { id: 3, name: 'LADY', price: DEMO_CASE_PRICES[3] },
           { id: 4, name: 'STREETRACER', price: DEMO_CASE_PRICES[4] },
           { id: 5, name: 'BUSINESSMAN', price: DEMO_CASE_PRICES[5] },
           { id: 6, name: 'CRYSTAL', price: DEMO_CASE_PRICES[6] }
-        ]);
+        ];
+        
+        setCases(demoCases);
+        setLoadingProgress(50);
+        
+        // Даже при ошибке API пробуем загрузить изображения
+        try {
+          const imageUrls = Object.values(caseImages);
+          await preloadImages(imageUrls);
+          setImagesLoaded(true);
+          setLoadingProgress(100);
+        } catch (imgError) {
+          console.error('❌ Ошибка загрузки изображений:', imgError);
+          setImagesLoaded(true); // Все равно показываем контент, даже если картинки не загрузились
+          setLoadingProgress(100);
+        }
       } finally {
         setIsLoading(false);
       }
     };
     
-    loadCases();
+    loadCasesAndImages();
   }, []);
 
   const handleCaseClick = (caseItem) => {
@@ -126,10 +190,25 @@ export default function CasesScreen({ onNavigate }) {
         <Header onNavigate={onNavigate} variant="cases" />
 
         <main className="cases-content">
-          {isLoading ? (
+          {isLoading || !imagesLoaded ? (
             <div className="cases-loading">
               <div className="spinner"></div>
-              <p>Loading cases...</p>
+              <div className="loading-progress">
+                <div className="progress-bar">
+                  <div 
+                    className="progress-fill" 
+                    style={{ width: `${loadingProgress}%` }}
+                  ></div>
+                </div>
+                <p>
+                  {loadingProgress < 50 
+                    ? 'Loading cases data...' 
+                    : loadingProgress < 100 
+                    ? 'Loading images...' 
+                    : 'Ready!'}
+                </p>
+                <p className="progress-text">{loadingProgress}%</p>
+              </div>
             </div>
           ) : (
             <div className="cases-grid">
@@ -149,6 +228,8 @@ export default function CasesScreen({ onNavigate }) {
                       src={caseImages[caseItem.id] || firstCase} 
                       alt={caseItem.name}
                       className={getCaseImageClass(caseItem.id)}
+                      loading="lazy"
+                      decoding="async"
                     />
                     
                     {isFreeCase ? (
