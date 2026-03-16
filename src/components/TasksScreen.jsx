@@ -4,7 +4,7 @@ import MainLayout from './MainLayout';
 import coinIcon from '../assets/Tasks/coin.png';
 import leaderboardImage from '../assets/Tasks/leaderboard.png';
 import inviteBg from '../assets/MainPage/invite1.png'; // Импортируем фон для кнопки INVITE
-import { usersApi, authApi } from '../utils/api';
+import { usersApi, authApi, referralsApi } from '../utils/api';
 
 export default function TasksScreen({ onNavigate }) {
   const [isLoading, setIsLoading] = useState(true);
@@ -13,6 +13,10 @@ export default function TasksScreen({ onNavigate }) {
   const [quests, setQuests] = useState([]);
   const [completedQuests, setCompletedQuests] = useState([]);
   const [isClaiming, setIsClaiming] = useState(false);
+  const [referralData, setReferralData] = useState(null);
+
+  // Константа для бота
+  const BOT_USERNAME = 'Bouncecase_bot';
 
   // Форматирование баланса
   const formatBalance = (value) => {
@@ -29,6 +33,25 @@ export default function TasksScreen({ onNavigate }) {
       }
     } catch (err) {
       console.error('❌ Error loading balance:', err);
+    }
+  };
+
+  // Загрузка реферальных данных
+  const loadReferralData = async () => {
+    try {
+      const data = await referralsApi.getMyReferralInfo();
+      setReferralData(data);
+      console.log('👥 Referral data loaded:', data);
+    } catch (err) {
+      console.error('❌ Error loading referral data:', err);
+      // Мок-данные для тестирования
+      setReferralData({
+        invited_count: 10,
+        accrual_date_utc: "2026-02-27T00:05:00Z",
+        amount_due_ton: 10.5,
+        referral_link: "https://t.me/Bouncecase_bot?start=15-8785",
+        referral_code: "15-8785"
+      });
     }
   };
 
@@ -64,6 +87,27 @@ export default function TasksScreen({ onNavigate }) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Функция для получения реферальной ссылки (как в MainScreen)
+  const getReferralLink = () => {
+    let referralCode = null;
+    
+    if (referralData?.referral_code) {
+      referralCode = referralData.referral_code;
+    } else if (referralData?.referral_link) {
+      const link = referralData.referral_link;
+      const match = link.match(/[?&]start=([^&]+)/);
+      if (match) {
+        referralCode = match[1];
+      }
+    }
+    
+    if (!referralCode) {
+      return null;
+    }
+    
+    return `https://t.me/${BOT_USERNAME}?start=${referralCode}`;
   };
 
   // Функция для получения награды через usersApi
@@ -163,14 +207,7 @@ export default function TasksScreen({ onNavigate }) {
     }
   };
 
-  // Функция для получения реферальной ссылки
-  const getReferralLink = () => {
-    // Здесь нужно получить реферальный код пользователя
-    // Пока используем заглушку
-    return 'https://t.me/Bouncecase_bot?start=15-8785';
-  };
-
-  // Обработчик для кнопки INVITE
+  // Обработчик для кнопки INVITE (как в MainScreen)
   const handleInviteClick = () => {
     const link = getReferralLink();
     if (!link) return;
@@ -188,7 +225,7 @@ export default function TasksScreen({ onNavigate }) {
   // Загрузка данных при монтировании
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([loadBalance(), loadQuests()]);
+      await Promise.all([loadBalance(), loadQuests(), loadReferralData()]);
     };
     
     loadData();
@@ -196,6 +233,7 @@ export default function TasksScreen({ onNavigate }) {
     const handleFocus = () => {
       loadBalance();
       loadQuests();
+      loadReferralData();
     };
     
     document.addEventListener('visibilitychange', handleFocus);
