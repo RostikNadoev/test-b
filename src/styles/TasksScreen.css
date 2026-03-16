@@ -162,27 +162,12 @@
     margin: 0;
 }
 
-.task-description {
-    font-family: 'KZ Supercell-Magic', sans-serif;
-    font-weight: 400;
-    font-style: normal;
-    font-size: 10px;
-    line-height: 14px;
-    color: rgb(110, 205, 243);
-    margin-top: 2px;
-}
-
 @media (max-width: 380px) {
     .task-title {
         font-weight: 800;
         font-style: normal;
         font-size: 12px;
         line-height: 18px;
-    }
-    
-    .task-description {
-        font-size: 9px;
-        line-height: 12px;
     }
 }
 
@@ -213,11 +198,11 @@
     height: 47px;
 }
 
-/* Левая кнопка действия */
+/* Левая кнопка действия (синий градиент) */
 .task-action-button {
     flex: 1;
     height: 47px;
-    background: linear-gradient(180deg, #4CAF50, #45a049);
+    background: linear-gradient(180deg, #4A90E2, #357ABD);
     border: 1.5px solid white;
     border-radius: 10px;
     font-family: 'KZ Supercell-Magic', sans-serif;
@@ -233,7 +218,7 @@
     justify-content: center;
     align-items: center;
     -webkit-tap-highlight-color: transparent;
-    -webkit-text-stroke: 1px #2d6a4f;
+    -webkit-text-stroke: 1px #1E4B8F;
     paint-order: stroke fill;
     box-sizing: border-box;
     transition: opacity 0.2s ease, transform 0.2s ease;
@@ -247,11 +232,11 @@
     transform: scale(0.98);
 }
 
-/* Правая кнопка CLAIM (половинного размера) */
-.task-claim-button--half {
+/* Правая кнопка CLAIM половинного размера (с текстом слева) */
+.task-claim-button-half {
     flex: 1;
     height: 47px;
-    background: linear-gradient(180deg, rgba(130, 213, 254, 1), rgba(190, 237, 254, 1));
+    background: linear-gradient(180deg, #82D5FE, #BEEDFE);
     border: 1.5px solid white;
     border-radius: 10px;
     font-family: 'KZ Supercell-Magic', sans-serif;
@@ -264,40 +249,40 @@
     color: white;
     cursor: pointer;
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
     padding: 0 15px;
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
-    position: relative;
-}
-
-.task-claim-button--half .task-claim-button-text {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     -webkit-text-stroke: 1px #3AABED;
     paint-order: stroke fill;
+    transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-.task-claim-button--half:hover:not(:disabled) {
+.task-claim-button-half-text {
+    white-space: nowrap;
+}
+
+.task-claim-button-half:hover:not(:disabled) {
     opacity: 0.95;
 }
 
-.task-claim-button--half:active:not(:disabled) {
+.task-claim-button-half:active:not(:disabled) {
     transform: scale(0.98);
 }
 
-/* Обычная кнопка CLAIM на всю ширину */
-.task-claim-button {
+.task-claim-button-half--disabled,
+.task-claim-button-half:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Кнопка CLAIM на всю ширину (с текстом слева) */
+.task-claim-button-full {
     width: 100%;
     height: 47px;
-    background: linear-gradient(180deg, rgba(130, 213, 254, 1), rgba(190, 237, 254, 1));
+    background: linear-gradient(180deg, #82D5FE, #BEEDFE);
     border: 1.5px solid white;
     border-radius: 10px;
     font-family: 'KZ Supercell-Magic', sans-serif;
@@ -310,31 +295,40 @@
     color: white;
     cursor: pointer;
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
     padding: 0 15px;
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
-    position: relative;
-}
-
-.task-claim-button-text {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     -webkit-text-stroke: 1px #3AABED;
     paint-order: stroke fill;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.task-claim-button-full-text {
+    white-space: nowrap;
+}
+
+.task-claim-button-full:hover:not(:disabled) {
+    opacity: 0.95;
+}
+
+.task-claim-button-full:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.task-claim-button-full--disabled,
+.task-claim-button-full:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    transform: none;
 }
 
 .task-claim-reward {
     display: flex;
     align-items: center;
     gap: 5px;
+    flex-shrink: 0;
 }
 
 .task-claim-amount {
@@ -355,32 +349,6 @@
     width: 30px;
     height: 30px;
     margin: 0;
-}
-
-.task-claim-button:hover:not(:disabled) {
-    opacity: 0.95;
-}
-
-.task-claim-button:active:not(:disabled) {
-    transform: scale(0.98);
-}
-
-/* Стили для неактивной кнопки CLAIM */
-.task-claim-button--disabled,
-.task-claim-button:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.task-claim-button--disabled:hover,
-.task-claim-button:disabled:hover {
-    opacity: 0.3;
-}
-
-.task-claim-button--disabled:active,
-.task-claim-button:disabled:active {
-    transform: none;
 }
 
 .task-completed-reward-container {
@@ -436,7 +404,6 @@
     background-clip: text;
     -webkit-text-fill-color: transparent;
     -webkit-text-stroke: 1px #FFFFFF;
-    -webkit-text-stroke-second: 1.5px #CDE2FB;
     paint-order: stroke fill;
     margin: 0;
     text-align: left;
@@ -515,15 +482,18 @@
     100% { transform: scale(1); }
 }
   
-.task-claim-button:active:not(:disabled) {
+.task-claim-button-full:active:not(:disabled),
+.task-claim-button-half:active:not(:disabled) {
     animation: rewardClaimed 0.3s ease;
 }
   
 /* Стили для отключенных кнопок - без анимации */
 .claim-all-button--disabled,
 .claim-all-button:disabled,
-.task-claim-button--disabled,
-.task-claim-button:disabled {
+.task-claim-button-full--disabled,
+.task-claim-button-full:disabled,
+.task-claim-button-half--disabled,
+.task-claim-button-half:disabled {
     animation: none !important;
     opacity: 0.3;
     cursor: not-allowed;
@@ -540,17 +510,13 @@
   
 /* Для лучшего отображения на мобильных */
 @media (max-width: 380px) {
-    .task-description {
-        font-size: 10px;
-        line-height: 12px;
-    }
-    
     .no-tasks-message {
         font-size: 14px;
     }
     
     .task-action-button,
-    .task-claim-button--half {
+    .task-claim-button-half,
+    .task-claim-button-full {
         font-size: 12px;
     }
     

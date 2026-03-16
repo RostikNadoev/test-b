@@ -219,7 +219,7 @@ export default function TasksScreen({ onNavigate }) {
             <span className="coin-balance">{formatBalance(balance)}</span>
           </div>
           <button 
-            className={`claim-all-button ${!hasClaimableRewards ? 'claim-all-button--disabled' : 'claim-all-button--pulse'}`} 
+            className={`claim-all-button ${!hasClaimableRewards ? 'claim-all-button--disabled' : ''}`} 
             disabled={!hasClaimableRewards}
             onClick={claimAllRewards}
           >
@@ -337,9 +337,6 @@ function TaskItem({ quest, coinIcon, onClaim, isClaiming }) {
       <div className={`task-content ${isCompleted ? 'task-content--completed' : ''}`}>
         <div className="task-text">
           <div className="task-title">{quest.title || 'Quest'}</div>
-          {quest.description && (
-            <div className="task-description">{quest.description}</div>
-          )}
         </div>
         {!isCompleted && (
           <div className="task-progress">
@@ -357,13 +354,11 @@ function TaskItem({ quest, coinIcon, onClaim, isClaiming }) {
             {quest.id === 16 ? 'OPEN CHANNEL' : 'BOOST'}
           </button>
           <button 
-            className={`task-claim-button task-claim-button--half ${!isClaimable ? 'task-claim-button--disabled' : ''}`}
+            className={`task-claim-button-half ${!isClaimable ? 'task-claim-button-half--disabled' : ''}`}
             disabled={!isClaimable || isClaiming}
             onClick={handleClaim}
           >
-            <span className="task-claim-button-text">
-              {isClaiming ? '...' : 'CLAIM'}
-            </span>
+            <span className="task-claim-button-half-text">CLAIM</span>
             <div className="task-claim-reward">
               <span className="task-claim-amount">{quest.reward_coins || 0}</span>
               <img src={coinIcon} alt="Reward Coin" className="task-claim-coin" />
@@ -374,11 +369,11 @@ function TaskItem({ quest, coinIcon, onClaim, isClaiming }) {
 
       {!isCompleted && !hasActionButton && (
         <button 
-          className={`task-claim-button ${!isClaimable ? 'task-claim-button--disabled' : 'task-claim-button--pulse'}`} 
+          className={`task-claim-button-full ${!isClaimable ? 'task-claim-button-full--disabled' : ''}`} 
           disabled={!isClaimable || isClaiming}
           onClick={handleClaim}
         >
-          <span className="task-claim-button-text">
+          <span className="task-claim-button-full-text">
             {isClaiming ? 'CLAIMING...' : 'CLAIM'}
           </span>
           <div className="task-claim-reward">
