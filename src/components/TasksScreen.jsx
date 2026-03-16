@@ -3,6 +3,8 @@ import '../styles/TasksScreen.css';
 import MainLayout from './MainLayout';
 import coinIcon from '../assets/Tasks/coin.png';
 import leaderboardImage from '../assets/Tasks/leaderboard.png';
+import inviteBg from '../assets/MainPage/invite1.png'; // Импортируем фон для кнопки INVITE
+import linkIcon from '../assets/MainPage/link.svg'; // Импортируем иконку ссылки
 import { usersApi, authApi } from '../utils/api';
 
 export default function TasksScreen({ onNavigate }) {
@@ -12,6 +14,8 @@ export default function TasksScreen({ onNavigate }) {
   const [quests, setQuests] = useState([]);
   const [completedQuests, setCompletedQuests] = useState([]);
   const [isClaiming, setIsClaiming] = useState(false);
+  const [showCopyToast, setShowCopyToast] = useState(false);
+  const [isToastHiding, setIsToastHiding] = useState(false);
 
   // Форматирование баланса
   const formatBalance = (value) => {
@@ -162,6 +166,51 @@ export default function TasksScreen({ onNavigate }) {
     }
   };
 
+  // Функция для получения реферальной ссылки
+  const getReferralLink = () => {
+    // Здесь нужно получить реферальный код пользователя
+    // Пока используем заглушку
+    return 'https://t.me/Bouncecase_bot?start=15-8785';
+  };
+
+  // Обработчик для кнопки INVITE
+  const handleInviteClick = () => {
+    const link = getReferralLink();
+    if (!link) return;
+
+    const message = `Join me on Bounce! Play games, open cases, and win!\n\n${link}`;
+    
+    if (window.Telegram?.WebApp) {
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('Join me on Bounce!')}`;
+      window.Telegram.WebApp.openTelegramLink(shareUrl);
+    } else {
+      window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('Join me on Bounce!')}`, '_blank');
+    }
+  };
+
+  // Обработчик для кнопки копирования ссылки
+  const handleLinkClick = async () => {
+    const link = getReferralLink();
+    if (!link) return;
+
+    try {
+      await navigator.clipboard.writeText(link);
+      
+      setShowCopyToast(true);
+      setIsToastHiding(false);
+      
+      setTimeout(() => {
+        setIsToastHiding(true);
+        setTimeout(() => {
+          setShowCopyToast(false);
+          setIsToastHiding(false);
+        }, 300);
+      }, 1300);
+    } catch (error) {
+      console.error('Failed to copy link:', error);
+    }
+  };
+
   // Загрузка данных при монтировании
   useEffect(() => {
     const loadData = async () => {
@@ -246,6 +295,8 @@ export default function TasksScreen({ onNavigate }) {
                         coinIcon={coinIcon}
                         onClaim={claimReward}
                         isClaiming={isClaiming}
+                        onInviteClick={handleInviteClick}
+                        onLinkClick={handleLinkClick}
                       />
                     ))}
                   </div>
@@ -266,6 +317,8 @@ export default function TasksScreen({ onNavigate }) {
                         coinIcon={coinIcon}
                         onClaim={claimReward}
                         isClaiming={isClaiming}
+                        onInviteClick={handleInviteClick}
+                        onLinkClick={handleLinkClick}
                       />
                     ))}
                   </div>
@@ -299,16 +352,25 @@ export default function TasksScreen({ onNavigate }) {
           )}
         </div>
       </div>
+
+      {/* Toast уведомление */}
+      {showCopyToast && (
+        <div className={`tasks-toast_notification ${isToastHiding ? 'tasks-toast_hide' : ''}`}>
+          <span className="tasks-toast_icon">✓</span>
+          <span className="tasks-toast_text">Link copied</span>
+        </div>
+      )}
     </MainLayout>
   );
 }
 
-function TaskItem({ quest, coinIcon, onClaim, isClaiming }) {
+function TaskItem({ quest, coinIcon, onClaim, isClaiming, onInviteClick, onLinkClick }) {
   const isClaimable = quest.completed && !quest.claimed;
   const isCompleted = quest.completed && quest.claimed;
   
   // Проверяем, нужно ли показывать дополнительные кнопки
   const hasActionButton = quest.id === 16 || quest.id === 17; // Subscribe и Boost
+  const isInviteQuest = quest.id === 18; // Invite Friends
 
   const handleAction = () => {
     if (quest.id === 16) {
@@ -345,7 +407,46 @@ function TaskItem({ quest, coinIcon, onClaim, isClaiming }) {
         )}
       </div>
 
-      {!isCompleted && hasActionButton && (
+      {!isCompleted && isInviteQuest && (
+        <>
+          {/* Две кнопки как в рефералке для Invite Friends */}
+          <div className="task-invite-buttons-row">
+            {/* Левая кнопка с фоном и надписью INVITE */}
+            <div 
+              className="task-invite-button task-invite-button-left"
+              onClick={onInviteClick}
+            >
+              <img src={inviteBg} alt="" className="task-invite-button-bg" />
+              <span className="task-invite-button-text">INVITE</span>
+            </div>
+
+            {/* Правая кнопка с иконкой ссылки */}
+            <div 
+              className="task-invite-button task-invite-button-right"
+              onClick={onLinkClick}
+            >
+              <img src={linkIcon} alt="Copy link" className="task-invite-link-icon" />
+            </div>
+          </div>
+
+          {/* Кнопка CLAIM под кнопками приглашения */}
+          <button 
+            className={`task-claim-button-full ${!isClaimable ? 'task-claim-button-full--disabled' : ''}`} 
+            disabled={!isClaimable || isClaiming}
+            onClick={handleClaim}
+          >
+            <span className="task-claim-button-full-text">
+              {isClaiming ? 'CLAIMING...' : 'CLAIM'}
+            </span>
+            <div className="task-claim-reward">
+              <span className="task-claim-amount">{quest.reward_coins || 0}</span>
+              <img src={coinIcon} alt="Reward Coin" className="task-claim-coin" />
+            </div>
+          </button>
+        </>
+      )}
+
+      {!isCompleted && hasActionButton && !isInviteQuest && (
         <div className="task-action-container">
           <button 
             className="task-action-button"
@@ -367,7 +468,7 @@ function TaskItem({ quest, coinIcon, onClaim, isClaiming }) {
         </div>
       )}
 
-      {!isCompleted && !hasActionButton && (
+      {!isCompleted && !hasActionButton && !isInviteQuest && (
         <button 
           className={`task-claim-button-full ${!isClaimable ? 'task-claim-button-full--disabled' : ''}`} 
           disabled={!isClaimable || isClaiming}

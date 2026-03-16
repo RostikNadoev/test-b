@@ -119,8 +119,9 @@
 .task-item {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 20px; /* Увеличено с 10px до 20px */
     width: 100%;
+    margin-bottom: 10px; /* Добавлен нижний отступ */
 }
 
 .task-item--completed {
@@ -190,11 +191,11 @@
     height: 24px;
 }
 
-/* Контейнер для двух кнопок */
+/* Контейнер для двух кнопок (Subscribe/Boost + CLAIM) */
 .task-action-container {
     width: 100%;
     display: flex;
-    gap: 10px;
+    gap: 15px; /* Увеличено с 10px до 15px */
     height: 47px;
 }
 
@@ -278,7 +279,7 @@
     transform: none;
 }
 
-/* Кнопка CLAIM на всю ширину (с текстом слева) */
+/* Кнопка CLAIM на всю ширину (с текстом по центру) */
 .task-claim-button-full {
     width: 100%;
     height: 47px;
@@ -295,18 +296,30 @@
     color: white;
     cursor: pointer;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     padding: 0 15px;
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
-    -webkit-text-stroke: 1px #3AABED;
-    paint-order: stroke fill;
+    position: relative;
     transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .task-claim-button-full-text {
-    white-space: nowrap;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    -webkit-text-stroke: 1px #3AABED;
+    paint-order: stroke fill;
+}
+
+.task-claim-button-full .task-claim-reward {
+    margin-left: auto;
 }
 
 .task-claim-button-full:hover:not(:disabled) {
@@ -322,6 +335,81 @@
     opacity: 0.3;
     cursor: not-allowed;
     transform: none;
+}
+
+/* Стили для кнопок Invite Friends задания */
+.task-invite-buttons-row {
+    width: 100%;
+    display: flex;
+    gap: 15px; /* Увеличено с 10px до 15px */
+    height: 47px;
+    margin-bottom: 5px;
+}
+
+.task-invite-button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    overflow: hidden;
+    border-radius: 10px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.task-invite-button:hover {
+    opacity: 0.95;
+}
+
+.task-invite-button:active {
+    transform: scale(0.98);
+}
+
+.task-invite-button-left {
+    flex: 1;
+    height: 47px;
+}
+
+.task-invite-button-right {
+    width: 47px;
+    height: 47px;
+    flex-shrink: 0;
+    background: linear-gradient(180deg, #82D5FE, #BEEDFE);
+    border: 1.5px solid white;
+}
+
+.task-invite-button-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1.5px solid white;
+    box-sizing: border-box;
+}
+
+.task-invite-button-text {
+    position: relative;
+    z-index: 1;
+    font-family: 'KZ Supercell-Magic', sans-serif;
+    font-weight: 800;
+    font-style: normal;
+    font-size: 14px;
+    line-height: 100%;
+    letter-spacing: 0%;
+    text-transform: uppercase;
+    color: white;
+    -webkit-text-stroke: 1px #3AABED;
+    paint-order: stroke fill;
+}
+
+.task-invite-link-icon {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
 }
 
 .task-claim-reward {
@@ -390,6 +478,7 @@
 
 .completed-tasks-header-container {
     width: 100%;
+    margin-bottom: 10px; /* Добавлен отступ снизу */
 }
 
 .completed-tasks-header {
@@ -413,7 +502,7 @@
 .completed-tasks-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 25px; /* Увеличено с 10px до 25px */
 }
 
 .loading-spinner {
@@ -507,7 +596,70 @@
 .task-item--completed {
     transition: all 0.3s ease;
 }
-  
+
+/* Toast уведомление для TasksScreen */
+.tasks-toast_notification {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(180deg, #82D5FE, #BEEDFE);
+    border: 1.5px solid white;
+    border-radius: 30px;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    z-index: 1000;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    animation: tasksToastIn 0.3s ease forwards;
+    min-width: 150px;
+}
+
+.tasks-toast_hide {
+    animation: tasksToastOut 0.3s ease forwards !important;
+}
+
+.tasks-toast_icon {
+    font-size: 20px;
+    color: white;
+    -webkit-text-stroke: 1px #3AABED;
+    paint-order: stroke fill;
+}
+
+.tasks-toast_text {
+    font-family: 'KZ Supercell-Magic', sans-serif;
+    font-weight: 800;
+    font-style: normal;
+    font-size: 14px;
+    color: white;
+    -webkit-text-stroke: 1px #3AABED;
+    paint-order: stroke fill;
+}
+
+@keyframes tasksToastIn {
+    0% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+@keyframes tasksToastOut {
+    0% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+}
+
 /* Для лучшего отображения на мобильных */
 @media (max-width: 380px) {
     .no-tasks-message {
@@ -516,7 +668,8 @@
     
     .task-action-button,
     .task-claim-button-half,
-    .task-claim-button-full {
+    .task-claim-button-full,
+    .task-invite-button-text {
         font-size: 12px;
     }
     
@@ -527,5 +680,15 @@
     .task-claim-coin {
         width: 25px;
         height: 25px;
+    }
+    
+    .task-invite-button-right {
+        width: 42px;
+        height: 42px;
+    }
+    
+    .task-invite-link-icon {
+        width: 20px;
+        height: 20px;
     }
 }
