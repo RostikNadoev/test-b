@@ -306,6 +306,19 @@ export default function TasksScreen({ onNavigate }) {
 function TaskItem({ quest, coinIcon, onClaim, isClaiming }) {
   const isClaimable = quest.completed && !quest.claimed;
   const isCompleted = quest.completed && quest.claimed;
+  
+  // Проверяем, нужно ли показывать дополнительные кнопки
+  const hasActionButton = quest.id === 16 || quest.id === 17; // Subscribe и Boost
+
+  const handleAction = () => {
+    if (quest.id === 16) {
+      // Подписка на канал
+      window.Telegram.WebApp.openTelegramLink('https://t.me/bounce_case');
+    } else if (quest.id === 17) {
+      // Буст канала - открываем диалог буста
+      window.Telegram.WebApp.openTelegramLink('https://t.me/bounce_case?boost');
+    }
+  };
 
   const handleClaim = async () => {
     if (isClaimable && onClaim && !isClaiming) {
@@ -315,21 +328,51 @@ function TaskItem({ quest, coinIcon, onClaim, isClaiming }) {
 
   const progress = quest.current_progress || quest.progress || 0;
   const target = quest.required_progress || quest.target || 1;
+  
+  // Форматируем прогресс для бесконечных заданий
+  const displayTarget = quest.id === 18 ? '∞' : target;
 
   return (
     <div className={`task-item ${isCompleted ? 'task-item--completed' : ''}`}>
       <div className={`task-content ${isCompleted ? 'task-content--completed' : ''}`}>
         <div className="task-text">
           <div className="task-title">{quest.title || 'Quest'}</div>
+          {quest.description && (
+            <div className="task-description">{quest.description}</div>
+          )}
         </div>
         {!isCompleted && (
           <div className="task-progress">
-            {progress}/{target}
+            {progress}/{displayTarget}
           </div>
         )}
       </div>
 
-      {!isCompleted ? (
+      {!isCompleted && hasActionButton && (
+        <div className="task-action-container">
+          <button 
+            className="task-action-button"
+            onClick={handleAction}
+          >
+            {quest.id === 16 ? 'OPEN CHANNEL' : 'BOOST'}
+          </button>
+          <button 
+            className={`task-claim-button task-claim-button--half ${!isClaimable ? 'task-claim-button--disabled' : ''}`}
+            disabled={!isClaimable || isClaiming}
+            onClick={handleClaim}
+          >
+            <span className="task-claim-button-text">
+              {isClaiming ? '...' : 'CLAIM'}
+            </span>
+            <div className="task-claim-reward">
+              <span className="task-claim-amount">{quest.reward_coins || 0}</span>
+              <img src={coinIcon} alt="Reward Coin" className="task-claim-coin" />
+            </div>
+          </button>
+        </div>
+      )}
+
+      {!isCompleted && !hasActionButton && (
         <button 
           className={`task-claim-button ${!isClaimable ? 'task-claim-button--disabled' : 'task-claim-button--pulse'}`} 
           disabled={!isClaimable || isClaiming}
@@ -343,7 +386,9 @@ function TaskItem({ quest, coinIcon, onClaim, isClaiming }) {
             <img src={coinIcon} alt="Reward Coin" className="task-claim-coin" />
           </div>
         </button>
-      ) : (
+      )}
+
+      {isCompleted && (
         <div className="task-completed-reward-container">
           <div className="task-claim-reward task-claim-reward--disabled">
             <span className="task-claim-amount task-claim-amount--disabled">
@@ -364,6 +409,9 @@ function TaskItem({ quest, coinIcon, onClaim, isClaiming }) {
 function CompletedTaskItem({ quest, coinIcon }) {
   const progress = quest.current_progress || quest.progress || 1;
   const target = quest.required_progress || quest.target || 1;
+  
+  // Форматируем прогресс для бесконечных заданий
+  const displayTarget = quest.id === 18 ? '∞' : target;
 
   return (
     <div className="task-item task-item--completed">
@@ -372,7 +420,7 @@ function CompletedTaskItem({ quest, coinIcon }) {
           <div className="task-title">{quest.title || 'Quest'}</div>
         </div>
         <div className="task-progress task-progress--completed">
-          {progress}/{target}
+          {progress}/{displayTarget}
         </div>
       </div>
 

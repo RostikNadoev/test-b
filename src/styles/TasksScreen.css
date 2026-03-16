@@ -16,7 +16,6 @@
     padding: 0;
 }
 
-
 /* Контейнер для изображения leaderboard */
 .tasks-leaderboard-image-container {
   width: 100%;
@@ -28,7 +27,7 @@
   width: 100%;
   height: auto;
   display: block;
-  border-radius: 10px; /* Опционально: скругление углов */
+  border-radius: 10px;
 }
 
 .coin-balance-container {
@@ -113,7 +112,7 @@
     display: flex;
     flex-direction: column;
     gap: 30px;
-    padding-bottom: 140px; /* Отступ снизу для футера */
+    padding-bottom: 140px;
     box-sizing: border-box;
 }
 
@@ -141,11 +140,6 @@
     box-sizing: border-box;
 }
 
-/* Убран opacity для выполненных заданий */
-.task-content--completed {
-    /* opacity: 0.6; */
-}
-
 .task-text {
     width: 70%;
     display: flex;
@@ -168,12 +162,27 @@
     margin: 0;
 }
 
+.task-description {
+    font-family: 'KZ Supercell-Magic', sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 10px;
+    line-height: 14px;
+    color: rgb(110, 205, 243);
+    margin-top: 2px;
+}
+
 @media (max-width: 380px) {
     .task-title {
         font-weight: 800;
         font-style: normal;
         font-size: 12px;
         line-height: 18px;
+    }
+    
+    .task-description {
+        font-size: 9px;
+        line-height: 12px;
     }
 }
 
@@ -196,7 +205,95 @@
     height: 24px;
 }
 
+/* Контейнер для двух кнопок */
+.task-action-container {
+    width: 100%;
+    display: flex;
+    gap: 10px;
+    height: 47px;
+}
 
+/* Левая кнопка действия */
+.task-action-button {
+    flex: 1;
+    height: 47px;
+    background: linear-gradient(180deg, #4CAF50, #45a049);
+    border: 1.5px solid white;
+    border-radius: 10px;
+    font-family: 'KZ Supercell-Magic', sans-serif;
+    font-weight: 800;
+    font-style: normal;
+    font-size: 14px;
+    line-height: 100%;
+    letter-spacing: 0%;
+    text-transform: uppercase;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-stroke: 1px #2d6a4f;
+    paint-order: stroke fill;
+    box-sizing: border-box;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.task-action-button:hover {
+    opacity: 0.95;
+}
+
+.task-action-button:active {
+    transform: scale(0.98);
+}
+
+/* Правая кнопка CLAIM (половинного размера) */
+.task-claim-button--half {
+    flex: 1;
+    height: 47px;
+    background: linear-gradient(180deg, rgba(130, 213, 254, 1), rgba(190, 237, 254, 1));
+    border: 1.5px solid white;
+    border-radius: 10px;
+    font-family: 'KZ Supercell-Magic', sans-serif;
+    font-weight: 800;
+    font-style: normal;
+    font-size: 14px;
+    line-height: 100%;
+    letter-spacing: 0%;
+    text-transform: uppercase;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0 15px;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+}
+
+.task-claim-button--half .task-claim-button-text {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    -webkit-text-stroke: 1px #3AABED;
+    paint-order: stroke fill;
+}
+
+.task-claim-button--half:hover:not(:disabled) {
+    opacity: 0.95;
+}
+
+.task-claim-button--half:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+/* Обычная кнопка CLAIM на всю ширину */
 .task-claim-button {
     width: 100%;
     height: 47px;
@@ -213,12 +310,12 @@
     color: white;
     cursor: pointer;
     display: flex;
-    justify-content: flex-end; /* Награда справа */
+    justify-content: flex-end;
     align-items: center;
     padding: 0 15px;
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
-    position: relative; /* Для абсолютного позиционирования текста */
+    position: relative;
 }
 
 .task-claim-button-text {
@@ -286,7 +383,6 @@
     transform: none;
 }
 
-
 .task-completed-reward-container {
     width: 100%;
     height: 47px;
@@ -297,16 +393,12 @@
     box-sizing: border-box;
 }
 
-/* Убран opacity для выполненных заданий */
 .task-claim-reward--disabled {
     display: flex;
     align-items: center;
     gap: 5px;
 }
 
-
-
-/* Убран opacity для выполненных заданий */
 .task-claim-amount--disabled {
     font-family: 'KZ Supercell-Magic', sans-serif;
     font-weight: 800;
@@ -321,7 +413,6 @@
     margin: 0;
 }
 
-/* Убран opacity для выполненных заданий */
 .task-claim-coin--disabled {
     width: 30px;
     height: 30px;
@@ -358,7 +449,6 @@
     gap: 10px;
 }
 
-
 .loading-spinner {
     display: flex;
     justify-content: center;
@@ -369,9 +459,9 @@
     font-style: normal;
     font-size: 16px;
     color: #35A3F2;
-  }
+}
   
-  .error-message {
+.error-message {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -382,17 +472,17 @@
     gap: 20px;
     width: 100%; 
     margin: 0 auto; 
-  }
+}
   
-  .error-message p {
+.error-message p {
     font-family: 'KZ Supercell-Magic', sans-serif;
     font-weight: 800;
     font-style: normal;
     font-size: 16px;
-    color: rgba(55, 189, 243, 1)
-  }
+    color: rgba(55, 189, 243, 1);
+}
   
-  .error-message button {
+.error-message button {
     padding: 10px 20px;
     background: linear-gradient(180deg, #82D5FE, #BEEDFE);
     border: 1.5px solid white;
@@ -406,9 +496,9 @@
     -webkit-text-stroke: 1px #3AABED;
     paint-order: stroke fill;
     -webkit-tap-highlight-color: transparent;
-  }
+}
   
-  .no-tasks-message {
+.no-tasks-message {
     text-align: center;
     font-family: 'KZ Supercell-Magic', sans-serif;
     font-weight: 800;
@@ -416,58 +506,60 @@
     font-size: 16px;
     color: #35A3F2;
     padding: 40px 0;
-  }
+}
   
-  /* Стили для описания задания */
-  .task-description {
-    font-family: 'KZ Supercell-Magic', sans-serif;
-    font-weight: 400;
-    font-style: normal;
-    font-size: 10px;
-    line-height: 14px;
-    color: rgb(110, 205, 243);
-    margin-top: 2px;
-  }
-  
-  /* Анимация для получения награды */
-  @keyframes rewardClaimed {
+/* Анимация для получения награды */
+@keyframes rewardClaimed {
     0% { transform: scale(1); }
     50% { transform: scale(1.1); }
     100% { transform: scale(1); }
-  }
+}
   
-  .task-claim-button:active:not(:disabled) {
+.task-claim-button:active:not(:disabled) {
     animation: rewardClaimed 0.3s ease;
-  }
+}
   
-  
-  /* Стили для отключенных кнопок - без анимации */
-  .claim-all-button--disabled,
-  .claim-all-button:disabled,
-  .task-claim-button--disabled,
-  .task-claim-button:disabled {
+/* Стили для отключенных кнопок - без анимации */
+.claim-all-button--disabled,
+.claim-all-button:disabled,
+.task-claim-button--disabled,
+.task-claim-button:disabled {
     animation: none !important;
     opacity: 0.3;
     cursor: not-allowed;
-  }
+}
   
-  /* Плавные переходы для элементов заданий */
-  .task-item {
+/* Плавные переходы для элементов заданий */
+.task-item {
     transition: opacity 0.3s ease, transform 0.3s ease;
-  }
+}
   
-  .task-item--completed {
+.task-item--completed {
     transition: all 0.3s ease;
-  }
+}
   
-  /* Для лучшего отображения на мобильных */
-  @media (max-width: 380px) {
+/* Для лучшего отображения на мобильных */
+@media (max-width: 380px) {
     .task-description {
-      font-size: 10px;
-      line-height: 12px;
+        font-size: 10px;
+        line-height: 12px;
     }
     
     .no-tasks-message {
-      font-size: 14px;
+        font-size: 14px;
     }
-  }
+    
+    .task-action-button,
+    .task-claim-button--half {
+        font-size: 12px;
+    }
+    
+    .task-claim-amount {
+        font-size: 13px;
+    }
+    
+    .task-claim-coin {
+        width: 25px;
+        height: 25px;
+    }
+}
