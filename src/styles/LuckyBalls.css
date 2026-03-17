@@ -789,4 +789,67 @@
   position: relative;
 }
 
-/* Остальные стили остаются без изменений */
+/* Добавьте в конец файла LuckyBalls.css */
+
+/* Информация о ставке */
+.bet-info {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  margin-top: -5px;
+}
+
+.min-bet-text {
+  font-family: 'KZ Supercell-Magic', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(128, 202, 244, 0.8);
+  letter-spacing: 0.3px;
+  background: linear-gradient(90deg, rgba(115, 190, 233, 0.8), rgba(52, 141, 192, 0.8));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Отключенная кнопка */
+.play-button-ballsl.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Анимация для ошибки */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Улучшения для инпута */
+.bet-input::-webkit-inner-spin-button,
+.bet-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.bet-input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Адаптация для маленьких экранов */
+@media (max-width: 380px) {
+  .bet-input-wrapper {
+    min-width: 180px;
+  }
+  
+  .min-bet-text,
+  .bet-error-text {
+    font-size: 11px;
+  }
+}

@@ -40,6 +40,12 @@ const DEMO_WIN_CHANCES = {
   10: 4   // 50% шанс пройти 10 уровень
 };
 
+// Минимальные ставки
+const MIN_BET = {
+  TON: 0.5,
+  STARS: 50
+};
+
 // Список всех изображений для предзагрузки
 const imagesToPreload = [
   ballsq,
@@ -97,6 +103,7 @@ export default function LuckyBalls({
   const [pageLoading, setPageLoading] = useState(true);
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const [initialScrollDone, setInitialScrollDone] = useState(false);
+  const [betError, setBetError] = useState('');
 
   const { balances, checkBalance, setNewBalances, loadBalances } = useBalance();
   const { isDemoMode, demoBalances, removeFromDemoBalance, addToDemoBalance, checkDemoBalance, getDemoBalance } = useDemo();
@@ -180,6 +187,11 @@ export default function LuckyBalls({
     }
   }, [pageLoading, initialScrollDone]);
 
+  // Валидация ставки при изменении
+  useEffect(() => {
+    validateBet(betAmount);
+  }, [betAmount, selectedCurrency]);
+
   // Обработчик клика вне дропдауна
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -193,6 +205,37 @@ export default function LuckyBalls({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  const validateBet = (value) => {
+    if (!value || value === '') {
+      setBetError('');
+      return false;
+    }
+
+    const numValue = parseFloat(value);
+    if (isNaN(numValue)) {
+      setBetError('Please enter a valid number');
+      return false;
+    }
+
+    const minBet = MIN_BET[selectedCurrency];
+
+    if (selectedCurrency === 'STARS') {
+      // Для STARS проверяем, что число целое
+      if (!Number.isInteger(numValue)) {
+        setBetError('STARS bet must be a whole number');
+        return false;
+      }
+    }
+
+    if (numValue < minBet) {
+      setBetError(`Minimum bet is ${minBet} ${selectedCurrency}`);
+      return false;
+    }
+
+    setBetError('');
+    return true;
+  };
 
   const loadActiveGame = async () => {
     if (isDemoMode) return;
@@ -223,6 +266,8 @@ export default function LuckyBalls({
   const handleCurrencySelect = (currency) => {
     setSelectedCurrency(currency);
     setIsDropdownOpen(false);
+    // Перевалидируем ставку после смены валюты
+    setTimeout(() => validateBet(betAmount), 0);
   };
 
   const toggleDropdown = () => {
@@ -230,9 +275,26 @@ export default function LuckyBalls({
   };
 
   const handleBetChange = (e) => {
-    const value = e.target.value;
-    if (value === '' || /^\d*\.?\d*$/.test(value)) {
-      setBetAmount(value);
+    let value = e.target.value;
+    
+    // Заменяем запятую на точку
+    value = value.replace(',', '.');
+    
+    // Для STARS разрешаем только целые числа
+    if (selectedCurrency === 'STARS') {
+      if (value === '' || /^\d+$/.test(value)) {
+        setBetAmount(value);
+      }
+    } else {
+      // Для TON разрешаем десятичные числа
+      if (value === '' || /^\d*\.?\d*$/.test(value)) {
+        // Ограничиваем до 2 знаков после запятой
+        const parts = value.split('.');
+        if (parts.length === 2 && parts[1].length > 2) {
+          return;
+        }
+        setBetAmount(value);
+      }
     }
   };
 
@@ -242,7 +304,11 @@ export default function LuckyBalls({
 
   const handlePlay = async () => {
     if (!betAmount || parseFloat(betAmount) <= 0) {
-      alert('Please enter a valid bet amount');
+      setBetError('Please enter a valid bet amount');
+      return;
+    }
+
+    if (!validateBet(betAmount)) {
       return;
     }
 
@@ -657,11 +723,19 @@ export default function LuckyBalls({
               </div>
             </div>
           </div>
+
+          {/* Минимальная ставка и ошибки */}
+          <div className="bet-info">
+            <span className="min-bet-text">
+              Min bet: {MIN_BET[selectedCurrency]} {selectedCurrency}
+              {selectedCurrency === 'STARS'}
+            </span>
+          </div>
           
           <button 
-            className='play-button-ballsl' 
+            className={`play-button-ballsl ${betError ? 'disabled' : ''}`}
             onClick={handlePlay}
-            disabled={isLoading || !betAmount || parseFloat(betAmount) <= 0}
+            disabled={isLoading || !betAmount || parseFloat(betAmount) <= 0 || !!betError}
           >
             {isLoading ? 'STARTING...' : 'PLAY'}
           </button>
