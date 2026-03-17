@@ -625,7 +625,7 @@ const getTonIconForPrice = (priceStr) => {
             <div className="pvp-modal-body">
               <h2 className="pvp-modal-title">SELECT GIFTS</h2>
               {loading ? (
-                <div className="loading-inventory"><div className="spinner"></div><p>Loading inventory...</p></div>
+                <div className="pvp-loading-inventory"><div className="spinner"></div><p>Loading inventory...</p></div>
               ) : getSortedItems().length > 0 ? (
                 <div className="pvp-inventory-container">
                   <div className="items-grid">
@@ -644,9 +644,9 @@ const getTonIconForPrice = (priceStr) => {
                   </div>
                 </div>
               ) : (
-                <div className='empty-gifts-container'>
+                <div className='pvp-empty-gifts-container'>
                   <div className="empty-gifts-animation-wrapper"><img src={gift} className="empty-gifts-animation" alt="Empty" loading="lazy" /></div>
-                  <div className="empty-gifts-text"><p className="no-gifts-text">No gifts yet.</p><p className="how-to-add-text" onClick={handleGoToProfile}>How to add?</p></div>
+                  <div className="pvp-empty-gifts-text"><p className="no-gifts-text">No gifts yet.</p><p className="how-to-add-text" onClick={handleGoToProfile}>How to add?</p></div>
                 </div>
               )}
             </div>
