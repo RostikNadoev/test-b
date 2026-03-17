@@ -12,6 +12,12 @@ import { getRandomPreset } from '../utils/bounceFallPresets';
 import { useBalance } from '../contexts/BalanceContext';
 import { useDemo } from '../contexts/DemoContext';
 
+// Минимальные ставки
+const MIN_BET = {
+  TON: 0.5,
+  STARS: 50
+};
+
 // Демо-множители для Plinko (сбалансированные шансы)
 const DEMO_MULTIPLIERS = [30, 15, 8, 3, 1.5, 0.6, 0.2, 0.6, 1.5, 3, 8, 15, 30];
 
@@ -167,6 +173,23 @@ export default function BounceFallScreen({ onNavigate }) {
     loadAllImages();
   }, []);
 
+  // Валидация ставки
+  const validateBet = (value) => {
+    if (!value || value === '') return false;
+
+    const numValue = parseFloat(value);
+    if (isNaN(numValue)) return false;
+
+    const minBet = MIN_BET[selectedCurrency];
+
+    if (selectedCurrency === 'STARS') {
+      // Для STARS проверяем, что число целое
+      if (!Number.isInteger(numValue)) return false;
+    }
+
+    return numValue >= minBet;
+  };
+
   // Обработчики для слайдера
   const handleSliderStart = (e) => {
     e.preventDefault();
@@ -266,6 +289,16 @@ export default function BounceFallScreen({ onNavigate }) {
   const handlePlay = async () => {
     if (!betAmount || parseFloat(betAmount) <= 0) {
       alert('Please enter a valid bet amount');
+      return;
+    }
+
+    if (!validateBet(betAmount)) {
+      const minBet = MIN_BET[selectedCurrency];
+      if (selectedCurrency === 'STARS') {
+        alert(`Minimum bet is ${minBet} ${selectedCurrency} (whole numbers only)`);
+      } else {
+        alert(`Minimum bet is ${minBet} ${selectedCurrency}`);
+      }
       return;
     }
 
@@ -433,11 +466,40 @@ export default function BounceFallScreen({ onNavigate }) {
   };
 
   const handleBetChange = (e) => {
-    const value = e.target.value;
-    if (value === '' || /^\d*\.?\d*$/.test(value)) setBetAmount(value);
+    let value = e.target.value;
+    
+    // Заменяем запятую на точку
+    value = value.replace(',', '.');
+    
+    // Для STARS разрешаем только целые числа
+    if (selectedCurrency === 'STARS') {
+      if (value === '' || /^\d+$/.test(value)) {
+        setBetAmount(value);
+      }
+    } else {
+      // Для TON разрешаем десятичные числа
+      if (value === '' || /^\d*\.?\d*$/.test(value)) {
+        // Ограничиваем до 2 знаков после запятой
+        const parts = value.split('.');
+        if (parts.length === 2 && parts[1].length > 2) {
+          return;
+        }
+        setBetAmount(value);
+      }
+    }
   };
 
-  const handleQuickBet = (amount) => setBetAmount(amount.toString());
+  const handleQuickBet = (amount) => {
+    const minBet = MIN_BET[selectedCurrency];
+    const betValue = parseFloat(amount);
+    
+    if (selectedCurrency === 'STARS' && betValue < minBet) {
+      alert(`Minimum bet is ${minBet} ${selectedCurrency}`);
+      return;
+    }
+    
+    setBetAmount(amount.toString());
+  };
 
   const quickBetValues = selectedCurrency === 'TON' 
     ? { first: '1', second: '5' }
@@ -450,6 +512,9 @@ export default function BounceFallScreen({ onNavigate }) {
 
   // Процент для слайдера
   const sliderPercentage = ((ballCount - 1) / 9) * 100;
+
+  // Проверка валидности ставки для кнопки
+  const isBetValid = validateBet(betAmount);
 
   // Если страница загружается, показываем спинер
   if (pageLoading) {
@@ -542,6 +607,12 @@ export default function BounceFallScreen({ onNavigate }) {
                   </div>
                 </div>
 
+                {/* Текст минимальной ставки */}
+                <div className="plinko-min-bet-info">
+                  Min bet: {MIN_BET[selectedCurrency]} {selectedCurrency}
+                  {selectedCurrency === 'STARS'}
+                </div>
+
                 <div className="plinko-balls-selector">
                   <div className="plinko-balls-label">Balls</div>
                   <div className="plinko-balls-slider-container">
@@ -568,7 +639,7 @@ export default function BounceFallScreen({ onNavigate }) {
                 <button 
                   className="plinko-drop-button"
                   onClick={handlePlay}
-                  disabled={isLoading || !betAmount || parseFloat(betAmount) <= 0}
+                  disabled={isLoading || !betAmount || !isBetValid}
                 >
                   {isLoading ? 'LOADING...' : `DROP ${totalBetFormatted} ${selectedCurrency}`}
                 </button>
