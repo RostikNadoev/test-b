@@ -31,7 +31,7 @@ export default function Header({ onNavigate, variant = 'default' }) {
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
   const [progressData, setProgressData] = useState({
     games: { current: 0, target: 10 },
-    stars: { current: 0, target: 2500 },
+    stars: { current: 0, target: 500 },
     canWithdraw: false
   });
   const [isLoadingProgress, setIsLoadingProgress] = useState(false);
@@ -139,7 +139,7 @@ export default function Header({ onNavigate, variant = 'default' }) {
       // Демо-данные для тестирования
       setProgressData({
         games: { current: 10, target: 10 },
-        stars: { current: 2400, target: 2500 },
+        stars: { current: 2400, target: 500 },
         canWithdraw: false
       });
       return;
@@ -159,7 +159,7 @@ export default function Header({ onNavigate, variant = 'default' }) {
         },
         stars: { 
           current: data.played_stars_total || 0, 
-          target: data.need_stars || 2500 
+          target: data.need_stars || 500 
         },
         canWithdraw: data.can_withdraw || false
       });
@@ -169,7 +169,7 @@ export default function Header({ onNavigate, variant = 'default' }) {
       // Заглушка на случай ошибки
       setProgressData({
         games: { current: 0, target: 10 },
-        stars: { current: 0, target: 2500 },
+        stars: { current: 0, target: 500 },
         canWithdraw: false
       });
     } finally {
@@ -288,7 +288,7 @@ export default function Header({ onNavigate, variant = 'default' }) {
         if (error.data.error === 'Withdraw conditions not met') {
           setWithdrawError(
             `Conditions not met: ${error.data.progress?.games || 0}/${error.data.required?.games || 10} games, ` +
-            `${error.data.progress?.stars || 0}/${error.data.required?.stars || 2500} stars`
+            `${error.data.progress?.stars || 0}/${error.data.required?.stars || 500} stars`
           );
           // Обновляем прогресс с данными от сервера
           if (error.data.progress) {
@@ -299,7 +299,7 @@ export default function Header({ onNavigate, variant = 'default' }) {
               },
               stars: { 
                 current: error.data.progress.stars || 0, 
-                target: error.data.required?.stars || 2500 
+                target: error.data.required?.stars || 500 
               },
               canWithdraw: false
             });
