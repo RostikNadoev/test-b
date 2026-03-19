@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Base backend URL - захардкожено напрямую
-const API_BASE_URL = 'https://shamefully-gifted-catbird.cloudpub.ru';
+const API_BASE_URL = 'https://frozen-por-underground-contains.trycloudflare.com';
 
 console.log('🌐 API Base URL:', API_BASE_URL);
 
