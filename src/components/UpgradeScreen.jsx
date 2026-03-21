@@ -103,7 +103,7 @@ export default function UpgradeScreen({ onNavigate }) {
     if (!imagePath) return cardton1;
     if (imagePath.startsWith('http')) return imagePath;
     if (imagePath.startsWith('/static/')) {
-      return `${(import.meta.env.VITE_BACKEND_URL || 'https://shamefully-gifted-catbird.cloudpub.ru').replace(/\/$/, '')}${imagePath}`;
+      return `${(import.meta.env.VITE_BACKEND_URL || 'https://bouncecase.duckdns.org').replace(/\/$/, '')}${imagePath}`;
     }
     return imagePath.startsWith('./') ? imagePath : cardton1;
   };

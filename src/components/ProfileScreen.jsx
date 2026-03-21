@@ -176,7 +176,7 @@ export default function ProfileScreen({ onNavigate }) {
     if (!imagePath || imagePath.trim() === '') return cardton1;
     
     if (imagePath.startsWith('/static/')) {
-      const baseUrl = 'https://shamefully-gifted-catbird.cloudpub.ru';
+      const baseUrl = 'https://bouncecase.duckdns.org';
       return `${baseUrl}${imagePath}`;
     }
     

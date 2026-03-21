@@ -30,7 +30,7 @@ class CrashWebSocket {
     this.token = token;
     this.connectionPromise = new Promise((resolve, reject) => {
       try {
-        const WS_URL = 'wss://shamefully-gifted-catbird.cloudpub.ru/ws/crash';
+        const WS_URL = 'wss://bouncecase.duckdns.org/ws/crash';
         const url = `${WS_URL}?token=${token}`;
         
         console.log('🌐 Connecting to WebSocket:', url);

@@ -21,7 +21,7 @@ class PvpSocket {
       return;
     }
 
-     const wsUrl = 'wss://shamefully-gifted-catbird.cloudpub.ru/ws/pvp';
+     const wsUrl = 'wss://bouncecase.duckdns.org/ws/pvp';
     let url = `${wsUrl}?token=${token}`;
     
     if (gameId) {

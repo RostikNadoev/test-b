@@ -58,7 +58,7 @@ export default function CaseModal({ caseItem, onClose, onNavigate, freeCaseStatu
     if (!imagePath) return tonIcon;
     
     if (imagePath.startsWith('/static/')) {
-      return `https://shamefully-gifted-catbird.cloudpub.ru${imagePath}`;
+      return `https://bouncecase.duckdns.org${imagePath}`;
     }
     
     if (imagePath.trim() === '') {

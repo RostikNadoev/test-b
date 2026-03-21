@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Base backend URL - захардкожено напрямую
-const API_BASE_URL = 'https://corners-architectural-vacations-varieties.trycloudflare.com';
+const API_BASE_URL = 'https://bouncecase.duckdns.org';
 
 console.log('🌐 API Base URL:', API_BASE_URL);
 

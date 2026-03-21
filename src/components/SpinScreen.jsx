@@ -59,7 +59,7 @@ export default function SpinScreen({ onNavigate, caseId, winData, isDemo, balanc
     if (!imagePath) return getDefaultImage();
     
     if (imagePath.startsWith('/static/')) {
-      return `https://shamefully-gifted-catbird.cloudpub.ru${imagePath}`;
+      return `https://bouncecase.duckdns.org${imagePath}`;
     }
     
     if (imagePath.trim() === '') {
