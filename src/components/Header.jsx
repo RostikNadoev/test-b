@@ -794,7 +794,6 @@ export default function Header({ onNavigate, variant = 'default' }) {
                         placeholder="0.00"
                         inputMode="decimal"
                       />
-                      <span className="balance-input-suffix">TON</span>
                     </div>
                     <button
                       className="balance-modal-action-btn"
