@@ -5,7 +5,6 @@ import { useBalance } from '../contexts/BalanceContext';
 import { authApi, formatBalance, tonApi, usersApi, starsApi } from '../utils/api';
 import { tonConnect } from '../utils/tonConnect';
 
-import ava from '../assets/MainPage/ava.jpg';
 import ton from '../assets/MainPage/ton.svg';
 import tonBack from '../assets/MainPage/tonblack.svg';
 import star from '../assets/MainPage/star1.png';
@@ -673,20 +672,28 @@ export default function Header({ onNavigate, variant = 'default' }) {
       <header className={headerClass}>
         <div className="header-inner">
           <div className="user-info">
-            <img 
-              src={user?.photo_url || ava} 
-              alt="User" 
-              className="user-avatar" 
-              onClick={() => onNavigate('profile')}
-              style={{ cursor: 'pointer' }}
-            />
-            
-            <span 
-              className="user-username" 
-              onClick={() => onNavigate('profile')}
-            >
-              {formatUsername(getUsername())}
-            </span>
+  {user?.photo_url ? (
+    <img 
+      src={user.photo_url} 
+      alt="User" 
+      className="user-avatar" 
+      onClick={() => onNavigate('profile')}
+      style={{ cursor: 'pointer' }}
+    />
+  ) : (
+    <div 
+      className="user-avatar-placeholder" 
+      onClick={() => onNavigate('profile')}
+      style={{ cursor: 'pointer' }}
+    ></div>
+  )}
+  
+  <span 
+    className="user-username" 
+    onClick={() => onNavigate('profile')}
+  >
+    {formatUsername(getUsername())}
+  </span>
 
             <div className="balances-container">
               <div className="balance-container ton-balance">

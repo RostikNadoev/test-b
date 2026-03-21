@@ -4,7 +4,6 @@ import { useDemo } from '../contexts/DemoContext';
 import { authApi, usersApi, giftsApi, starsApi } from '../utils/api';
 import { tonConnect } from '../utils/tonConnect';
 
-import ava from '../assets/MainPage/ava.jpg';
 import tonGift from '../assets/Profile/ton-gift.svg';
 import modalCloseIcon from '../assets/Profile/close.png'; 
 import giftchange from '../assets/Profile/giftchange.png';
@@ -558,18 +557,18 @@ export default function ProfileScreen({ onNavigate }) {
     return username;
   };
 
-  const getAvatar = () => {
-    if (userData?.photo_url) {
-      try {
-        new URL(userData.photo_url);
-        return userData.photo_url;
-      } catch (error) {
-        console.warn('Invalid avatar URL:', userData.photo_url);
-        return ava;
-      }
+ const getAvatar = () => {
+  if (userData?.photo_url) {
+    try {
+      new URL(userData.photo_url);
+      return userData.photo_url;
+    } catch (error) {
+      console.warn('Invalid avatar URL:', userData.photo_url);
+      return null;
     }
-    return ava;
-  };
+  }
+  return null;
+};
 
   const getUserId = () => {
     if (userData?.id) {
@@ -694,13 +693,17 @@ export default function ProfileScreen({ onNavigate }) {
 
       <div className="profile-main-row">
         <div className="profile-avatar-container">
-          <img 
-            src={getAvatar()} 
-            alt="User" 
-            className="profile-avatar" 
-            loading="lazy" 
-          />
-        </div>
+  {getAvatar() ? (
+    <img 
+      src={getAvatar()} 
+      alt="User" 
+      className="profile-avatar" 
+      loading="lazy" 
+    />
+  ) : (
+    <div className="profile-avatar-placeholder"></div>
+  )}
+</div>
 
         <div className="gifts-container">
           <div className="gifts-box">
